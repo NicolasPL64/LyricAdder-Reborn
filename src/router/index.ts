@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router"
-import LyricsInput from "@/views/LyricsInput.vue"
+import LyricsInputView from "@/views/LyricsInputView.vue"
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,7 +12,7 @@ const router = createRouter({
     {
       path: "/lyricsinput",
       name: "LyricsInput",
-      component: LyricsInput,
+      component: LyricsInputView,
     },
   ],
 })

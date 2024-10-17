@@ -27,7 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import { parseChart } from "@/utils/parseChart"
+import { parseChart, type parsedChart } from "@/utils/parseChart"
+import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { open } from "@tauri-apps/plugin-dialog"
 import { ref, watch } from "vue"
 
@@ -41,18 +42,12 @@ const lyricsTextarea = ref<HTMLTextAreaElement | null>(null)
 
 const syncScroll = (event: any) => {
   const scrollTop = event.target.scrollTop
-  if (syllablesTextarea.value) {
-    syllablesTextarea.value.scrollTop = scrollTop
-  }
-  if (lineNumbersTextarea.value) {
-    lineNumbersTextarea.value.scrollTop = scrollTop
-  }
-  if (lyricsTextarea.value) {
-    lyricsTextarea.value.scrollTop = scrollTop
-  }
+  if (syllablesTextarea.value) syllablesTextarea.value.scrollTop = scrollTop
+  if (lineNumbersTextarea.value) lineNumbersTextarea.value.scrollTop = scrollTop
+  if (lyricsTextarea.value) lyricsTextarea.value.scrollTop = scrollTop
 }
 
-let chart: { syllablesCount: number[]; lyrics: string }
+let chart: parsedChart
 
 async function loadFile() {
   const file = await open({
@@ -63,52 +58,16 @@ async function loadFile() {
   if (!file) return
 
   chart = await parseChart(file)
-  lyricsText.value = chart.lyrics
-  updateSyllableCount()
-  updateLineNumbers()
-}
-
-function updateLineNumbers() {
-  const lines = lyricsText.value.split("\n")
-  lineNumbers.value = lines.map((_, index) => `${index + 1}`).join("\n") + "\n"
-}
-
-function updateSyllableCount() {
-  if (!chart?.syllablesCount) return
-  const curSyl = countCurrentSyllables()
-  const chSyl = countChartSyllables()
-  const sylls = curSyl.map((syl, i) => (chSyl[i] === "" ? "\n" : `${syl}/${chSyl[i]}\n`)).join("")
-  syllablesCount.value = sylls
-}
-
-function countChartSyllables() {
-  const lines = lyricsText.value.split("\n")
-  let emptyLines = 0
-  return lines.map((line, index) => {
-    if (line === "") {
-      emptyLines++
-      return ""
-    } else {
-      return (chart.syllablesCount[index - emptyLines] ?? "-1").toString()
-    }
-  })
-}
-
-function countCurrentSyllables() {
-  const lines = lyricsText.value.split("\n")
-  return lines.map((line) =>
-    line.trim().length === 0
-      ? "0"
-      : line
-          .split(/[ \-=]/)
-          .filter(Boolean)
-          .length.toString()
-  )
+  lyricsText.value = chart.chartLyrics
 }
 
 watch(lyricsText, () => {
-  updateSyllableCount()
-  updateLineNumbers()
+  //TODO: Add user option to re-read the chart automatically each time there's an update in the lyricsText
+
+  const lines = lyricsText.value.split("\n")
+
+  syllablesCount.value = updateSyllableCount(chart, lines)
+  lineNumbers.value = updateLineNumbers(lines)
 })
 </script>
 
