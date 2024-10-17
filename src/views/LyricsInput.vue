@@ -58,38 +58,54 @@ async function loadFile() {
   const file = await open({
     multiple: false,
     directory: false,
-    filters: [{ name: "Chart files (.chart/.mid)", extensions: ["chart", "mid"] }],
+    filters: [{ name: "Chart files (.chart)", extensions: ["chart"] }],
   })
   if (!file) return
 
   chart = await parseChart(file)
+  lyricsText.value = chart.lyrics
   updateSyllableCount()
   updateLineNumbers()
-  lyricsText.value = chart.lyrics
 }
 
 function updateLineNumbers() {
   const lines = lyricsText.value.split("\n")
-  lineNumbers.value = ""
-  for (const line in lines) {
-    lineNumbers.value += `${parseInt(line) + 1}\n`
-  }
-  console.log(lineNumbers.value)
+  lineNumbers.value = lines.map((_, index) => `${index + 1}`).join("\n") + "\n"
 }
 
-async function updateSyllableCount() {
+function updateSyllableCount() {
+  if (!chart?.syllablesCount) return
+  const curSyl = countCurrentSyllables()
+  const chSyl = countChartSyllables()
+  const sylls = curSyl.map((syl, i) => (chSyl[i] === "" ? "\n" : `${syl}/${chSyl[i]}\n`)).join("")
+  syllablesCount.value = sylls
+}
+
+function countChartSyllables() {
   const lines = lyricsText.value.split("\n")
-  syllablesCount.value = ""
   let emptyLines = 0
-  lines.forEach((line, index) => {
+  return lines.map((line, index) => {
     if (line === "") {
-      syllablesCount.value += "\n"
       emptyLines++
+      return ""
     } else {
-      syllablesCount.value += (chart.syllablesCount[index - emptyLines] ?? -1) + "\n"
+      return (chart.syllablesCount[index - emptyLines] ?? "-1").toString()
     }
   })
 }
+
+function countCurrentSyllables() {
+  const lines = lyricsText.value.split("\n")
+  return lines.map((line) =>
+    line.trim().length === 0
+      ? "0"
+      : line
+          .split(/[ \-=]/)
+          .filter(Boolean)
+          .length.toString()
+  )
+}
+
 watch(lyricsText, () => {
   updateSyllableCount()
   updateLineNumbers()

@@ -2,9 +2,6 @@ import { ChartIO, type ChartEvent } from "./herochartio"
 
 export async function parseChart(path: string) {
   const chart = await ChartIO.load(path)
-
-  //console.log(chart.Events)
-  //console.log(extractLyrics(chart.Events))
   return extractLyrics(chart.Events)
 }
 
@@ -18,21 +15,25 @@ function extractLyrics(events: { [key: number]: ChartEvent[] }): {
   let syllables: number = 0
   let previousLyricEndsWithHyphen = false
 
-  for (const key in events) {
-    if (Object.prototype.hasOwnProperty.call(events, key)) {
-      const eventList = events[key]
+  for (const event in events) {
+    if (Object.prototype.hasOwnProperty.call(events, event)) {
+      const eventList = events[event]
       eventList.forEach((event) => {
         if (event.name === "phrase_start") {
           if (currentPhrase.length > 0) {
-            lyrics.push(currentPhrase.join(" "))
+            lyrics.push(currentPhrase.join(" ").trim())
             syllablesCount.push(syllables)
-            //Reset values
+
+            //Reset values for next phrase
             currentPhrase = []
             syllables = 0
           }
-        } else if (event.name.startsWith("lyric") && event.type === "E") {
+        } else if (
+          (event.name.startsWith("lyric") || event.name.startsWith("Default")) &&
+          event.type === "E"
+        ) {
           syllables++
-          const lyricText = event.name.replace("lyric ", "")
+          const lyricText = event.name.split(" ")[1] ?? ""
           if (previousLyricEndsWithHyphen) {
             currentPhrase[currentPhrase.length - 1] += lyricText
             previousLyricEndsWithHyphen = false
