@@ -24,4 +24,5 @@ export class ChartSong {
   BassStream?: string = undefined
   RhythmStream?: string = undefined
   DrumStream?: string = undefined
+  VocalStream?: string = undefined
 }

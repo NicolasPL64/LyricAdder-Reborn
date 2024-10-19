@@ -4,7 +4,7 @@ export type parsedChart = { chartSyllablesCount: number[]; chartLyrics: string }
 
 export async function parseChart(path: string) {
   const chart = await ChartIO.load(path)
-  return extractLyrics(chart.Events)
+  return { parsed: extractLyrics(chart.Events), original: chart }
 }
 
 function extractLyrics(events: { [key: number]: ChartEvent[] }) {

@@ -58,6 +58,7 @@ export class ChartIO {
     if (obj.Song.BassStream != undefined) chart.Song.BassStream = obj.Song.BassStream[0]
     if (obj.Song.RhythmStream != undefined) chart.Song.RhythmStream = obj.Song.RhythmStream[0]
     if (obj.Song.DrumStream != undefined) chart.Song.DrumStream = obj.Song.DrumStream[0]
+    if (obj.Song.VocalStream != undefined) chart.Song.VocalStream = obj.Song.VocalStream[0]
 
     for (const ts in obj.SyncTrack) {
       chart.SyncTrack[parseInt(ts)] = obj.SyncTrack[ts].map((o: any) => {
@@ -158,6 +159,8 @@ export class ChartIO {
       str += `  RhythmStream = ${JSON.stringify(chart.Song.RhythmStream)}\n`
     if (chart.Song.DrumStream != undefined)
       str += `  DrumStream = ${JSON.stringify(chart.Song.DrumStream)}\n`
+    if (chart.Song.VocalStream != undefined)
+      str += `  VocalStream = ${JSON.stringify(chart.Song.VocalStream)}\n`
     str += "}\n"
     str += "[SyncTrack]\n"
     str += "{\n"

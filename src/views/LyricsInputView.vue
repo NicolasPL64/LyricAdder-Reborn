@@ -6,6 +6,7 @@
       ref="syllablesTextarea"
       v-model="syllablesCount"
       spellcheck="false"
+      disabled="true"
       readonly
       @scroll="syncScroll"
     ></textarea>
@@ -13,6 +14,7 @@
       class="line-numbers"
       ref="lineNumbersTextarea"
       v-model="lineNumbers"
+      disabled="true"
       readonly
       @scroll="syncScroll"
     ></textarea>
@@ -36,10 +38,13 @@
       ></textarea>
     </div>
   </div>
+  <button @click="saveFile">Save file</button>
 </template>
 
 <script setup lang="ts">
+import type { Chart } from "@/utils/herochartio"
 import { parseChart, type parsedChart } from "@/utils/parseChart"
+import { parseLyricsToChart } from "@/utils/saveChart"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { wrongPhrases } from "@/utils/wrongPhrases"
 import { open } from "@tauri-apps/plugin-dialog"
@@ -71,25 +76,32 @@ const updateHighlightedLines = () => {
       highlightedLines.value[index] = " "
     }
   })
-  highlightedLines.value.push("\n\n")
+  highlightedLines.value.push(" ")
 }
 
 const isHighlighted = (index: number) => {
   return highlightedIndices.value.includes(index)
 }
 
-let chart: parsedChart
+let chart: { parsed: parsedChart; original: Chart }
+let path: string | null = ""
 
 async function loadFile() {
-  const file = await open({
+  path = await open({
     multiple: false,
     directory: false,
     filters: [{ name: "Chart files (.chart)", extensions: ["chart"] }],
   })
-  if (!file) return
+  if (!path) return
 
-  chart = await parseChart(file)
-  lyricsText.value = chart.chartLyrics
+  chart = await parseChart(path)
+  lyricsText.value = chart.parsed.chartLyrics
+}
+
+async function saveFile() {
+  //TODO: If highlightedIndices.length > 0, disable the save button and show a message to the user when trying to click the button
+  if (!path) return
+  parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
 }
 
 watch(lyricsText, () => {
@@ -97,10 +109,11 @@ watch(lyricsText, () => {
 
   const lines = lyricsText.value.split("\n")
 
-  syllablesCount.value = updateSyllableCount(chart, lines)
+  syllablesCount.value = updateSyllableCount(chart.parsed, lines)
   lineNumbers.value = updateLineNumbers(lines)
   highlightedIndices.value = wrongPhrases(syllablesCount.value.split("\n"))
   updateHighlightedLines()
+  console.log(highlightedIndices.value)
 })
 </script>
 
