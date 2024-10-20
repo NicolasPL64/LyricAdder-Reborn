@@ -1,53 +1,46 @@
+import { isLyricEvent } from "./auxFunctions"
 import { ChartIO, type ChartEvent } from "./herochartio"
 
-export type parsedChart = { chartSyllablesCount: number[]; chartLyrics: string }
+export type ParsedChart = { chartSyllablesCount: number[]; chartLyrics: string }
 
-export async function parseChart(path: string) {
+export async function parseChart(path: string): Promise<{ parsed: ParsedChart; original: any }> {
   const chart = await ChartIO.load(path)
   return { parsed: extractLyrics(chart.Events), original: chart }
 }
 
-function extractLyrics(events: { [key: number]: ChartEvent[] }) {
+function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
   const lyrics: string[] = []
   const syllablesCount: number[] = []
   let currentPhrase: string[] = []
-  let syllables: number = 0
+  let syllables = 0
   let previousLyricEndsWithHyphen = false
 
-  for (const event in events) {
-    if (!Object.prototype.hasOwnProperty.call(events, event))
-      throw new Error("Invalid chart format")
-    const eventList = events[event]
+  for (const eventList of Object.values(events)) {
     eventList.forEach((event) => {
+      // TODO: What happens if there are two phrase_start events in a row?
       if (event.name === "phrase_start" && currentPhrase.length > 0) {
-        //TODO: What happens if there are two phrase_start events in a row?
-
+        // Save the phrase and reset for the next one
         lyrics.push(currentPhrase.join(" ").trim())
         syllablesCount.push(syllables)
-
-        //Reset values for next phrase
         currentPhrase = []
         syllables = 0
-      } else if (
-        (event.name.startsWith("lyric") || event.name.startsWith("Default")) &&
-        event.type === "E"
-      ) {
-        syllables++
+      } else if (isLyricEvent(event)) {
         const lyricText = event.name.split(" ")[1] ?? ""
+        syllables++
         if (previousLyricEndsWithHyphen) {
           currentPhrase[currentPhrase.length - 1] += lyricText
           previousLyricEndsWithHyphen = false
-        } else currentPhrase.push(lyricText)
-        if (lyricText.endsWith("-") || lyricText.endsWith("=")) {
-          previousLyricEndsWithHyphen = true
+        } else {
+          currentPhrase.push(lyricText)
         }
+        previousLyricEndsWithHyphen = lyricText.endsWith("-") || lyricText.endsWith("=")
       }
     })
   }
 
-  // Adds last phrase
+  // Add last phrase
   if (currentPhrase.length > 0) {
-    lyrics.push(currentPhrase.join(" "))
+    lyrics.push(currentPhrase.join(" ").trim())
     syllablesCount.push(syllables)
   }
 

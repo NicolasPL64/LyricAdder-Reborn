@@ -38,12 +38,12 @@
       ></textarea>
     </div>
   </div>
-  <button @click="saveFile">Save file</button>
+  <button @click="saveFile" :disabled="highlightedIndices.length > 0">Save file</button>
 </template>
 
 <script setup lang="ts">
 import type { Chart } from "@/utils/herochartio"
-import { parseChart, type parsedChart } from "@/utils/parseChart"
+import { parseChart, type ParsedChart } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { wrongPhrases } from "@/utils/wrongPhrases"
@@ -63,19 +63,14 @@ const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
 
 const syncScroll = (event: any) => {
   const scrollTop = event.target.scrollTop
-  if (syllablesTextarea.value) syllablesTextarea.value.scrollTop = scrollTop
-  if (lineNumbersTextarea.value) lineNumbersTextarea.value.scrollTop = scrollTop
-  if (lyricsTextarea.value) lyricsTextarea.value.scrollTop = scrollTop
-  if (highlightedLinesContainer.value) highlightedLinesContainer.value.scrollTop = scrollTop
+  syllablesTextarea.value?.scrollTo({ top: scrollTop })
+  lineNumbersTextarea.value?.scrollTo({ top: scrollTop })
+  lyricsTextarea.value?.scrollTo({ top: scrollTop })
+  highlightedLinesContainer.value?.scrollTo({ top: scrollTop })
 }
 
 const updateHighlightedLines = () => {
-  highlightedLines.value = lyricsText.value.split("\n")
-  highlightedLines.value.map((line, index) => {
-    if (line === "") {
-      highlightedLines.value[index] = " "
-    }
-  })
+  highlightedLines.value = lyricsText.value.split("\n").map((line) => (line === "" ? " " : line))
   highlightedLines.value.push(" ")
 }
 
@@ -83,9 +78,10 @@ const isHighlighted = (index: number) => {
   return highlightedIndices.value.includes(index)
 }
 
-let chart: { parsed: parsedChart; original: Chart }
+let chart: { parsed: ParsedChart; original: Chart }
 let path: string | null = ""
 
+// Function to load a chart file
 async function loadFile() {
   path = await open({
     multiple: false,
@@ -98,14 +94,15 @@ async function loadFile() {
   lyricsText.value = chart.parsed.chartLyrics
 }
 
+// Function to save the modified chart
 async function saveFile() {
-  //TODO: If highlightedIndices.length > 0, disable the save button and show a message to the user when trying to click the button
+  // TODO: If highlightedIndices.length > 0, disable the save button and show a message to the user when trying to click the button
   if (!path) return
-  parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
+  await parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
 }
 
 watch(lyricsText, () => {
-  //TODO: Add user option to re-read the chart automatically each time there's an update in the lyricsText
+  // TODO: Add user option to re-read the chart automatically each time there's an update in the lyricsText
 
   const lines = lyricsText.value.split("\n")
 
@@ -113,7 +110,6 @@ watch(lyricsText, () => {
   lineNumbers.value = updateLineNumbers(lines)
   highlightedIndices.value = wrongPhrases(syllablesCount.value.split("\n"))
   updateHighlightedLines()
-  console.log(highlightedIndices.value)
 })
 </script>
 

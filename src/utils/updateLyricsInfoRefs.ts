@@ -1,37 +1,39 @@
-import type { parsedChart } from "./parseChart"
+import type { ParsedChart } from "./parseChart"
 
 export function updateLineNumbers(lines: string[]) {
   return lines.map((_, index) => `${index + 1}`).join("\n") + "\n"
 }
 
 // Concatenates the syllable count of the current lyrics with the syllable count of the chart
-export function updateSyllableCount(chart: parsedChart, lines: string[]) {
+export function updateSyllableCount(chart: ParsedChart, lines: string[]) {
   if (!chart?.chartSyllablesCount) return ""
-  const curSyl = countCurrentSyllables(lines)
-  const chSyl = countChartSyllables(chart, lines)
-  const sylls = curSyl.map((syl, i) => (chSyl[i] === "" ? "\n" : `${syl}/${chSyl[i]}\n`)).join("")
-  return sylls
+
+  const currentSyllables = countSyllables(lines)
+  const chartSyllables = mapChartSyllables(chart, lines)
+
+  return currentSyllables
+    .map((syllable, i) => (chartSyllables[i] === "" ? "\n" : `${syllable}/${chartSyllables[i]}\n`))
+    .join("")
 }
 
-function countChartSyllables(chart: parsedChart, lines: string[]) {
+function mapChartSyllables(chart: ParsedChart, lines: string[]) {
   let emptyLines = 0
   return lines.map((line, index) => {
-    if (line === "") {
+    if (line.trim() === "") {
       emptyLines++
       return ""
-    } else {
-      return (chart.chartSyllablesCount[index - emptyLines] ?? "-1").toString()
     }
+    return (chart.chartSyllablesCount[index - emptyLines] ?? "-1").toString()
   })
 }
 
-function countCurrentSyllables(lines: string[]) {
+function countSyllables(lines: string[]) {
   return lines.map((line) =>
     line.trim().length === 0
       ? "0"
       : line
-          .split(/[ \-=]/)
-          .filter(Boolean)
+          .split(/[ \-=]/) // Split by spaces, hyphens, and equal signs
+          .filter(Boolean) // Remove empty strings
           .length.toString()
   )
 }
