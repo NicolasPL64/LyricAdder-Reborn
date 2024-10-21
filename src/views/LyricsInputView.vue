@@ -2,7 +2,7 @@
   <h1>Lyrics Input</h1>
 
   <button @click="loadFile">Load chart</button>
-  <p>Input the lyrics below using the appropriate syntax:</p>
+  <p>Input the lyrics in the box below using the appropriate syntax:</p>
   <div class="container">
     <textarea
       class="syllables"
@@ -109,10 +109,8 @@ async function saveFile() {
 watch(lyricsText, () => {
   // TODO: Add user option to re-read the chart automatically each time there's an update in the lyricsText
 
-  const lines = lyricsText.value.split("\n")
-
-  syllablesCount.value = updateSyllableCount(chart.parsed, lines)
-  lineNumbers.value = updateLineNumbers(lines)
+  syllablesCount.value = updateSyllableCount(chart.parsed, lyricsText.value.split("\n"))
+  lineNumbers.value = updateLineNumbers(lyricsText.value.split("\n"))
   highlightedIndices.value = wrongPhrases(syllablesCount.value.split("\n"))
   updateHighlightedLines()
 })
