@@ -5,7 +5,7 @@ export function isLyricEvent(event: ChartEvent): boolean {
 }
 
 export function removeTrailingEmptyElements(arr: string[]): string[] {
-  while (arr.length > 0 && arr[arr.length - 1] === "") {
+  while (arr.length > 0 && arr[arr.length - 1].trim() === "") {
     arr.pop()
   }
   return arr

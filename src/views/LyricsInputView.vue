@@ -21,7 +21,7 @@
       readonly
       @scroll="syncScroll"
     ></textarea>
-    <div style="display: flex">
+    <div style="display: flex; position: relative">
       <div class="highlighted-lines" ref="highlightedLinesContainer" readonly>
         <div
           v-for="(line, index) in highlightedLines"
@@ -111,7 +111,10 @@ watch(lyricsText, () => {
 
   syllablesCount.value = updateSyllableCount(chart.parsed, lyricsText.value.split("\n"))
   lineNumbers.value = updateLineNumbers(lyricsText.value.split("\n"))
-  highlightedIndices.value = wrongPhrases(syllablesCount.value.split("\n"))
+  highlightedIndices.value = wrongPhrases(
+    syllablesCount.value.split("\n"),
+    lyricsText.value.split("\n")
+  )
   updateHighlightedLines()
 })
 </script>
@@ -119,8 +122,8 @@ watch(lyricsText, () => {
 <style scoped>
 .container {
   display: flex;
-  position: absolute;
-  height: 70vh;
+  position: relative;
+  height: 60vh;
 }
 
 .container * {
@@ -130,8 +133,9 @@ watch(lyricsText, () => {
 
 .highlighted-lines {
   width: 80vw;
-  height: 69.5vh;
   top: 2px;
+  height: calc(100% - 2px);
+  width: 100%;
   position: absolute;
   pointer-events: none;
   overflow-wrap: normal;

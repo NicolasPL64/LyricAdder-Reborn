@@ -1,4 +1,4 @@
-import { isLyricEvent } from "./auxFunctions"
+import { isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
 import { ChartIO, type ChartEvent } from "./herochartio"
 
 export type ParsedChart = { chartSyllablesCount: number[]; chartLyrics: string }
@@ -44,5 +44,8 @@ function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
     syllablesCount.push(syllables)
   }
 
-  return { chartLyrics: lyrics.join("\n"), chartSyllablesCount: syllablesCount }
+  return {
+    chartLyrics: removeTrailingEmptyElements(lyrics).join("\n"),
+    chartSyllablesCount: syllablesCount,
+  }
 }
