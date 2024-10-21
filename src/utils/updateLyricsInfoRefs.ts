@@ -17,6 +17,8 @@ export function updateSyllableCount(chart: ParsedChart, lines: string[]) {
 }
 
 function mapChartSyllables(chart: ParsedChart, lines: string[]) {
+  // TODO: If chart.chartSyllablesCount is longer than the number of lines, keep adding them
+
   let emptyLines = 0
   return lines.map((line, index) => {
     if (line.trim() === "") {

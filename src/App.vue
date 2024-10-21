@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <!-- <Sidebar class="sidebar" /> -->
+  <Sidebar />
+  <div class="page-container">
     <RouterView />
   </div>
 </template>
@@ -11,7 +11,8 @@ import Sidebar from "./components/sidebar/Sidebar.vue"
 </script>
 
 <style scoped>
-.sidebar {
-  flex-shrink: 0; /* Mantiene el tamaño fijo del sidebar */
+.page-container {
+  display: block;
+  padding-left: 4rem;
 }
 </style>

@@ -1,5 +1,8 @@
 <template>
-  <button @click="loadFile">Load file</button>
+  <h1>Lyrics Input</h1>
+
+  <button @click="loadFile">Load chart</button>
+  <p>Input the lyrics below using the appropriate syntax:</p>
   <div class="container">
     <textarea
       class="syllables"
@@ -28,17 +31,20 @@
           {{ line }}
         </div>
       </div>
-      <textarea
-        class="lyrics"
-        ref="lyricsTextarea"
-        v-model="lyricsText"
-        spellcheck="false"
-        @scroll="syncScroll"
-        @input="updateHighlightedLines"
-      ></textarea>
+      <div style="display: flex; position: relative">
+        <div class="lyricsBG"></div>
+        <textarea
+          class="lyrics"
+          ref="lyricsTextarea"
+          v-model="lyricsText"
+          spellcheck="false"
+          @scroll="syncScroll"
+          @input="updateHighlightedLines"
+        ></textarea>
+      </div>
     </div>
   </div>
-  <button @click="saveFile" :disabled="highlightedIndices.length > 0">Save file</button>
+  <button @click="saveFile" :disabled="highlightedIndices.length > 0">Save chart</button>
 </template>
 
 <script setup lang="ts">
@@ -94,7 +100,6 @@ async function loadFile() {
   lyricsText.value = chart.parsed.chartLyrics
 }
 
-// Function to save the modified chart
 async function saveFile() {
   // TODO: If highlightedIndices.length > 0, disable the save button and show a message to the user when trying to click the button
   if (!path) return
@@ -116,20 +121,18 @@ watch(lyricsText, () => {
 <style scoped>
 .container {
   display: flex;
-  position: relative;
-  height: 70dvh;
+  position: absolute;
+  height: 70vh;
 }
 
 .container * {
   line-height: 1.5;
   font-size: 0.9rem;
-  /* scrollbar-color: red transparent; */
-  /* https://developer.chrome.com/docs/css-ui/scrollbar-styling?hl=es-419 */
 }
 
 .highlighted-lines {
-  width: 70ch;
-  height: 69.5dvh;
+  width: 80vw;
+  height: 69.5vh;
   top: 2px;
   position: absolute;
   pointer-events: none;
@@ -141,13 +144,13 @@ watch(lyricsText, () => {
 }
 
 .highlighted-lines .highlight {
-  background-color: rgb(208, 255, 0);
-  box-shadow: 0 1px 0 rgb(208, 255, 0);
+  background-image: linear-gradient(to right, var(--error-500), transparent);
+  box-shadow: 0 1px 0 linear-gradient(to right, var(--error-500), transparent);
 }
 
 textarea {
+  color: var(--text-900);
   resize: none;
-  background: transparent;
   z-index: 1;
   overflow-wrap: normal;
   overflow: hidden;
@@ -157,17 +160,27 @@ textarea {
 
 .syllables {
   width: 5ch;
+  background: var(--background-100);
 }
 
 .line-numbers {
   width: 4ch;
-  background-color: #f0f0f0;
-  border-right: 1px solid #ddd;
+  background-color: var(--background-200);
+  border-right: 1px solid var(--background-500);
 }
 
 .lyrics {
-  width: 70ch;
-  overflow: scroll;
+  background: transparent;
+  width: 80vw;
+  overflow: auto;
   text-align: left;
+}
+
+.lyricsBG {
+  z-index: -1;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background: var(--background-100);
 }
 </style>

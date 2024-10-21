@@ -2,8 +2,8 @@ export function wrongPhrases(sylArray: string[]) {
   const highlightedArray: number[] = []
   sylArray.forEach((line, index) => {
     if (!line) return
-    const [cuSyl, chSyl] = line.split("/")
-    if (cuSyl !== chSyl) {
+    const [currSyl, chartSyl] = line.split("/")
+    if (currSyl !== chartSyl) {
       highlightedArray.push(index)
     }
   })

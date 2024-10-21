@@ -13,8 +13,9 @@
     "windows": [
       {
         "title": "LyricAdder Reborn",
-        "width": 800,
-        "height": 600,
+        "width": 950,
+        "height": 750,
+        "center": true,
         "resizable": true,
         "fullscreen": false
       }
