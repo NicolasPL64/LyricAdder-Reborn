@@ -14,18 +14,29 @@ function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
   let currentPhrase: string[] = []
   let syllables = 0
   let previousLyricEndsWithHyphen = false
+  let sectionsSpaceCount = 0
 
   for (const eventList of Object.values(events)) {
     eventList.forEach((event) => {
-      // TODO: What happens if there are two phrase_start events in a row?
+      // TODO: Add user option to change the max number of sections
+      if (lyrics.length > 0 && sectionsSpaceCount < 3 && event.name.startsWith("section")) {
+        lyrics.push("")
+        sectionsSpaceCount++
+      }
+      // TODO: What happens if there are two phrase_start events in a row? A: error in console
       if (event.name === "phrase_start" && currentPhrase.length > 0) {
         // Save the phrase and reset for the next one
         lyrics.push(currentPhrase.join(" ").trim())
         syllablesCount.push(syllables)
         currentPhrase = []
         syllables = 0
+        sectionsSpaceCount = 0
       } else if (isLyricEvent(event)) {
-        const lyricText = event.name.split(" ")[1] ?? ""
+        const lyricArray = event.name.split(" ")
+        let lyricText = ""
+
+        if (lyricArray.length > 2) lyricText = lyricArray.slice(1).join("§")
+        else lyricText = lyricArray[1] ?? ""
         syllables++
         if (previousLyricEndsWithHyphen) {
           currentPhrase[currentPhrase.length - 1] += lyricText
