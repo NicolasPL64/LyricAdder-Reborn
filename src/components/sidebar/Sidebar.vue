@@ -1,9 +1,12 @@
 <template>
   <div class="sidebar" @mouseover="hover = true" @mouseleave="hover = false">
-    <SidebarLink to="/lyricsinput" :icon="IconCommunity" :hover="hover">A</SidebarLink>
+    <SidebarLink to="/lyricsinput" :icon="IconCommunity" :hover="hover">Lyrics Input</SidebarLink>
     <SidebarLink to="/" :icon="IconSupport" :hover="hover">B</SidebarLink>
     <SidebarLink to="/" :icon="IconSupport" :hover="hover">C</SidebarLink>
-    <button @click="toggleTheme">Toggle Theme</button>
+    <button @click="toggleTheme">L/D</button>
+    <div class="bottom">
+      <SidebarLink to="/" :icon="IconSupport" :hover="hover">Settings</SidebarLink>
+    </div>
   </div>
   <div class="view-dimmer" :class="{ hovered: hover }"></div>
 </template>
@@ -23,7 +26,7 @@ const setTheme = (theme: string) => {
   localStorage.setItem("theme", theme)
 }
 
-const savedTheme = localStorage.getItem("theme")
+/* const savedTheme = localStorage.getItem("theme")
 
 if (savedTheme) {
   setTheme(savedTheme)
@@ -31,7 +34,7 @@ if (savedTheme) {
   setTheme("dark")
 } else {
   setTheme("light")
-}
+} */
 
 const toggleTheme = () => {
   const currentTheme = localStorage.getItem("theme") || (userPrefersDark ? "dark" : "light")
@@ -53,7 +56,7 @@ onMounted(() => {
 
 <style scoped>
 .sidebar {
-  border-radius: 0 5px 5px 0;
+  border-radius: 0 var(--border-small) var(--border-small) 0;
   background-color: var(--secondary-300);
   width: 40px;
   transition: all 0.5s var(--elastic);
@@ -72,6 +75,12 @@ onMounted(() => {
   filter: drop-shadow(5px 0 10px rgba(0, 0, 0, 0.5));
 }
 
+.sidebar .bottom {
+  position: absolute;
+  bottom: 0;
+  padding-bottom: inherit;
+  width: inherit;
+}
 .view-dimmer {
   pointer-events: none;
   background-color: rgba(0, 0, 0, 0);

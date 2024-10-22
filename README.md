@@ -4,6 +4,11 @@
 + Add user-option to auto-convert every type of apostrophe into the same custom character
 + Add auto-hypenator (pnpm add hyphen)
 
+## Features
+### When opening:
++ Replace spaces for § 
++ Section separator (option)
+
 ## Project Setup
 
 ```sh
@@ -19,7 +24,7 @@ pnpm tauri dev
 ### Type-Check, Compile and Minify for Production
 
 ```sh
-pnpm tauri dev
+pnpm tauri build
 ```
 
 ### Lint with [ESLint](https://eslint.org/)

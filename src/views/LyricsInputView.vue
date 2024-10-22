@@ -1,5 +1,5 @@
 <template>
-  <h1>Lyrics Input</h1>
+  <h1 style="margin-top: 0">Lyrics Input</h1>
 
   <button @click="loadFile">Load chart</button>
   <p>Input the lyrics in the box below using the appropriate syntax:</p>
@@ -21,27 +21,26 @@
       readonly
       @scroll="syncScroll"
     ></textarea>
-    <div style="display: flex; position: relative">
-      <div class="highlighted-lines" ref="highlightedLinesContainer" readonly>
-        <div
-          v-for="(line, index) in highlightedLines"
-          :key="index"
-          :class="{ highlight: isHighlighted(index) }"
-        >
-          {{ line }}
-        </div>
+
+    <div class="highlighted-lines" ref="highlightedLinesContainer" readonly>
+      <div
+        v-for="(line, index) in highlightedLines"
+        :key="index"
+        :class="{ highlight: isHighlighted(index) }"
+      >
+        {{ line }}
       </div>
-      <div style="display: flex; position: relative">
-        <div class="lyricsBG"></div>
-        <textarea
-          class="lyrics"
-          ref="lyricsTextarea"
-          v-model="lyricsText"
-          spellcheck="false"
-          @scroll="syncScroll"
-          @input="updateHighlightedLines"
-        ></textarea>
-      </div>
+    </div>
+    <div style="position: inherit; width: 100%">
+      <div class="lyricsBG"></div>
+      <textarea
+        class="lyrics"
+        ref="lyricsTextarea"
+        v-model="lyricsText"
+        spellcheck="false"
+        @scroll="syncScroll"
+        @input="updateHighlightedLines"
+      ></textarea>
     </div>
   </div>
   <button @click="saveFile" :disabled="highlightedIndices.length > 0">Save chart</button>
@@ -126,13 +125,13 @@ watch(lyricsText, () => {
   height: 60vh;
 }
 
+/* TODO: These two can be user options */
 .container * {
   line-height: 1.5;
   font-size: 0.9rem;
 }
 
 .highlighted-lines {
-  width: 80vw;
   top: 2px;
   height: calc(100% - 2px);
   width: 100%;
@@ -161,21 +160,28 @@ textarea {
 }
 
 .syllables {
+  border-radius: var(--border-small) 0 0 var(--border-small);
   width: 5ch;
+  min-width: 5ch;
   background: var(--background-100);
 }
 
 .line-numbers {
   width: 4ch;
+  min-width: 4ch;
   background-color: var(--background-200);
   border-right: 1px solid var(--background-500);
 }
 
 .lyrics {
   background: transparent;
-  width: 80vw;
+  box-sizing: border-box;
+  position: absolute;
+  width: 100%;
+  height: 100%;
   overflow: auto;
   text-align: left;
+  border-radius: 0 var(--border-small) var(--border-small) 0;
 }
 
 .lyricsBG {
