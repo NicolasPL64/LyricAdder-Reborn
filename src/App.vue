@@ -12,12 +12,12 @@ import Sidebar from "./components/sidebar/Sidebar.vue"
 
 <style scoped>
 .page-container {
+  display: block;
   position: absolute;
   top: 0;
-  left: calc(40px + 0.5em * 2);
   right: 0;
   bottom: 0;
-  display: block;
+  left: calc(40px + 0.5em * 2);
   margin: 1em;
 }
 </style>

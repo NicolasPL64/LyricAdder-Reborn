@@ -1,0 +1,62 @@
+/* Ripped off CSS from the PrimeVue repo. Too lazy to delete the comments.
+Also fuck PrimeVue's documentation */
+
+.p-tooltip {
+  display: none;
+  position: absolute;
+  max-width: 12.5rem; /* Reemplazado con el valor de max-width definido en tu archivo */
+}
+
+.p-tooltip-right,
+.p-tooltip-left {
+  padding: 0 0.5rem; /* Reemplazado con el valor de gutter definido en tu archivo */
+}
+
+.p-tooltip-top,
+.p-tooltip-bottom {
+  padding: 0.5rem 0; /* Reemplazado con el valor de gutter definido en tu archivo */
+}
+
+.p-tooltip-text {
+  box-shadow: 0 0 0 1px var(--accent-100); /* Reemplazado con el valor de shadow definido en tu archivo */
+  border-radius: var(--border-small); /* Reemplazado con la variable de border-radius */
+  background: var(--background-300); /* Reemplazado con la variable de background */
+  padding: 0.5rem; /* Reemplazado con el valor de padding definido en tu archivo */
+  color: var(--text-800); /* Reemplazado con la variable de color */
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.p-tooltip-arrow {
+  position: absolute;
+  border-style: solid;
+  border-color: transparent;
+  width: 0;
+  height: 0;
+}
+
+.p-tooltip-right .p-tooltip-arrow {
+  margin-top: calc(-1 * 0.5rem); /* Reemplazado con el valor de gutter definido en tu archivo */
+  border-width: 0.5rem 0.5rem 0.5rem 0; /* Reemplazado con el valor de gutter definido en tu archivo */
+  border-right-color: var(--background-300); /* Reemplazado con la variable de background */
+}
+
+.p-tooltip-left .p-tooltip-arrow {
+  margin-top: calc(-1 * 0.5rem); /* Reemplazado con el valor de gutter definido en tu archivo */
+  border-width: 0.5rem 0 0.5rem 0.5rem; /* Reemplazado con el valor de gutter definido en tu archivo */
+  border-left-color: var(--background-300); /* Reemplazado con la variable de background */
+}
+
+.p-tooltip-top .p-tooltip-arrow {
+  margin-left: calc(-1 * 0.5rem); /* Reemplazado con el valor de gutter definido en tu archivo */
+  border-width: 0.5rem 0.5rem 0 0.5rem; /* Reemplazado con el valor de gutter definido en tu archivo */
+  border-top-color: var(--background-300); /* Reemplazado con la variable de background */
+  border-bottom-color: var(--background-300); /* Reemplazado con la variable de background */
+}
+
+.p-tooltip-bottom .p-tooltip-arrow {
+  margin-left: calc(-1 * 0.5rem); /* Reemplazado con el valor de gutter definido en tu archivo */
+  border-width: 0 0.5rem 0.5rem 0.5rem; /* Reemplazado con el valor de gutter definido en tu archivo */
+  border-top-color: var(--background-300); /* Reemplazado con la variable de background */
+  border-bottom-color: var(--background-300); /* Reemplazado con la variable de background */
+}

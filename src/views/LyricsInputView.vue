@@ -1,7 +1,15 @@
 <template>
   <h1 style="margin-top: 0">Lyrics Input</h1>
 
-  <button @click="loadFile">Load chart</button>
+  <button
+    @click="loadFile"
+    v-tooltip="{
+      value: 'Loads and reads a chart',
+      showDelay: 800,
+    }"
+  >
+    <IconLoad />Load chart
+  </button>
   <p>Input the lyrics in the box below using the appropriate syntax:</p>
   <div class="container">
     <textarea
@@ -43,10 +51,16 @@
       ></textarea>
     </div>
   </div>
-  <button @click="saveFile" :disabled="highlightedIndices.length > 0">Save chart</button>
+  <button @click="saveFile" :disabled="highlightedIndices.length > 0">
+    <IconSave />Save chart
+  </button>
+  <ToggleSwitch v-model="test" />
 </template>
 
 <script setup lang="ts">
+import IconLoad from "@/components/icons/IconLoad.vue"
+import IconSave from "@/components/icons/IconSave.vue"
+
 import type { Chart } from "@/utils/herochartio"
 import { parseChart, type ParsedChart } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
@@ -55,6 +69,7 @@ import { wrongPhrases } from "@/utils/wrongPhrases"
 import { open } from "@tauri-apps/plugin-dialog"
 import { ref, watch } from "vue"
 
+const test = ref(false)
 const lyricsText = ref("")
 const syllablesCount = ref("")
 const lineNumbers = ref("1")
@@ -125,70 +140,70 @@ watch(lyricsText, () => {
   height: 60vh;
 }
 
-/* TODO: These two can be user options */
+/* TODO: These three can be user options */
 .container * {
-  line-height: 1.5;
   font-size: 0.9rem;
-}
-
-.highlighted-lines {
-  top: 2px;
-  height: calc(100% - 2px);
-  width: 100%;
-  position: absolute;
-  pointer-events: none;
-  overflow-wrap: normal;
-  white-space: pre;
-  overflow: hidden;
-  color: transparent;
+  line-height: 1.5;
   font-family: monospace;
 }
 
+.highlighted-lines {
+  position: absolute;
+  top: 2px;
+  width: 100%;
+  height: calc(100% - 2px);
+  overflow: hidden;
+  pointer-events: none;
+  color: transparent;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
 .highlighted-lines .highlight {
-  background-image: linear-gradient(to right, var(--error-500), transparent);
   box-shadow: 0 1px 0 linear-gradient(to right, var(--error-500), transparent);
+  background-image: linear-gradient(to right, var(--error-500), transparent);
 }
 
 textarea {
-  color: var(--text-900);
-  resize: none;
   z-index: 1;
-  overflow-wrap: normal;
   overflow: hidden;
+  resize: none;
+  color: var(--text-900);
   text-align: right;
   white-space: pre;
+  overflow-wrap: normal;
 }
 
 .syllables {
   border-radius: var(--border-small) 0 0 var(--border-small);
+  background: var(--background-100);
   width: 5ch;
   min-width: 5ch;
-  background: var(--background-100);
 }
 
 .line-numbers {
+  border-right: 1px solid var(--background-500);
+  background-color: var(--background-200);
   width: 4ch;
   min-width: 4ch;
-  background-color: var(--background-200);
-  border-right: 1px solid var(--background-500);
 }
 
 .lyrics {
-  background: transparent;
-  box-sizing: border-box;
   position: absolute;
+  box-sizing: border-box;
+  border-radius: 0 var(--border-small) var(--border-small) 0;
+  background: transparent;
   width: 100%;
   height: 100%;
   overflow: auto;
   text-align: left;
-  border-radius: 0 var(--border-small) var(--border-small) 0;
 }
 
 .lyricsBG {
-  z-index: -1;
   position: absolute;
-  height: 100%;
-  width: 100%;
+  z-index: -1;
   background: var(--background-100);
+  width: 100%;
+  height: 100%;
 }
 </style>

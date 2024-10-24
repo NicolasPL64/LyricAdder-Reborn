@@ -18,6 +18,7 @@ function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
 
   for (const eventList of Object.values(events)) {
     eventList.forEach((event) => {
+      //FIXME: Bug with 'Berried Alive - Crusty'
       // TODO: Add user option to change the max number of sections
       if (lyrics.length > 0 && sectionsSpaceCount < 3 && event.name.startsWith("section")) {
         lyrics.push("")

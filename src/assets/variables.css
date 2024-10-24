@@ -2,10 +2,10 @@
   --elastic: cubic-bezier(0.075, 0.82, 0.165, 1);
   --border-small: 5px;
   --border-large: 15px;
-  
+
   background-color: var(--background-50);
   color: var(--text-900);
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 ::-webkit-scrollbar {
@@ -18,9 +18,9 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--background-300);
-  border-radius: var(--border-small);
   border: 3px solid transparent;
+  border-radius: var(--border-small);
+  background-color: var(--background-300);
 }
 
 ::-webkit-scrollbar-corner {
@@ -28,13 +28,39 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  
-  background-color: var(--background-400);
   cursor: default;
+
+  background-color: var(--background-400);
 }
 
 ::-webkit-scrollbar-thumb:active {
   background-color: var(--background-500);
+}
+
+button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  margin: 0.5em 0;
+  border: none;
+  border-radius: var(--border-small);
+  background-color: var(--primary-500);
+  padding: 0.5em 1em;
+  color: var(--text-100);
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+button:hover {
+  background-color: var(--primary-600);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  background-color: var(--background-300);
 }
 
 /* REF: https://www.realtimecolors.com/?colors=ebebe6-060605-c5c5b5-4b5d50-849f9b&fonts=Inter-Inter */
@@ -105,7 +131,7 @@
   --error-200: rgb(239, 154, 154);
   --error-300: rgb(229, 115, 115);
   --error-400: rgb(239, 83, 80);
-  --error-500: rgb(244, 67, 54); 
+  --error-500: rgb(244, 67, 54);
   --error-600: rgb(229, 57, 53);
   --error-700: rgb(211, 47, 47);
   --error-800: rgb(198, 40, 40);
@@ -179,7 +205,7 @@
   --error-200: rgb(198, 40, 40);
   --error-300: rgb(211, 47, 47);
   --error-400: rgb(229, 57, 53);
-  --error-500: rgb(244, 67, 54); 
+  --error-500: rgb(244, 67, 54);
   --error-600: rgb(239, 83, 80);
   --error-700: rgb(229, 115, 115);
   --error-800: rgb(239, 154, 154);

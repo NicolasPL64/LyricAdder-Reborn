@@ -1,11 +1,14 @@
 <template>
   <div class="sidebar" @mouseover="hover = true" @mouseleave="hover = false">
-    <SidebarLink to="/lyricsinput" :icon="IconCommunity" :hover="hover">Lyrics Input</SidebarLink>
-    <SidebarLink to="/" :icon="IconSupport" :hover="hover">B</SidebarLink>
-    <SidebarLink to="/" :icon="IconSupport" :hover="hover">C</SidebarLink>
+    <SidebarLink to="/lyricsinput" :icon="IconLyricsInput" :hover="hover">Lyrics Input</SidebarLink>
+    <SidebarLink to="/" :icon="IconMusic" :hover="hover" style="cursor: not-allowed"
+      >Lyrics Preview (soon)</SidebarLink
+    >
+    <SidebarLink to="/" :icon="IconAbout" :hover="hover">About</SidebarLink>
     <button @click="toggleTheme">L/D</button>
+
     <div class="bottom">
-      <SidebarLink to="/" :icon="IconSupport" :hover="hover">Settings</SidebarLink>
+      <SidebarLink to="/" :icon="IconSettings" :hover="hover">Settings</SidebarLink>
     </div>
   </div>
   <div class="view-dimmer" :class="{ hovered: hover }"></div>
@@ -13,8 +16,10 @@
 
 <script setup lang="ts">
 import SidebarLink from "./SidebarLink.vue"
-import IconCommunity from "../icons/IconCommunity.vue"
-import IconSupport from "../icons/IconSupport.vue"
+import IconLyricsInput from "../icons/IconLyricsInput.vue"
+import IconMusic from "../icons/IconMusic.vue"
+import IconAbout from "../icons/IconAbout.vue"
+import IconSettings from "../icons/IconSettings.vue"
 import { ref, onMounted } from "vue"
 
 const hover = ref(false)
@@ -25,16 +30,6 @@ const setTheme = (theme: string) => {
   document.documentElement.setAttribute("data-theme", theme)
   localStorage.setItem("theme", theme)
 }
-
-/* const savedTheme = localStorage.getItem("theme")
-
-if (savedTheme) {
-  setTheme(savedTheme)
-} else if (userPrefersDark) {
-  setTheme("dark")
-} else {
-  setTheme("light")
-} */
 
 const toggleTheme = () => {
   const currentTheme = localStorage.getItem("theme") || (userPrefersDark ? "dark" : "light")
@@ -56,23 +51,23 @@ onMounted(() => {
 
 <style scoped>
 .sidebar {
+  display: flex;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  flex-direction: column;
+  float: left;
+  z-index: 1000;
+  transition: all 0.5s var(--elastic);
   border-radius: 0 var(--border-small) var(--border-small) 0;
   background-color: var(--secondary-300);
-  width: 40px;
-  transition: all 0.5s var(--elastic);
-  float: left;
-  position: fixed;
-  z-index: 1000;
-  top: 0;
-  left: 0;
-  bottom: 0;
   padding: 0.5em;
-  display: flex;
-  flex-direction: column;
+  width: 40px;
 }
 .sidebar:hover {
-  width: 300px;
   filter: drop-shadow(5px 0 10px rgba(0, 0, 0, 0.5));
+  width: 300px;
 }
 
 .sidebar .bottom {
@@ -82,18 +77,19 @@ onMounted(() => {
   width: inherit;
 }
 .view-dimmer {
-  pointer-events: none;
-  background-color: rgba(0, 0, 0, 0);
   position: fixed;
   top: 0;
-  left: 0;
   right: 0;
   bottom: 0;
+  left: 0;
   z-index: 999;
   transition: all 0.5s var(--elastic);
+  background-color: rgba(0, 0, 0, 0);
+  pointer-events: none;
 }
 
 .view-dimmer.hovered {
+  backdrop-filter: blur(1px);
   background-color: rgba(0, 0, 0, 0.3);
 }
 </style>
