@@ -15,16 +15,20 @@ function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
   let syllables = 0
   let previousLyricEndsWithHyphen = false
   let sectionsSpaceCount = 0
+  const maxSectionSeparators = parseInt(localStorage.getItem("maxSectionSeparators") ?? "3")
 
   for (const eventList of Object.values(events)) {
     eventList.forEach((event) => {
       //FIXME: Bug with 'Berried Alive - Crusty'
-      // TODO: Add user option to change the max number of sections
-      if (lyrics.length > 0 && sectionsSpaceCount < 3 && event.name.startsWith("section")) {
+      if (
+        lyrics.length > 0 &&
+        sectionsSpaceCount < maxSectionSeparators &&
+        event.name.startsWith("section")
+      ) {
         lyrics.push("")
         sectionsSpaceCount++
       }
-      // TODO: What happens if there are two phrase_start events in a row? A: error in console
+      // WARN: What happens if there are two phrase_start events in a row? A: error in console
       if (event.name === "phrase_start" && currentPhrase.length > 0) {
         // Save the phrase and reset for the next one
         lyrics.push(currentPhrase.join(" ").trim())

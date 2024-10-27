@@ -2,125 +2,137 @@
 Also fuck PrimeVue's documentation */
 
 :root {
-    --toggle-width: 3rem;
-    --toggle-height: 1.5rem;
-    --toggle-border-radius: 30px;
-    --toggle-handle-size: 1.25rem;
-    --toggle-gap: 0.25rem;
-    --toggle-border-width: 0px;
-    --toggle-shadow: 0 0 0 0px var(--background-400);
-    --toggle-background: var(--background-300);
-    --toggle-border-color: var(--background-400);
-    --toggle-checked-background: var(--background-500);
-    --toggle-checked-border-color: var(--background-600);
-    --toggle-handle-background: var(--background-100);
-    --toggle-handle-color: var(--text-100);
-    --toggle-hover-background: var(--background-200);
-    --toggle-hover-border-color: var(--background-300);
-    --toggle-checked-hover-background: var(--background-600);
-    --toggle-checked-hover-border-color: var(--background-700);
-    --toggle-focus-shadow: var(--background-500);
-    --toggle-invalid-border-color: var(--error-500);
-    --toggle-disabled-background: var(--background-300);
-    --toggle-transition: 0.3s var(--elastic);
-    --toggle-slide-duration: 0.3s var(--elastic);
+  --toggle-width: 3rem;
+  --toggle-height: 1.5rem;
+  --toggle-border-radius: 30px;
+  --toggle-handle-size: 1.25rem;
+  --toggle-gap: 0.25rem;
+  --toggle-border-width: 0px;
+  --toggle-shadow: 0 0 0 0px var(--background-400);
+  --toggle-background: var(--background-300);
+  --toggle-border-color: var(--background-400);
+  --toggle-checked-background: var(--background-500);
+  --toggle-checked-border-color: var(--background-600);
+  --toggle-handle-background: var(--background-100);
+  --toggle-handle-color: var(--text-100);
+  --toggle-hover-background: var(--background-200);
+  --toggle-hover-border-color: var(--background-300);
+  --toggle-checked-hover-background: var(--background-600);
+  --toggle-checked-hover-border-color: var(--background-700);
+  --toggle-focus-shadow: var(--background-500);
+  --toggle-invalid-border-color: var(--error-500);
+  --toggle-disabled-background: var(--background-300);
+  --toggle-transition: 0.3s var(--elastic);
+  --toggle-slide-duration: 0.3s var(--elastic);
 }
 
 .p-toggleswitch {
-    display: inline-block;
-    width: var(--toggle-width);
-    height: var(--toggle-height);
+  display: inline-block;
+  vertical-align: middle;
+  width: var(--toggle-width);
+  height: var(--toggle-height);
 }
 
 .p-toggleswitch-input {
-    cursor: pointer;
-    appearance: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-    opacity: 0;
-    z-index: 1;
-    outline: none;
-    border-radius: var(--toggle-border-radius);
+  position: absolute;
+  top: 0;
+  left: 0;
+  appearance: none;
+  opacity: 0;
+  z-index: 1;
+  cursor: pointer;
+  margin: 0;
+  outline: none;
+  border-radius: var(--toggle-border-radius);
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .p-toggleswitch-slider {
-    display: inline-block;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-    border-width: var(--toggle-border-width);
-    border-style: solid;
-    border-color: var(--toggle-border-color);
-    background: var(--toggle-background);
-    transition: background var(--toggle-transition), color var(--toggle-transition), border-color var(--toggle-transition), outline-color var(--toggle-transition), box-shadow var(--toggle-transition);
-    border-radius: var(--toggle-border-radius);
-    box-shadow: var(--toggle-shadow);
+  display: inline-block;
+  transition:
+    background var(--toggle-transition),
+    color var(--toggle-transition),
+    border-color var(--toggle-transition),
+    outline-color var(--toggle-transition),
+    box-shadow var(--toggle-transition);
+  cursor: pointer;
+  box-shadow: var(--toggle-shadow);
+  border-width: var(--toggle-border-width);
+  border-style: solid;
+  border-color: var(--toggle-border-color);
+  border-radius: var(--toggle-border-radius);
+  background: var(--toggle-background);
+  width: 100%;
+  height: 100%;
 }
 
 .p-toggleswitch-handle {
-    position: absolute;
-    top: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--toggle-handle-background);
-    color: var(--toggle-handle-color);
-    width: var(--toggle-handle-size);
-    height: var(--toggle-handle-size);
-    left: var(--toggle-gap);
-    margin-top: calc(var(--toggle-handle-size) / -2);
-    border-radius: 50%;
-    transition: background var(--toggle-transition), color var(--toggle-transition), left var(--toggle-slide-duration), box-shadow var(--toggle-slide-duration);
+  display: flex;
+  position: absolute;
+  top: 50%;
+  left: var(--toggle-gap);
+  justify-content: center;
+  align-items: center;
+  transition:
+    background var(--toggle-transition),
+    color var(--toggle-transition),
+    left var(--toggle-slide-duration),
+    box-shadow var(--toggle-slide-duration);
+  margin-top: calc(var(--toggle-handle-size) / -2);
+  border-radius: 50%;
+  background: var(--toggle-handle-background);
+  width: var(--toggle-handle-size);
+  height: var(--toggle-handle-size);
+  color: var(--toggle-handle-color);
 }
 
 .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
-    background: var(--toggle-checked-background);
-    border-color: var(--toggle-checked-border-color);
+  border-color: var(--toggle-checked-border-color);
+  background: var(--toggle-checked-background);
 }
 
 .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle {
-    left: calc(var(--toggle-width) - calc(var(--toggle-handle-size) + var(--toggle-gap)));
+  left: calc(var(--toggle-width) - calc(var(--toggle-handle-size) + var(--toggle-gap)));
 }
 
 .p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:hover) .p-toggleswitch-slider {
-    background: var(--toggle-hover-background);
-    border-color: var(--toggle-hover-border-color);
+  border-color: var(--toggle-hover-border-color);
+  background: var(--toggle-hover-background);
 }
 
 .p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:hover) .p-toggleswitch-handle {
-    background: var(--toggle-handle-background);
-    color: var(--toggle-handle-color);
+  background: var(--toggle-handle-background);
+  color: var(--toggle-handle-color);
 }
 
-.p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:hover).p-toggleswitch-checked .p-toggleswitch-slider {
-    background: var(--toggle-checked-hover-background);
-    border-color: var(--toggle-checked-hover-border-color);
+.p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:hover).p-toggleswitch-checked
+  .p-toggleswitch-slider {
+  border-color: var(--toggle-checked-hover-border-color);
+  background: var(--toggle-checked-hover-background);
 }
 
-.p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:hover).p-toggleswitch-checked .p-toggleswitch-handle {
-    background: var(--toggle-handle-background);
-    color: var(--toggle-handle-color);
+.p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:hover).p-toggleswitch-checked
+  .p-toggleswitch-handle {
+  background: var(--toggle-handle-background);
+  color: var(--toggle-handle-color);
 }
 
 .p-toggleswitch:not(.p-disabled):has(.p-toggleswitch-input:focus-visible) .p-toggleswitch-slider {
-    box-shadow: var(--toggle-shadow);
-    outline: 2px solid var(--toggle-focus-shadow);
-    outline-offset: 2px;
+  outline: 2px solid var(--toggle-focus-shadow);
+  outline-offset: 2px;
+  box-shadow: var(--toggle-shadow);
 }
 
 .p-toggleswitch.p-invalid > .p-toggleswitch-slider {
-    border-color: var(--toggle-invalid-border-color);
+  border-color: var(--toggle-invalid-border-color);
 }
 
 .p-toggleswitch.p-disabled .p-toggleswitch-slider {
-    background: var(--toggle-disabled-background);
+  background: var(--toggle-disabled-background);
 }
 
 .p-toggleswitch.p-disabled .p-toggleswitch-handle {
-    background: var(--toggle-handle-background);
+  background: var(--toggle-handle-background);
 }

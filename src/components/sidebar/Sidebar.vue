@@ -5,10 +5,9 @@
       >Lyrics Preview (soon)</SidebarLink
     >
     <SidebarLink to="/" :icon="IconAbout" :hover="hover">About</SidebarLink>
-    <button @click="toggleTheme">L/D</button>
 
     <div class="bottom">
-      <SidebarLink to="/" :icon="IconSettings" :hover="hover">Settings</SidebarLink>
+      <SidebarLink to="/settings" :icon="IconSettings" :hover="hover">Settings</SidebarLink>
     </div>
   </div>
   <div class="view-dimmer" :class="{ hovered: hover }"></div>
@@ -20,33 +19,10 @@ import IconLyricsInput from "../icons/IconLyricsInput.vue"
 import IconMusic from "../icons/IconMusic.vue"
 import IconAbout from "../icons/IconAbout.vue"
 import IconSettings from "../icons/IconSettings.vue"
-import { ref, onMounted } from "vue"
+import { ref } from "vue"
 
+// TODO: Make this bool false when clicking on a SidebarLink so the sidebar closes
 const hover = ref(false)
-
-const userPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-
-const setTheme = (theme: string) => {
-  document.documentElement.setAttribute("data-theme", theme)
-  localStorage.setItem("theme", theme)
-}
-
-const toggleTheme = () => {
-  const currentTheme = localStorage.getItem("theme") || (userPrefersDark ? "dark" : "light")
-  const newTheme = currentTheme === "dark" ? "light" : "dark"
-  setTheme(newTheme)
-}
-
-onMounted(() => {
-  const savedTheme = localStorage.getItem("theme")
-  if (savedTheme) {
-    setTheme(savedTheme)
-  } else if (userPrefersDark) {
-    setTheme("dark")
-  } else {
-    setTheme("light")
-  }
-})
 </script>
 
 <style scoped>
@@ -67,7 +43,7 @@ onMounted(() => {
 }
 .sidebar:hover {
   filter: drop-shadow(5px 0 10px rgba(0, 0, 0, 0.5));
-  width: 300px;
+  width: 240px;
 }
 
 .sidebar .bottom {

@@ -1,28 +1,34 @@
-/* Ripped off CSS from the PrimeVue repo. Too lazy to delete the comments.
-Also fuck PrimeVue's documentation */
+:root {
+  --tooltip-max-width: 12.5rem;
+  --tooltip-gutter: 0.4rem;
+  --tooltip-background: var(--background-200);
+  --tooltip-color: var(--text-800);
+  --tooltip-padding: 0.5rem 0.75rem;
+  --tooltip-border-radius: var(--border-small);
+}
 
 .p-tooltip {
   display: none;
   position: absolute;
-  max-width: 12.5rem; /* Reemplazado con el valor de max-width definido en tu archivo */
+  max-width: var(--tooltip-max-width);
 }
 
 .p-tooltip-right,
 .p-tooltip-left {
-  padding: 0 0.5rem; /* Reemplazado con el valor de gutter definido en tu archivo */
+  padding: 0 var(--tooltip-gutter);
 }
 
 .p-tooltip-top,
 .p-tooltip-bottom {
-  padding: 0.5rem 0; /* Reemplazado con el valor de gutter definido en tu archivo */
+  padding: var(--tooltip-gutter) 0;
 }
 
 .p-tooltip-text {
-  box-shadow: 0 0 0 1px var(--accent-100); /* Reemplazado con el valor de shadow definido en tu archivo */
-  border-radius: var(--border-small); /* Reemplazado con la variable de border-radius */
-  background: var(--background-300); /* Reemplazado con la variable de background */
-  padding: 0.5rem; /* Reemplazado con el valor de padding definido en tu archivo */
-  color: var(--text-800); /* Reemplazado con la variable de color */
+  box-shadow: 0;
+  border-radius: var(--tooltip-border-radius);
+  background: var(--tooltip-background);
+  padding: var(--tooltip-padding);
+  color: var(--tooltip-color);
   white-space: pre-line;
   word-break: break-word;
 }
@@ -36,27 +42,27 @@ Also fuck PrimeVue's documentation */
 }
 
 .p-tooltip-right .p-tooltip-arrow {
-  margin-top: calc(-1 * 0.5rem); /* Reemplazado con el valor de gutter definido en tu archivo */
-  border-width: 0.5rem 0.5rem 0.5rem 0; /* Reemplazado con el valor de gutter definido en tu archivo */
-  border-right-color: var(--background-300); /* Reemplazado con la variable de background */
+  margin-top: calc(-1 * var(--tooltip-gutter));
+  border-width: var(--tooltip-gutter) var(--tooltip-gutter) var(--tooltip-gutter) 0;
+  border-right-color: var(--tooltip-background);
 }
 
 .p-tooltip-left .p-tooltip-arrow {
-  margin-top: calc(-1 * 0.5rem); /* Reemplazado con el valor de gutter definido en tu archivo */
-  border-width: 0.5rem 0 0.5rem 0.5rem; /* Reemplazado con el valor de gutter definido en tu archivo */
-  border-left-color: var(--background-300); /* Reemplazado con la variable de background */
+  margin-top: calc(-1 * var(--tooltip-gutter));
+  border-width: var(--tooltip-gutter) 0 var(--tooltip-gutter) var(--tooltip-gutter);
+  border-left-color: var(--tooltip-background);
 }
 
 .p-tooltip-top .p-tooltip-arrow {
-  margin-left: calc(-1 * 0.5rem); /* Reemplazado con el valor de gutter definido en tu archivo */
-  border-width: 0.5rem 0.5rem 0 0.5rem; /* Reemplazado con el valor de gutter definido en tu archivo */
-  border-top-color: var(--background-300); /* Reemplazado con la variable de background */
-  border-bottom-color: var(--background-300); /* Reemplazado con la variable de background */
+  margin-left: calc(-1 * var(--tooltip-gutter));
+  border-width: var(--tooltip-gutter) var(--tooltip-gutter) 0 var(--tooltip-gutter);
+  border-top-color: var(--tooltip-background);
+  border-bottom-color: var(--tooltip-background);
 }
 
 .p-tooltip-bottom .p-tooltip-arrow {
-  margin-left: calc(-1 * 0.5rem); /* Reemplazado con el valor de gutter definido en tu archivo */
-  border-width: 0 0.5rem 0.5rem 0.5rem; /* Reemplazado con el valor de gutter definido en tu archivo */
-  border-top-color: var(--background-300); /* Reemplazado con la variable de background */
-  border-bottom-color: var(--background-300); /* Reemplazado con la variable de background */
+  margin-left: calc(-1 * var(--tooltip-gutter));
+  border-width: 0 var(--tooltip-gutter) var(--tooltip-gutter) var(--tooltip-gutter);
+  border-top-color: var(--tooltip-background);
+  border-bottom-color: var(--tooltip-background);
 }

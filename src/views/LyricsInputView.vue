@@ -54,7 +54,6 @@
   <button @click="saveFile" :disabled="highlightedIndices.length > 0">
     <IconSave />Save chart
   </button>
-  <ToggleSwitch v-model="test" />
 </template>
 
 <script setup lang="ts">
@@ -64,12 +63,17 @@ import IconSave from "@/components/icons/IconSave.vue"
 import type { Chart } from "@/utils/herochartio"
 import { parseChart, type ParsedChart } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
+import { loadLyricsSettings } from "@/utils/theme"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { wrongPhrases } from "@/utils/wrongPhrases"
 import { open } from "@tauri-apps/plugin-dialog"
-import { ref, watch } from "vue"
+import {
+  watch as watchFile,
+  type WatchEvent,
+  type WatchEventKindModify,
+} from "@tauri-apps/plugin-fs"
+import { ref, watch, onMounted, onActivated, onDeactivated } from "vue"
 
-const test = ref(false)
 const lyricsText = ref("")
 const syllablesCount = ref("")
 const lineNumbers = ref("1")
@@ -80,6 +84,8 @@ const syllablesTextarea = ref<HTMLTextAreaElement | null>(null)
 const lineNumbersTextarea = ref<HTMLTextAreaElement | null>(null)
 const lyricsTextarea = ref<HTMLTextAreaElement | null>(null)
 const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
+
+let isRereadOnChange = ref<boolean>(false)
 
 const syncScroll = (event: any) => {
   const scrollTop = event.target.scrollTop
@@ -99,19 +105,41 @@ const isHighlighted = (index: number) => {
 }
 
 let chart: { parsed: ParsedChart; original: Chart }
-let path: string | null = ""
+let path = ""
+let fileWatcher: (() => void) | undefined
 
 // Function to load a chart file
 async function loadFile() {
-  path = await open({
+  const selectedPath = await open({
     multiple: false,
     directory: false,
     filters: [{ name: "Chart files (.chart)", extensions: ["chart"] }],
   })
-  if (!path) return
+  if (!selectedPath) return
+  path = selectedPath
 
   chart = await parseChart(path)
   lyricsText.value = chart.parsed.chartLyrics
+
+  createFileWatcher()
+}
+
+async function createFileWatcher() {
+  if (isRereadOnChange.value) {
+    if (fileWatcher) fileWatcher() // To remove any previous fileWatcher
+    fileWatcher = await watchFile(path, handleFileChange, {
+      delayMs: 300,
+    })
+  }
+}
+
+async function handleFileChange(event: WatchEvent) {
+  if (typeof event.type === "object" && "modify" in event.type) {
+    console.log("File modified")
+    chart = await parseChart(path)
+
+    watchLyricsTextRef()
+  }
 }
 
 async function saveFile() {
@@ -120,9 +148,7 @@ async function saveFile() {
   await parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
 }
 
-watch(lyricsText, () => {
-  // TODO: Add user option to re-read the chart automatically each time there's an update in the lyricsText
-
+async function watchLyricsTextRef() {
   syllablesCount.value = updateSyllableCount(chart.parsed, lyricsText.value.split("\n"))
   lineNumbers.value = updateLineNumbers(lyricsText.value.split("\n"))
   highlightedIndices.value = wrongPhrases(
@@ -130,10 +156,34 @@ watch(lyricsText, () => {
     lyricsText.value.split("\n")
   )
   updateHighlightedLines()
+}
+
+watch(lyricsText, watchLyricsTextRef)
+
+onMounted(() => {
+  isRereadOnChange.value = loadLyricsSettings()
+})
+
+onActivated(async () => {
+  isRereadOnChange.value = loadLyricsSettings()
+  if (isRereadOnChange.value) {
+    chart = await parseChart(path)
+    watchLyricsTextRef()
+  }
+  createFileWatcher()
+})
+
+onDeactivated(() => {
+  if (fileWatcher) fileWatcher() // Disables the fileWatcher
 })
 </script>
 
 <style scoped>
+:root {
+  --lyrics-container-font-size: 0.9rem;
+  --lyrics-container-line-height: 1.5;
+}
+
 .container {
   display: flex;
   position: relative;
@@ -142,8 +192,8 @@ watch(lyricsText, () => {
 
 /* TODO: These three can be user options */
 .container * {
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: var(--lyrics-container-font-size);
+  line-height: var(--lyrics-container-line-height);
   font-family: monospace;
 }
 
