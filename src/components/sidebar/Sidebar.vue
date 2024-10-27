@@ -1,5 +1,11 @@
 <template>
-  <div class="sidebar" @mouseover="hover = true" @mouseleave="hover = false">
+  <div
+    class="sidebar"
+    @mouseover="handleMouseOver"
+    @mouseleave="hover = false"
+    :class="{ hovered: hover }"
+    @click="handleClick"
+  >
     <SidebarLink to="/lyricsinput" :icon="IconLyricsInput" :hover="hover">Lyrics Input</SidebarLink>
     <SidebarLink to="/" :icon="IconMusic" :hover="hover" style="cursor: not-allowed"
       >Lyrics Preview (soon)</SidebarLink
@@ -19,10 +25,36 @@ import IconLyricsInput from "../icons/IconLyricsInput.vue"
 import IconMusic from "../icons/IconMusic.vue"
 import IconAbout from "../icons/IconAbout.vue"
 import IconSettings from "../icons/IconSettings.vue"
-import { ref } from "vue"
+import { onMounted, ref } from "vue"
 
-// TODO: Make this bool false when clicking on a SidebarLink so the sidebar closes
 const hover = ref(false)
+const sidebar = ref<HTMLElement | null>(null)
+let isClicked = false
+
+const handleMouseOver = () => {
+  if (!hover.value && !isClicked) {
+    hover.value = true
+  }
+}
+
+const handleMouseMove = (event: MouseEvent) => {
+  if (sidebar.value && !sidebar.value.contains(event.target as Node) && !isClicked) {
+    hover.value = false
+  }
+}
+
+const handleClick = () => {
+  hover.value = false
+  isClicked = true
+
+  setTimeout(() => {
+    isClicked = false
+  }, 1000)
+}
+
+onMounted(() => {
+  document.addEventListener("mousemove", handleMouseMove)
+})
 </script>
 
 <style scoped>
@@ -41,7 +73,7 @@ const hover = ref(false)
   padding: 0.5em;
   width: 40px;
 }
-.sidebar:hover {
+.sidebar.hovered {
   filter: drop-shadow(5px 0 10px rgba(0, 0, 0, 0.5));
   width: 240px;
 }

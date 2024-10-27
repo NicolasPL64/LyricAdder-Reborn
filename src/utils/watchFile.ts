@@ -25,6 +25,5 @@ export async function createFileWatcher(
 }
 
 export function removeFileWatcher() {
-  console.log(fileWatcher)
   if (fileWatcher) fileWatcher() // Removes the fileWatcher
 }

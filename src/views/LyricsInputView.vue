@@ -82,7 +82,7 @@ const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
 
 let isRereadOnChange = false
 
-const syncScroll = (event: any) => {
+function syncScroll(event: any) {
   const scrollTop = event.target.scrollTop
   syllablesTextarea.value?.scrollTo({ top: scrollTop })
   lineNumbersTextarea.value?.scrollTo({ top: scrollTop })
@@ -90,12 +90,12 @@ const syncScroll = (event: any) => {
   highlightedLinesContainer.value?.scrollTo({ top: scrollTop })
 }
 
-const updateHighlightedLines = () => {
+function updateHighlightedLines() {
   highlightedLines.value = lyricsText.value.split("\n").map((line) => (line === "" ? " " : line))
   highlightedLines.value.push(" ")
 }
 
-const isHighlighted = (index: number) => {
+function isHighlighted(index: number) {
   return highlightedIndices.value.includes(index)
 }
 
@@ -177,7 +177,7 @@ onDeactivated(() => {
   height: 60vh;
 }
 
-/* TODO: These three can be user options */
+/* TODO: The fony family could be a user option */
 .container * {
   font-size: var(--lyrics-container-font-size);
   line-height: var(--lyrics-container-line-height);

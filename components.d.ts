@@ -8,17 +8,11 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     IconAbout: typeof import('./src/components/icons/IconAbout.vue')['default']
-    IconCommunity: typeof import('./src/components/icons/IconCommunity.vue')['default']
-    IconDocumentation: typeof import('./src/components/icons/IconDocumentation.vue')['default']
-    IconEcosystem: typeof import('./src/components/icons/IconEcosystem.vue')['default']
     IconLoad: typeof import('./src/components/icons/IconLoad.vue')['default']
     IconLyricsInput: typeof import('./src/components/icons/IconLyricsInput.vue')['default']
-    IconLyricsInputView: typeof import('./src/components/icons/IconLyricsInputView.vue')['default']
     IconMusic: typeof import('./src/components/icons/IconMusic.vue')['default']
     IconSave: typeof import('./src/components/icons/IconSave.vue')['default']
     IconSettings: typeof import('./src/components/icons/IconSettings.vue')['default']
-    IconSupport: typeof import('./src/components/icons/IconSupport.vue')['default']
-    IconTooling: typeof import('./src/components/icons/IconTooling.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sidebar: typeof import('./src/components/sidebar/Sidebar.vue')['default']
