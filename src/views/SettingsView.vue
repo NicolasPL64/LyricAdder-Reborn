@@ -22,7 +22,7 @@
       class="info-icon"
       v-tooltip="{
         value:
-          'If enabled, each time the loaded chart is updated, the file will be automatically re-read.\nIf disabled, the file will only be read once when the chart is loaded.',
+          'If enabled, each time the loaded chart is updated, the file will be automatically re-read.\n\nIf disabled, the file will be only re-read when there is a change to the lyrics box. (This is the original LyricAdder behavior)',
         showDelay: 0,
       }"
     />
@@ -34,7 +34,7 @@
       class="info-icon"
       v-tooltip="{
         value:
-          'Indicates the maximum amount of concurrent line breaks that will be added to indicate a new section when loading a chart.\nSet this to 0 to disable it.',
+          'Indicates the maximum amount of concurrent line breaks that will be added to indicate a new section when loading a chart.\n\nSet this to 0 to disable it.',
         showDelay: 0,
       }"
     />
@@ -69,7 +69,7 @@ onMounted(() => {
   isDarkMode.value = localStorage.getItem("theme") === "dark"
   lyricsFontSize.value = parseFloat(localStorage.getItem("lyricsFontSize") || "1")
   lyricsLineHeight.value = parseFloat(localStorage.getItem("lyricsLineHeight") || "1.5")
-  isRereadOnChange.value = localStorage.getItem("isRereadOnChange") === "true"
+  isRereadOnChange.value = localStorage.getItem("isRereadOnChange") === "false"
   maxSectionSeparators.value = parseInt(localStorage.getItem("maxSectionSeparators") || "3")
   isGayMode.value = localStorage.getItem("isGayMode") === "true"
 })

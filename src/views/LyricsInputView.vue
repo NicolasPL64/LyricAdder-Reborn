@@ -60,18 +60,13 @@
 import IconLoad from "@/components/icons/IconLoad.vue"
 import IconSave from "@/components/icons/IconSave.vue"
 
-import type { Chart } from "@/utils/herochartio"
-import { parseChart, type ParsedChart } from "@/utils/parseChart"
+import { parseChart, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings } from "@/utils/theme"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
+import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
 import { open } from "@tauri-apps/plugin-dialog"
-import {
-  watch as watchFile,
-  type WatchEvent,
-  type WatchEventKindModify,
-} from "@tauri-apps/plugin-fs"
 import { ref, watch, onMounted, onActivated, onDeactivated } from "vue"
 
 const lyricsText = ref("")
@@ -85,7 +80,7 @@ const lineNumbersTextarea = ref<HTMLTextAreaElement | null>(null)
 const lyricsTextarea = ref<HTMLTextAreaElement | null>(null)
 const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
 
-let isRereadOnChange = ref<boolean>(false)
+let isRereadOnChange = false
 
 const syncScroll = (event: any) => {
   const scrollTop = event.target.scrollTop
@@ -104,11 +99,9 @@ const isHighlighted = (index: number) => {
   return highlightedIndices.value.includes(index)
 }
 
-let chart: { parsed: ParsedChart; original: Chart }
+let chart: ParsedChartWithOriginal
 let path = ""
-let fileWatcher: (() => void) | undefined
 
-// Function to load a chart file
 async function loadFile() {
   const selectedPath = await open({
     multiple: false,
@@ -121,25 +114,7 @@ async function loadFile() {
   chart = await parseChart(path)
   lyricsText.value = chart.parsed.chartLyrics
 
-  createFileWatcher()
-}
-
-async function createFileWatcher() {
-  if (isRereadOnChange.value) {
-    if (fileWatcher) fileWatcher() // To remove any previous fileWatcher
-    fileWatcher = await watchFile(path, handleFileChange, {
-      delayMs: 300,
-    })
-  }
-}
-
-async function handleFileChange(event: WatchEvent) {
-  if (typeof event.type === "object" && "modify" in event.type) {
-    console.log("File modified")
-    chart = await parseChart(path)
-
-    watchLyricsTextRef()
-  }
+  setupFileWatcher()
 }
 
 async function saveFile() {
@@ -148,7 +123,16 @@ async function saveFile() {
   await parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
 }
 
+function setupFileWatcher() {
+  createFileWatcher(path, isRereadOnChange, (updatedChart) => {
+    chart = updatedChart
+    watchLyricsTextRef()
+  })
+}
+
 async function watchLyricsTextRef() {
+  if (!isRereadOnChange) chart = await parseChart(path) // Original LyricAdder behavior
+
   syllablesCount.value = updateSyllableCount(chart.parsed, lyricsText.value.split("\n"))
   lineNumbers.value = updateLineNumbers(lyricsText.value.split("\n"))
   highlightedIndices.value = wrongPhrases(
@@ -158,23 +142,26 @@ async function watchLyricsTextRef() {
   updateHighlightedLines()
 }
 
+// HOOKS:
 watch(lyricsText, watchLyricsTextRef)
 
 onMounted(() => {
-  isRereadOnChange.value = loadLyricsSettings()
+  isRereadOnChange = loadLyricsSettings()
 })
 
 onActivated(async () => {
-  isRereadOnChange.value = loadLyricsSettings()
-  if (isRereadOnChange.value) {
-    chart = await parseChart(path)
-    watchLyricsTextRef()
+  isRereadOnChange = loadLyricsSettings()
+  if (path) {
+    if (isRereadOnChange) {
+      chart = await parseChart(path)
+      watchLyricsTextRef()
+    }
+    setupFileWatcher()
   }
-  createFileWatcher()
 })
 
 onDeactivated(() => {
-  if (fileWatcher) fileWatcher() // Disables the fileWatcher
+  removeFileWatcher()
 })
 </script>
 

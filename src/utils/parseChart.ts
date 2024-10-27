@@ -1,7 +1,8 @@
 import { isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
-import { ChartIO, type ChartEvent } from "./herochartio"
+import { Chart, ChartIO, type ChartEvent } from "./herochartio"
 
 export type ParsedChart = { chartSyllablesCount: number[]; chartLyrics: string }
+export type ParsedChartWithOriginal = { parsed: ParsedChart; original: Chart }
 
 export async function parseChart(path: string): Promise<{ parsed: ParsedChart; original: any }> {
   const chart = await ChartIO.load(path)
