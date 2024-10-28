@@ -1,7 +1,9 @@
 <template>
   <h1 style="margin-top: 0">Settings</h1>
   <h2>Theme</h2>
-  <p>Dark mode <ToggleSwitch v-model="isDarkMode" /></p>
+  <p style="display: flex; align-items: center">
+    Select your theme: <ThemeDropdownMenu style="margin-left: 0.25em" />
+  </p>
 
   <hr />
   <h2>Lyrics View</h2>
@@ -29,7 +31,7 @@
     <ToggleSwitch v-model="isRereadOnChange" />
   </p>
   <p>
-    Max amount of section-separators:
+    Max amount of section separators:
     <IconInfo
       class="info-icon"
       v-tooltip="{
@@ -51,31 +53,45 @@
     />
     <ToggleSwitch v-model="isGayMode" />
   </p>
+
+  <hr />
+  <button @click="resetDefaultSettings">Reset to default</button>
 </template>
 
 <script setup lang="ts">
 import IconInfo from "@/components/icons/IconAbout.vue"
-import { setTheme } from "@/utils/theme"
+import ThemeDropdownMenu from "@/components/ThemeDropdownMenu.vue"
+import { defaultSettings } from "@/utils/settings"
 import { onMounted, ref, watch } from "vue"
 
-const isDarkMode = ref<boolean>(true)
-const lyricsFontSize = ref<number>()
-const lyricsLineHeight = ref<number>()
-const isRereadOnChange = ref<boolean>(true)
-const maxSectionSeparators = ref<number>()
-const isGayMode = ref<boolean>(false)
+const lyricsFontSize = ref<number>(defaultSettings.lyricsFontSize)
+const lyricsLineHeight = ref<number>(defaultSettings.lyricsLineHeight)
+const isRereadOnChange = ref<boolean>(defaultSettings.isRereadOnChange)
+const maxSectionSeparators = ref<number>(defaultSettings.maxSectionSeparators)
+const isGayMode = ref<boolean>(defaultSettings.isGayMode)
+
+function resetDefaultSettings() {
+  lyricsFontSize.value = defaultSettings.lyricsFontSize
+  lyricsLineHeight.value = defaultSettings.lyricsLineHeight
+  isRereadOnChange.value = defaultSettings.isRereadOnChange
+  maxSectionSeparators.value = defaultSettings.maxSectionSeparators
+  isGayMode.value = defaultSettings.isGayMode
+}
 
 onMounted(() => {
-  isDarkMode.value = localStorage.getItem("theme") === "dark"
-  lyricsFontSize.value = parseFloat(localStorage.getItem("lyricsFontSize") || "1")
-  lyricsLineHeight.value = parseFloat(localStorage.getItem("lyricsLineHeight") || "1.5")
-  isRereadOnChange.value = localStorage.getItem("isRereadOnChange") === "false"
-  maxSectionSeparators.value = parseInt(localStorage.getItem("maxSectionSeparators") || "3")
-  isGayMode.value = localStorage.getItem("isGayMode") === "true"
-})
+  lyricsFontSize.value = parseFloat(
+    localStorage.getItem("lyricsFontSize") || defaultSettings.lyricsFontSize.toString()
+  )
 
-watch(isDarkMode, (newVal) => {
-  setTheme(newVal ? "dark" : "light")
+  lyricsLineHeight.value = parseFloat(
+    localStorage.getItem("lyricsLineHeight") || defaultSettings.lyricsLineHeight.toString()
+  )
+  isRereadOnChange.value =
+    localStorage.getItem("isRereadOnChange") === (!defaultSettings.isRereadOnChange).toString()
+  maxSectionSeparators.value = parseInt(
+    localStorage.getItem("maxSectionSeparators") || defaultSettings.maxSectionSeparators.toString()
+  )
+  isGayMode.value = localStorage.getItem("isGayMode") === (!defaultSettings.isGayMode).toString()
 })
 
 watch(lyricsFontSize, (newVal) => {
@@ -102,6 +118,7 @@ watch(isGayMode, (newVal) => {
 <style scoped>
 .info-icon {
   vertical-align: middle;
+  margin-right: 0.25em;
   width: 1rem;
   height: 1rem;
 }
@@ -109,7 +126,16 @@ watch(isGayMode, (newVal) => {
 hr {
   margin: 1em 0;
   border: 0;
-  background: var(--accent-400);
+  background: var(--secondary-300);
   height: 1px;
+}
+
+input {
+  border: 1px solid var(--background-400);
+  border-radius: 0.25em;
+  background-color: var(--background-100);
+  padding: 0.25em;
+  width: 3rem;
+  color: var(--text-800);
 }
 </style>

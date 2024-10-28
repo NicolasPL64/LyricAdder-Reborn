@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     IconAbout: typeof import('./src/components/icons/IconAbout.vue')['default']
+    IconArrowDown: typeof import('./src/components/icons/IconArrowDown.vue')['default']
     IconLoad: typeof import('./src/components/icons/IconLoad.vue')['default']
     IconLyricsInput: typeof import('./src/components/icons/IconLyricsInput.vue')['default']
     IconMusic: typeof import('./src/components/icons/IconMusic.vue')['default']
@@ -17,6 +18,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Sidebar: typeof import('./src/components/sidebar/Sidebar.vue')['default']
     SidebarLink: typeof import('./src/components/sidebar/SidebarLink.vue')['default']
+    ThemeDropdownMenu: typeof import('./src/components/ThemeDropdownMenu.vue')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
   }
   export interface ComponentCustomProperties {

@@ -48,6 +48,7 @@
         spellcheck="false"
         @scroll="syncScroll"
         @input="updateHighlightedLines"
+        :placeholder="isGayMode ? 'Ca-co-rro' : ''"
       ></textarea>
     </div>
   </div>
@@ -62,7 +63,7 @@ import IconSave from "@/components/icons/IconSave.vue"
 
 import { parseChart, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
-import { loadLyricsSettings } from "@/utils/theme"
+import { loadLyricsSettings } from "@/utils/settings"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
@@ -80,7 +81,9 @@ const lineNumbersTextarea = ref<HTMLTextAreaElement | null>(null)
 const lyricsTextarea = ref<HTMLTextAreaElement | null>(null)
 const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
 
+// Settings
 let isRereadOnChange = false
+let isGayMode = ref<boolean>(false)
 
 function syncScroll(event: any) {
   const scrollTop = event.target.scrollTop
@@ -146,11 +149,11 @@ async function watchLyricsTextRef() {
 watch(lyricsText, watchLyricsTextRef)
 
 onMounted(() => {
-  isRereadOnChange = loadLyricsSettings()
+  ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
 })
 
 onActivated(async () => {
-  isRereadOnChange = loadLyricsSettings()
+  ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
   if (path) {
     if (isRereadOnChange) {
       chart = await parseChart(path)
@@ -169,6 +172,8 @@ onDeactivated(() => {
 :root {
   --lyrics-container-font-size: 0.9rem;
   --lyrics-container-line-height: 1.5;
+  --lyrics-font-family: monospace;
+  /* TODO: Yet to implement user option */
 }
 
 .container {
@@ -177,7 +182,6 @@ onDeactivated(() => {
   height: 60vh;
 }
 
-/* TODO: The fony family could be a user option */
 .container * {
   font-size: var(--lyrics-container-font-size);
   line-height: var(--lyrics-container-line-height);

@@ -13,10 +13,10 @@
 import { RouterView } from "vue-router"
 import Sidebar from "./components/sidebar/Sidebar.vue"
 import { onMounted } from "vue"
-import { setTheme, getSystemTheme } from "./utils/theme"
+import { setTheme, getSystemTheme, type ThemeId } from "./utils/settings"
 
 onMounted(async () => {
-  const savedTheme = localStorage.getItem("theme")
+  const savedTheme = localStorage.getItem("theme") as ThemeId
   if (savedTheme) {
     setTheme(savedTheme)
   } else {

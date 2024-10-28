@@ -1,4 +1,5 @@
 import "./assets/normalize.css"
+import "./assets/themes.css"
 import "./assets/variables.css"
 import "./assets/v-tooltip.css"
 import "./assets/toggle-switch.css"
