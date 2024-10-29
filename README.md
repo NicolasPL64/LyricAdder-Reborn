@@ -3,6 +3,8 @@
 ## Future plans
 + Add user-option to auto-convert every type of apostrophe into the same custom character
 + Add auto-hypenator (pnpm add hyphen)
++ Show current chart
++ Add lyrics preview
 
 ## Features
 ### When opening:
