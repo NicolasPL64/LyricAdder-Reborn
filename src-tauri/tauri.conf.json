@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "lyricadder-reborn",
-  "version": "0.1.0",
+  "productName": "LyricAdder Reborn",
+  "version": "../package.json",
   "identifier": "com.nicolaspl.lyricadder-reborn.app",
   "build": {
     "frontendDist": "../dist",
@@ -34,5 +34,12 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM4RkRFRDNCMEJDQ0MxODUKUldTRndjd0xPKzM5T0lWK243WHRWWmcyaU41cG1lN1U0QU1ibkZ2VEhlSElFQzJkdUlONE40NmgK"
+      
+    }
+
   }
 }
