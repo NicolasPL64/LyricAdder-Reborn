@@ -60,12 +60,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload release assets for Linux
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ./artifacts/tauri-build-ubuntu-latest/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Upload release assets for Linux
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          files: ./artifacts/tauri-build-ubuntu-latest/*
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload release assets for macOS
         uses: softprops/action-gh-release@v1
