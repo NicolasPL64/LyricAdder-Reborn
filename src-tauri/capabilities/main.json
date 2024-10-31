@@ -17,6 +17,7 @@
         "fs:allow-exists",
         "fs:allow-watch",
         "fs:allow-unwatch",
-        "core:path:allow-extname"
+        "core:path:allow-extname",
+        "updater:default"
     ]
 }
