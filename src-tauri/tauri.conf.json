@@ -26,6 +26,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -37,9 +38,10 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM4RkRFRDNCMEJDQ0MxODUKUldTRndjd0xPKzM5T0lWK243WHRWWmcyaU41cG1lN1U0QU1ibkZ2VEhlSElFQzJkdUlONE40NmgK"
-      
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM4RkRFRDNCMEJDQ0MxODUKUldTRndjd0xPKzM5T0lWK243WHRWWmcyaU41cG1lN1U0QU1ibkZ2VEhlSElFQzJkdUlONE40NmgK",
+      "endpoints": [
+        "https://github.com/NicolasPL64/LyricAdder-Reborn/releases/latest/download/latest.json"
+      ]
     }
-
   }
 }
