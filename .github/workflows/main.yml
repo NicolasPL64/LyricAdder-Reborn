@@ -2,8 +2,8 @@ name: Build and Release Tauri App
 
 on:
   push:
-    branches:
-      - workflow-tests
+    tags:
+      - 'v*'
 
 jobs:
   build:
