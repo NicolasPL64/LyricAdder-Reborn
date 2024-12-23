@@ -47,12 +47,14 @@ function mapChartSyllables(chart: ParsedChart, lines: string[]) {
 }
 
 function countSyllables(lines: string[]) {
-  return lines.map((line) =>
-    line.trim().length === 0
+  return lines.map((line) => {
+    // Eliminate content inside HTML tags
+    const cleanedLine = line.replace(/<[^>]*>/g, "")
+    return cleanedLine.trim().length === 0
       ? "0"
-      : line
+      : cleanedLine
           .split(/[ \-=]/) // Split by spaces, hyphens, and equal signs
           .filter(Boolean) // Remove empty strings
           .length.toString()
-  )
+  })
 }

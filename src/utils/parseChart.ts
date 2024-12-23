@@ -37,6 +37,7 @@ function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
         currentPhrase = []
         syllables = 0
         sectionsSpaceCount = 0
+        previousLyricEndsWithHyphen = false
       } else if (isLyricEvent(event)) {
         const lyricArray = event.name.split(" ")
         let lyricText = ""
