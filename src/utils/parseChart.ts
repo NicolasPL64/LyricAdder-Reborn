@@ -1,5 +1,6 @@
 import { isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
-import { Chart, ChartIO, type ChartEvent } from "./herochartio"
+import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
+import { defaultSettings } from "./settings"
 
 export type ParsedChart = { chartSyllablesCount: number[]; chartLyrics: string }
 export type ParsedChartWithOriginal = { parsed: ParsedChart; original: Chart }
@@ -9,18 +10,21 @@ export async function parseChart(path: string): Promise<{ parsed: ParsedChart; o
   return { parsed: extractLyrics(chart.Events), original: chart }
 }
 
-function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
+function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
   const lyrics: string[] = []
   const syllablesCount: number[] = []
   let currentPhrase: string[] = []
   let syllables = 0
   let previousLyricEndsWithHyphen = false
   let sectionsSpaceCount = 0
-  const maxSectionSeparators = parseInt(localStorage.getItem("maxSectionSeparators") ?? "3")
+  const maxSectionSeparators = parseInt(
+    localStorage.getItem("maxSectionSeparators") ?? defaultSettings.maxSectionSeparators.toString()
+  )
 
   for (const eventList of Object.values(events)) {
     eventList.forEach((event) => {
       //FIXME: Bug with 'Berried Alive - Crusty'
+      //FIXME: If there is a = symbol in the middle of an event, it will be always considered a syllable separator
       if (
         lyrics.length > 0 &&
         sectionsSpaceCount < maxSectionSeparators &&
@@ -28,12 +32,12 @@ function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
       ) {
         lyrics.push("")
         sectionsSpaceCount++
-      }
-      // WARN: What happens if there are two phrase_start events in a row? A: error in console
-      if (event.name === "phrase_start" && currentPhrase.length > 0) {
-        // Save the phrase and reset for the next one
+        // WARN: What happens if there are two phrase_start events in a row? A: error in console
+      } else if (event.name === "phrase_start" && currentPhrase.length > 0) {
+        // Save the phrase
         lyrics.push(currentPhrase.join(" ").trim())
         syllablesCount.push(syllables)
+        // Reset variables for the next phrase
         currentPhrase = []
         syllables = 0
         sectionsSpaceCount = 0
@@ -42,6 +46,7 @@ function extractLyrics(events: { [key: number]: ChartEvent[] }): ParsedChart {
         const lyricArray = event.name.split(" ")
         let lyricText = ""
 
+        // In case there is a space in the middle of the event
         if (lyricArray.length > 2) lyricText = lyricArray.slice(1).join("§")
         else lyricText = lyricArray[1] ?? ""
         syllables++
