@@ -1,66 +1,9 @@
-<template>
-  <h1 style="margin-top: 0">Lyrics Input</h1>
-
-  <button
-    @click="loadFile"
-    v-tooltip="{
-      value: 'Loads and reads a chart',
-      showDelay: 800,
-    }"
-  >
-    <IconLoad />Load chart
-  </button>
-  <p>Input the lyrics in the box below using the appropriate syntax:</p>
-  <div class="container">
-    <textarea
-      class="syllables"
-      ref="syllablesTextarea"
-      v-model="syllablesCount"
-      spellcheck="false"
-      disabled="true"
-      readonly
-      @scroll="syncScroll"
-    ></textarea>
-    <textarea
-      class="line-numbers"
-      ref="lineNumbersTextarea"
-      v-model="lineNumbers"
-      disabled="true"
-      readonly
-      @scroll="syncScroll"
-    ></textarea>
-
-    <div class="highlighted-lines" ref="highlightedLinesContainer" readonly>
-      <div
-        v-for="(line, index) in highlightedLines"
-        :key="index"
-        :class="{ highlight: isHighlighted(index) }"
-      >
-        {{ line }}
-      </div>
-    </div>
-    <div style="position: inherit; width: 100%">
-      <div class="lyricsBG"></div>
-      <textarea
-        class="lyrics"
-        ref="lyricsTextarea"
-        v-model="lyricsText"
-        spellcheck="false"
-        @scroll="syncScroll"
-        @input="updateHighlightedLines"
-        :placeholder="isGayMode ? 'Ca-co-rro' : ''"
-      ></textarea>
-    </div>
-  </div>
-  <button @click="saveFile" :disabled="highlightedIndices.length > 0">
-    <IconSave />Save chart
-  </button>
-</template>
-
 <script setup lang="ts">
 import IconLoad from "@/components/icons/IconLoad.vue"
 import IconSave from "@/components/icons/IconSave.vue"
 
+import Editor from "@tinymce/tinymce-vue"
+import { type EditorOptions } from "tinymce"
 import { parseChart, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings } from "@/utils/settings"
@@ -70,31 +13,92 @@ import { wrongPhrases } from "@/utils/wrongPhrases"
 import { open } from "@tauri-apps/plugin-dialog"
 import { ref, watch, onMounted, onActivated, onDeactivated } from "vue"
 
-const lyricsText = ref("")
-const syllablesCount = ref("")
-const lineNumbers = ref("1")
+const lyricsInput = ref("")
+const syllablesCount = ref("<p>0/2<br>0/0</p><p>0/2<br>0/0</p>")
+const lineNumbers = ref("<p>1</p>")
 const highlightedLines = ref<string[]>([]) // Array of lines to display in the highlighted lines container
 const highlightedIndices = ref<number[]>([]) // Indices of the lines that should be highlighted
 
-const syllablesTextarea = ref<HTMLTextAreaElement | null>(null)
-const lineNumbersTextarea = ref<HTMLTextAreaElement | null>(null)
-const lyricsTextarea = ref<HTMLTextAreaElement | null>(null)
+const syllablesDiv = ref<HTMLDivElement | null>(null)
+const lineNumbersDiv = ref<HTMLDivElement | null>(null)
+const lyricsEditor = ref<any>(null)
 const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
 
 // Settings
 let isRereadOnChange = false
 let isGayMode = ref<boolean>(false)
 
+const editorOptions: Partial<EditorOptions> = {
+  plugins: [
+    "code",
+    "fullscreen",
+    "help",
+    "insertdatetime",
+    "preview",
+    "searchreplace",
+    "visualblocks",
+  ],
+  toolbar:
+    "replaceSpaces undo redo | styles | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
+  height: 500,
+  newline_behavior: "invert",
+  remove_trailing_brs: true,
+  resize: false,
+  //menubar: false,
+  statusbar: false,
+  inline: true,
+  valid_elements: "p,br,span[*],b,i,b/strong,i/em",
+  //placeholder: isGayMode.value ? "Ca-co-rro" : "",
+  setup(editor) {
+    // Botón personalizado
+    editor.ui.registry.addButton("replaceSpaces", {
+      text: "§",
+      tooltip: "Reemplazar espacios",
+      onAction: () => {
+        const txt = editor.selection.getContent({ format: "text" })
+        editor.selection.setContent(txt.replace(/\s+/g, "§"))
+      },
+      shortcut: "meta+shift+M", // muestra el atajo en el tooltip
+    })
+
+    // Atajo personalizado
+    editor.addShortcut(
+      "meta+shift+M", // combinación: Cmd+Shift+S (Mac) o Ctrl+Shift+S (Win)
+      "Reemplazar espacios por §", // descripción del atajo
+      () => {
+        const txt = editor.selection.getContent({ format: "text" })
+        editor.selection.setContent(txt.replace(/\s+/g, "§"))
+      }
+    )
+    // Scroll event to synchronize scroll between the editor and the other elements
+    // (Thanks, Copilot)
+    editor.on("init", () => {
+      editor.getBody().addEventListener("scroll", (e) => {
+        const scrollTop = (e.target as HTMLElement).scrollTop
+        syllablesDiv.value?.scrollTo({ top: scrollTop })
+        lineNumbersDiv.value?.scrollTo({ top: scrollTop })
+        highlightedLinesContainer.value?.scrollTo({ top: scrollTop })
+      })
+    })
+  },
+}
+
 function syncScroll(event: any) {
   const scrollTop = event.target.scrollTop
-  syllablesTextarea.value?.scrollTo({ top: scrollTop })
-  lineNumbersTextarea.value?.scrollTo({ top: scrollTop })
-  lyricsTextarea.value?.scrollTo({ top: scrollTop })
+  syllablesDiv.value?.scrollTo({ top: scrollTop })
+  lineNumbersDiv.value?.scrollTo({ top: scrollTop })
   highlightedLinesContainer.value?.scrollTo({ top: scrollTop })
+
+  if (lyricsEditor.value && lyricsEditor.value.editor) {
+    const editorElement = lyricsEditor.value.editor.getBody()
+    if (editorElement) {
+      editorElement.scrollTop = scrollTop
+    }
+  }
 }
 
 function updateHighlightedLines() {
-  highlightedLines.value = lyricsText.value.split("\n").map((line) => (line === "" ? " " : line))
+  highlightedLines.value = lyricsInput.value.split("\n").map((line) => (line === "" ? " " : line))
   highlightedLines.value.push(" ")
 }
 
@@ -115,7 +119,7 @@ async function loadFile() {
   path = selectedPath
 
   chart = await parseChart(path)
-  lyricsText.value = chart.parsed.chartLyrics
+  lyricsInput.value = chart.parsed.chartLyrics
 
   setupFileWatcher()
 }
@@ -123,7 +127,7 @@ async function loadFile() {
 async function saveFile() {
   // TODO: If highlightedIndices.length > 0, disable the save button and show a message to the user when trying to click the button
   if (!path) return
-  await parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
+  await parseLyricsToChart(lyricsInput.value.split("\n"), chart.original, path)
 }
 
 function setupFileWatcher() {
@@ -134,19 +138,21 @@ function setupFileWatcher() {
 }
 
 async function watchLyricsTextRef() {
-  if (!isRereadOnChange) chart = await parseChart(path) // Original LyricAdder behavior
+  lineNumbers.value = updateLineNumbers(lyricsInput.value)
 
-  syllablesCount.value = updateSyllableCount(chart.parsed, lyricsText.value.split("\n"))
-  lineNumbers.value = updateLineNumbers(lyricsText.value.split("\n"))
+  /* if (!isRereadOnChange) chart = await parseChart(path) // Original LyricAdder behavior
+
+  syllablesCount.value = updateSyllableCount(chart.parsed, lyricsInput.value.split("\n"))
+  lineNumbers.value = updateLineNumbers(lyricsInput.value)
   highlightedIndices.value = wrongPhrases(
     syllablesCount.value.split("\n"),
-    lyricsText.value.split("\n")
+    lyricsInput.value.split("\n")
   )
-  updateHighlightedLines()
+  updateHighlightedLines() */
 }
 
 // HOOKS:
-watch(lyricsText, watchLyricsTextRef)
+watch(lyricsInput, watchLyricsTextRef)
 
 onMounted(() => {
   ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
@@ -167,6 +173,58 @@ onDeactivated(() => {
   removeFileWatcher()
 })
 </script>
+
+<template>
+  <h1 style="margin-top: 0">Lyrics Input</h1>
+
+  <button
+    @click="loadFile"
+    v-tooltip="{
+      value: 'Loads and reads a chart',
+      showDelay: 800,
+    }"
+  >
+    <IconLoad />Load chart
+  </button>
+  <p>Input the lyrics in the box below using the appropriate syntax:</p>
+  <div class="container">
+    <div
+      class="syllables mce-content-body"
+      ref="syllablesDiv"
+      v-html="syllablesCount"
+      @scroll="syncScroll"
+    />
+    <div
+      class="line-numbers mce-content-body"
+      ref="lineNumbersDiv"
+      v-html="lineNumbers"
+      @scroll="syncScroll"
+    />
+
+    <div class="highlighted-lines" ref="highlightedLinesContainer" readonly>
+      <div
+        v-for="(line, index) in highlightedLines"
+        :key="index"
+        :class="{ highlight: isHighlighted(index) }"
+      >
+        {{ line }}
+      </div>
+    </div>
+    <div style="position: inherit; width: 100%">
+      <div class="lyricsBG"></div>
+      <editor
+        ref="lyricsEditor"
+        class="lyrics"
+        api-key="qagffr3pkuv17a8on1afax661irst1hbr4e6tbv888sz91jc"
+        v-model="lyricsInput"
+        :init="editorOptions"
+      />
+    </div>
+  </div>
+  <button @click="saveFile" :disabled="highlightedIndices.length > 0">
+    <IconSave />Save chart
+  </button>
+</template>
 
 <style scoped>
 :root {
@@ -210,8 +268,6 @@ textarea {
   overflow: hidden;
   resize: none;
   color: var(--text-900);
-  text-align: right;
-  white-space: pre;
   overflow-wrap: normal;
 }
 
@@ -220,13 +276,21 @@ textarea {
   background: var(--background-100);
   width: 5ch;
   min-width: 5ch;
+  text-align: right;
 }
 
 .line-numbers {
+  z-index: 1;
   border-right: 1px solid var(--background-500);
   background-color: var(--background-200);
+  padding-bottom: 0;
   width: 4ch;
   min-width: 4ch;
+  overflow: hidden;
+  resize: none;
+  color: var(--text-900);
+  user-select: none;
+  text-align: right;
 }
 
 .lyrics {
@@ -240,11 +304,29 @@ textarea {
   text-align: left;
 }
 
+.mce-content-body {
+  padding: 0 0.5em;
+}
+
 .lyricsBG {
   position: absolute;
   z-index: -1;
   background: var(--background-100);
   width: 100%;
   height: 100%;
+}
+</style>
+
+<style>
+.mce-content-body p {
+  margin: calc((var(--lyrics-container-line-height) / 1.5) * 1em) 0;
+}
+
+.mce-content-body p:first-child {
+  margin-top: 0;
+}
+
+.mce-content-body p:last-child {
+  margin-bottom: 0;
 }
 </style>

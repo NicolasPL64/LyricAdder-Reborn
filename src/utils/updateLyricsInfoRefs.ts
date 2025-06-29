@@ -1,8 +1,61 @@
 import { removeTrailingEmptyElements } from "./auxFunctions"
 import type { ParsedChart } from "./parseChart"
 
-export function updateLineNumbers(lines: string[]) {
-  return lines.map((_, index) => `${index + 1}`).join("\n") + "\n"
+/**
+ * Returns an HTML string with line numbers for each line of lyrics.
+ * Each line of lyrics is separated by either <br> tags or <p> tags.
+ *
+ * @param {string} lyricsHtml - The HTML string containing lyrics.
+ * @returns {string} - The HTML string with line numbers.
+ */
+export function updateLineNumbers(lyricsHtml: string): string {
+  //FIXME: When doing "enter, shift+enter, <text>", this function doesnt work properly
+
+  // console.log("lyricsHtml", lyricsHtml)
+  if (lyricsHtml === "") return "<p>1</p>"
+
+  let lineNumber = 1
+
+  // Replace empty paragraphs with a <br> tag
+  lyricsHtml = lyricsHtml.replace(/<p><\/p>/g, "<p><br></p>")
+
+  const paragraphRegex = /<p>(.*?)<\/p>/gs
+  const anyHtmlTagRegex = /<[^>]*>/g
+
+  return lyricsHtml.replace(paragraphRegex, (_, innerContent: string) => {
+    /* HTML Tag Processing
+     * This section handles HTML content cleaning:
+     * 1. We need to preserve <br> tags as they represent line breaks
+     * 2. All other HTML tags should be removed to avoid counting them
+     * 3. We use a temporary marker (###BR###) to protect <br> tags during cleaning
+     */
+    let cleanedContent = innerContent
+    cleanedContent = cleanedContent.replace(/<br>/g, "###BR###")
+    cleanedContent = cleanedContent.replace(anyHtmlTagRegex, "")
+    cleanedContent = cleanedContent.replace(/###BR###/g, "<br>")
+    // console.log("cleanedContent", cleanedContent)
+
+    /* Content Processing
+     * After cleaning the HTML, we:
+     * 1. Split the content by <br> tags to identify line breaks
+     * 2. For each text segment between breaks, replace with a line number
+     * 3. Each non-empty text segment gets a consecutive line number
+     * 4. Empty segments and <br> tags are preserved as-is
+     */
+    const parts = cleanedContent.split(/(<br>)/)
+    const updatedParts = parts.map((part: string) => {
+      if (part === "<br>") {
+        return part
+      } else if (part.trim()) {
+        return lineNumber++
+      }
+      return part
+    })
+
+    // Reconstruct the paragraph with line numbers instead of text
+    const updatedContent = `<p>${updatedParts.join("")}</p>`
+    return updatedContent
+  })
 }
 
 // Concatenates the syllable count of the current lyrics with the syllable count of the chart
