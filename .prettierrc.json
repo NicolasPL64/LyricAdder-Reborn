@@ -1,10 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/prettierrc",
   "semi": false,
-  "tabWidth": 2,
+  "tabWidth": 4,
   "singleQuote": false,
   "printWidth": 100,
   "trailingComma": "es5",
   "endOfLine": "auto",
-  "plugins": ["prettier-plugin-css-order"]
+  "plugins": ["prettier-plugin-css-order"],
+  "overrides": [
+    {
+      "files": "*.vue",
+      "options": {
+        "tabWidth": 2
+      }
+    }
+  ]
 }
