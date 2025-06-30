@@ -30,8 +30,11 @@ function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
                 handleLyricEvent(lyricArray.join(""))
             } else if (event.name.startsWith("section")) {
                 handleSectionEvent()
-            } else if (event.name.startsWith("phrase_start")) {
-                handleStartPhraseEvent()
+            } else if (
+                event.name.startsWith("phrase_start") ||
+                event.name.startsWith("phrase_end")
+            ) {
+                handlePhraseEvent()
             }
         })
     }
@@ -39,7 +42,7 @@ function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
     // For handling the very last phrase
     if (currentPhrase.length > 0) {
         pendingSections = 0
-        handleStartPhraseEvent()
+        handlePhraseEvent()
     }
 
     return {
@@ -73,7 +76,7 @@ function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
     }
 
     // TODO: What happens when there are multiple sections befure the first phrase_start?
-    function handleStartPhraseEvent() {
+    function handlePhraseEvent() {
         if (currentPhrase.length === 0) return
 
         // Chooses to add either a section break (<p>) or just a line break (<br>)
