@@ -1,4 +1,4 @@
-import { isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
+import { fixTags, isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
 import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
 import { defaultSettings } from "./settings"
 
@@ -36,13 +36,14 @@ function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
         })
     }
 
+    // For handling the very last phrase
     if (currentPhrase.length > 0) {
         pendingSections = 0
         handleStartPhraseEvent()
     }
 
     return {
-        chartLyrics: lyrics.join(""),
+        chartLyrics: fixTags(lyrics.join("")),
         chartSyllablesCount: syllablesCount,
     }
 
@@ -94,6 +95,7 @@ function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
     }
 }
 
+/* 
 function extractLyricsOld(events: ChartTrack<ChartEvent>): ParsedChart {
     const lyrics: string[] = []
     const syllablesCount: number[] = []
@@ -170,3 +172,4 @@ function extractLyricsOld(events: ChartTrack<ChartEvent>): ParsedChart {
         chartSyllablesCount: syllablesCount,
     }
 }
+ */
