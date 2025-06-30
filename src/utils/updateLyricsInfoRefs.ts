@@ -22,7 +22,7 @@ export function updateLineNumbers(lyricsHtml: string): string {
     const paragraphRegex = /<p>(.*?)<\/p>/gs
     const anyHtmlTagRegex = /<[^>]*>/g
 
-    return lyricsHtml.replace(paragraphRegex, (_, innerContent: string) => {
+    const result = lyricsHtml.replace(paragraphRegex, (_, innerContent: string) => {
         /* HTML Tag Processing
          * This section handles HTML content cleaning:
          * 1. We need to preserve <br> tags as they represent line breaks
@@ -52,13 +52,11 @@ export function updateLineNumbers(lyricsHtml: string): string {
             return part
         })
 
-        // Adds an empty paragraph at the end to avoid scroll syncing issues
-        updatedParts.push("<p>&nbsp;</p>")
-
-        // Reconstruct the paragraph with line numbers instead of text
-        const updatedContent = `<p>${updatedParts.join("")}</p>`
-        return updatedContent
+        return `<p>${updatedParts.join("")}</p>`
     })
+
+    // Add empty paragraph at the end outside the replace function
+    return result + "<p></p>"
 }
 
 // Concatenates the syllable count of the current lyrics with the syllable count of the chart

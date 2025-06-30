@@ -47,7 +47,7 @@ const editorOptions: Partial<EditorOptions> = {
   //menubar: false,
   statusbar: false,
   inline: true,
-  //valid_elements: "p,br,span[*],b,i,b/strong,i/em",
+  valid_elements: "p,br,span[*],b,i,b/strong,i/em",
   //placeholder: isGayMode.value ? "Ca-co-rro" : "",
   setup(editor) {
     // Botón personalizado

@@ -1,4 +1,4 @@
-import { fixTags, isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
+import { fixTags, isLyricEvent } from "./auxFunctions"
 import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
 import { defaultSettings } from "./settings"
 
@@ -47,6 +47,7 @@ function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
         chartSyllablesCount: syllablesCount,
     }
 
+    // TODO: Put events with spaces in a <span> tag
     function handleLyricEvent(syllableText: string) {
         // If the previous syllable did not end with a hyphen, add a space before the new lyric
         // Then add the new syllable
