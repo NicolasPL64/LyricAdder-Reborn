@@ -55,7 +55,7 @@ export function updateLineNumbers(lyricsHtml: string): string {
         return `<p>${updatedParts.join("")}</p>`
     })
 
-    // Add empty paragraph at the end outside the replace function
+    // Adds an empty paragraph at the end to avoid scroll syncing issues
     return result + "<p></p>"
 }
 
