@@ -41,17 +41,17 @@ export function updateLineNumbers(lyricsHtml: string): string {
          * 3. Each non-empty text segment gets a consecutive line number
          * 4. Empty segments and <br> tags are preserved as-is
          */
-        const parts = cleanedContent.split(/(<br>)/)
-        const updatedParts = parts.map((part: string) => {
-            if (part === "<br>") {
-                return part
-            } else if (part.trim()) {
+        const paragraphs = cleanedContent.split(/(<br>)/)
+        const updatedParagraphs = paragraphs.map((phrase: string) => {
+            if (phrase === "<br>") {
+                return phrase
+            } else if (phrase.trim()) {
                 return lineNumber++
             }
-            return part
+            return phrase
         })
 
-        return `<p>${updatedParts.join("")}</p>`
+        return `<p>${updatedParagraphs.join("")}</p>`
     })
 
     // Adds an empty paragraph at the end to avoid scroll syncing issues
@@ -123,24 +123,24 @@ export function updateSyllableCount(chart: ParsedChart, lyricsInputHtml: string)
          * 3. Each non-empty text segment gets a consecutive line number
          * 4. Empty segments and <br> tags are preserved as-is
          */
-        const parts = removeTrailingEmptyElements(cleanedContent.split(/(<br>)/))
+        const paragraphs = removeTrailingEmptyElements(cleanedContent.split(/(<br>)/))
 
         // Since removeTrailingEmptyElements() removes trailing empty elements,
         // the "sections separators" config option doesn't work properly without the following check:
-        if (parts.length === 0) return "<p><br></p>"
+        if (paragraphs.length === 0) return "<p><br></p>"
 
-        const updatedParts = parts.map((part: string) => {
-            if (part === "<br>") {
-                return part
-            } else if (part.trim()) {
-                const currentSyllables = countSyllables(part)
+        const updatedParagraphs = paragraphs.map((phrase: string) => {
+            if (phrase === "<br>") {
+                return phrase
+            } else if (phrase.trim()) {
+                const currentSyllables = countSyllables(phrase)
                 const chartSyllables = chart.chartSyllablesCount[index] ?? "-1"
                 index++
                 return `${currentSyllables}/${chartSyllables}`
             }
         })
 
-        return `<p>${updatedParts.join("")}`
+        return `<p>${updatedParagraphs.join("")}`
     })
 
     // If there are more lines in the .chart than what it's written, append the remaining syllable counts
