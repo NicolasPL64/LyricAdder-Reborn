@@ -124,7 +124,10 @@ export function updateSyllableCount(chart: ParsedChart, lyricsInputHtml: string)
          * 4. Empty segments and <br> tags are preserved as-is
          */
         const parts = removeTrailingEmptyElements(cleanedContent.split(/(<br>)/))
-        console.log(parts)
+
+        // Since removeTrailingEmptyElements() removes trailing empty elements,
+        // the "sections separators" config option doesn't work properly without the following check:
+        if (parts.length === 0) return "<p><br></p>"
 
         const updatedParts = parts.map((part: string) => {
             if (part === "<br>") {
