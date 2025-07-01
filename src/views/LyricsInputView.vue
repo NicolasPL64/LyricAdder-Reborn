@@ -40,7 +40,7 @@ const editorOptions: Partial<EditorOptions> = {
     "visualblocks",
   ],
   toolbar:
-    "replaceSpaces undo redo | styles | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
+    "joinSyllables undo redo | styles | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
   height: 500,
   newline_behavior: "invert",
   remove_trailing_brs: true,
@@ -50,26 +50,31 @@ const editorOptions: Partial<EditorOptions> = {
   inline: true,
   valid_elements: "p,br,span[*],b,i,b/strong,i/em",
   setup(editor) {
-    // Botón personalizado
-    editor.ui.registry.addButton("replaceSpaces", {
-      text: "§",
-      tooltip: "Reemplazar espacios",
+    editor.ui.registry.addButton("joinSyllables", {
+      icon: "non-breaking",
+      tooltip: "Join syllables",
       onAction: () => {
         const txt = editor.selection.getContent({ format: "text" })
-        editor.selection.setContent(txt.replace(/\s+/g, "§"))
+        if (txt) {
+          editor.selection.setContent(
+            `<span class="multi-syllable" style="background-color: #b96ad9;">${txt}</span>`
+          )
+        }
+        watchLyricsTextRef()
       },
-      shortcut: "meta+shift+M", // muestra el atajo en el tooltip
+      shortcut: "meta+shift+A",
     })
 
-    // Atajo personalizado
-    editor.addShortcut(
-      "meta+shift+M", // combinación: Cmd+Shift+S (Mac) o Ctrl+Shift+S (Win)
-      "Reemplazar espacios por §", // descripción del atajo
-      () => {
-        const txt = editor.selection.getContent({ format: "text" })
-        editor.selection.setContent(txt.replace(/\s+/g, "§"))
+    editor.addShortcut("meta+shift+A", "Join syllables", () => {
+      const txt = editor.selection.getContent({ format: "text" })
+      if (txt) {
+        editor.selection.setContent(
+          `<span class="multi-syllable" style="background-color: #b96ad9;">${txt}</span>`
+        )
       }
-    )
+      watchLyricsTextRef()
+    })
+
     // Scroll event to synchronize scroll between the editor and the other elements
     // (Thanks, Copilot)
     editor.on("init", () => {
@@ -146,7 +151,6 @@ async function watchLyricsTextRef() {
 
   /* 
 
-  lineNumbers.value = updateLineNumbers(lyricsInput.value)
   highlightedIndices.value = wrongPhrases(
     syllablesCount.value.split("\n"),
     lyricsInput.value.split("\n")
