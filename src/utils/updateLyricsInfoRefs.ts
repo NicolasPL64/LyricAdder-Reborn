@@ -1,4 +1,4 @@
-import { removeTrailingEmptyElements } from "./auxFunctions"
+import { removeTrailingEmptyElements, replaceMultiSyllableSpans } from "./auxFunctions"
 import type { ParsedChart } from "./parseChart"
 
 /**
@@ -10,8 +10,8 @@ import type { ParsedChart } from "./parseChart"
  */
 export function updateLineNumbers(lyricsHtml: string): string {
     //FIXME: When doing "enter, shift+enter, <text>", this function doesnt work properly
+    // Only for the first phrase (not critical)
 
-    // console.log("lyricsHtml", lyricsHtml)
     if (lyricsHtml === "") return "<p>1</p>"
 
     let lineNumber = 1
@@ -33,7 +33,6 @@ export function updateLineNumbers(lyricsHtml: string): string {
         cleanedContent = cleanedContent.replace(/<br>/g, "###BR###")
         cleanedContent = cleanedContent.replace(anyHtmlTagRegex, "")
         cleanedContent = cleanedContent.replace(/###BR###/g, "<br>")
-        // console.log("cleanedContent", cleanedContent)
 
         /* Content Processing
          * After cleaning the HTML, we:
@@ -59,32 +58,102 @@ export function updateLineNumbers(lyricsHtml: string): string {
     return result + "<p></p>"
 }
 
-// Concatenates the syllable count of the current lyrics with the syllable count of the chart
-export function updateSyllableCount(chart: ParsedChart, lines: string[]) {
-    if (!chart?.chartSyllablesCount) return ""
+function extractPhrasesFromHtml(html: string): string[] {
+    if (html === "") return []
 
-    const currentSyllables = countSyllables(lines)
-    const chartSyllables = mapChartSyllables(chart, lines)
+    const phrases: string[] = []
 
-    if (chartSyllables.length >= currentSyllables.length)
-        // If the original chart has more lines, shows the syllable count of the original chart
-        // This way, the user can see how many syllables they're missing
-        return chartSyllables
-            .map((syllable, i) =>
-                lines[i] === "" ? "\n" : `${currentSyllables[i] ?? 0}/${syllable ?? -1}\n`
-            )
-            .join("")
-    // If the original chart has fewer lines, return the syllable count of the current lyrics
-    // This way, the textarea won't be flooded with error lines
-    else
-        return currentSyllables
-            .map((syllable, i) =>
-                !chartSyllables[i] ? "\n" : `${syllable}/${chartSyllables[i]}\n`
-            )
-            .join("")
+    // Replace empty paragraphs with a <br> tag (same logic as updateLineNumbers)
+    html = html.replace(/<p><\/p>/g, "<p><br></p>")
+
+    const paragraphRegex = /<p>(.*?)<\/p>/gs
+    const anyHtmlTagRegex = /<[^>]*>/g
+
+    html.replace(paragraphRegex, (_, innerContent: string) => {
+        // Clean HTML tags but preserve <br> tags (same logic as updateLineNumbers)
+        let cleanedContent = innerContent
+        cleanedContent = cleanedContent.replace(/<br>/g, "###BR###")
+        cleanedContent = cleanedContent.replace(anyHtmlTagRegex, "")
+        cleanedContent = cleanedContent.replace(/###BR###/g, "<br>")
+
+        // Split by <br> tags to get individual phrases
+        const parts = cleanedContent.split(/(<br>)/)
+
+        parts.forEach((part: string) => {
+            if (part === "<br>") {
+                phrases.push(part)
+            } else {
+                phrases.push(part.trim())
+            }
+        })
+
+        return "" // We don't need the return value, just processing
+    })
+    return phrases
 }
 
-function mapChartSyllables(chart: ParsedChart, lines: string[]) {
+// Concatenates the syllable count of the current lyrics with the syllable count of the chart
+export function updateSyllableCount(chart: ParsedChart, lyricsInputHtml: string): string {
+    if (!chart?.chartSyllablesCount) return ""
+    let sanitized = replaceMultiSyllableSpans(lyricsInputHtml)
+
+    // Replace empty paragraphs with a <br> tag
+    sanitized = sanitized.replace(/<p><\/p>/g, "<p><br></p>")
+
+    const paragraphRegex = /<p>(.*?)<\/p>/gs
+    const anyHtmlTagRegex = /<[^>]*>/g
+
+    let index = 0
+    let result = sanitized.replace(paragraphRegex, (_, innerContent: string) => {
+        /* HTML Tag Processing
+         * This section handles HTML content cleaning:
+         * 1. We need to preserve <br> tags as they represent line breaks
+         * 2. All other HTML tags should be removed to avoid counting them
+         * 3. We use a temporary marker (###BR###) to protect <br> tags during cleaning
+         */
+        let cleanedContent = innerContent
+        cleanedContent = cleanedContent.replace(/<br>/g, "###BR###")
+        cleanedContent = cleanedContent.replace(anyHtmlTagRegex, "")
+        cleanedContent = cleanedContent.replace(/###BR###/g, "<br>")
+
+        /* Content Processing
+         * After cleaning the HTML, we:
+         * 1. Split the content by <br> tags to identify line breaks
+         * 2. For each text segment between breaks, replace with a line number
+         * 3. Each non-empty text segment gets a consecutive line number
+         * 4. Empty segments and <br> tags are preserved as-is
+         */
+        const parts = removeTrailingEmptyElements(cleanedContent.split(/(<br>)/))
+        console.log(parts)
+
+        const updatedParts = parts.map((part: string) => {
+            if (part === "<br>") {
+                return part
+            } else if (part.trim()) {
+                const currentSyllables = countSyllables(part)
+                const chartSyllables = chart.chartSyllablesCount[index] ?? "-1"
+                index++
+                return `${currentSyllables}/${chartSyllables}`
+            }
+        })
+
+        return `<p>${updatedParts.join("")}`
+    })
+
+    // If there are more lines in the .chart than what it's written, append the remaining syllable counts
+    if (index < chart.chartSyllablesCount.length) {
+        for (index; index < chart.chartSyllablesCount.length; index++) {
+            // If it's the first line, don't add a <br> tag
+            if (index === 0) result += `0/${chart.chartSyllablesCount[index]}`
+            else result += `<br>0/${chart.chartSyllablesCount[index]}`
+        }
+    }
+
+    // Adds an empty paragraph at the end to avoid scroll desyncing issues
+    return result + "<p></p>"
+}
+
+function mapChartSyllables(chart: ParsedChart, lines: string[]): string[] {
     lines = removeTrailingEmptyElements(lines)
     let emptyLines = 0
     const result = lines.map((line, index) => {
@@ -102,15 +171,17 @@ function mapChartSyllables(chart: ParsedChart, lines: string[]) {
     return result.concat(remainingCounts)
 }
 
-function countSyllables(lines: string[]) {
-    return lines.map((line) => {
-        // Eliminate content inside HTML tags
-        const cleanedLine = line.replace(/<[^>]*>/g, "")
-        return cleanedLine.trim().length === 0
-            ? "0"
-            : cleanedLine
-                  .split(/[ \-=]/) // Split by spaces, hyphens, and equal signs
-                  .filter(Boolean) // Remove empty strings
-                  .length.toString()
-    })
+function countSyllables(line: string): string {
+    // Eliminate content inside HTML tags
+    const cleanedLine = line.replace(/<[^>]*>/g, "")
+
+    if (cleanedLine.trim().length === 0) {
+        return "0"
+    }
+
+    const syllableCount = cleanedLine
+        .split(/[ \-=]/) // Split by spaces, hyphens, and equal signs
+        .filter(Boolean).length // Remove empty strings
+
+    return syllableCount.toString()
 }

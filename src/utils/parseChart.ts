@@ -10,6 +10,14 @@ export async function parseChart(path: string): Promise<{ parsed: ParsedChart; o
     return { parsed: extractLyrics(chart.Events), original: chart }
 }
 
+/**
+ * Extracts lyrics from a chart track and returns them in a structured format.
+ * The function processes lyric events, section events, and phrase events to build
+ * a list of lyrics with syllable counts.
+ *
+ * @param {ChartTrack<ChartEvent>} events - The chart track containing the events.
+ * @returns {ParsedChart} An object containing the processed lyrics and syllable counts.
+ */
 function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
     const lyrics: string[] = []
     const syllablesCount: number[] = []
@@ -39,7 +47,7 @@ function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
         })
     }
 
-    // For handling the very last phrase
+    // For handling the very last phrase if not closed by a phrase_end event already
     if (currentPhrase.length > 0) {
         pendingSections = 0
         handlePhraseEvent()
@@ -50,7 +58,8 @@ function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
         chartSyllablesCount: syllablesCount,
     }
 
-    // TODO: Put events with spaces in a <span> tag
+    // TODO: Put events that contain spaces (multiple syllables in one) in a <span> tag
+    // Maybe even use a custom class like "multi-syllable" to better classify them in case other <span> tags are needed in the future?
     function handleLyricEvent(syllableText: string) {
         // If the previous syllable did not end with a hyphen, add a space before the new lyric
         // Then add the new syllable

@@ -3,7 +3,7 @@ import IconLoad from "@/components/icons/IconLoad.vue"
 import IconSave from "@/components/icons/IconSave.vue"
 
 import Editor from "@tinymce/tinymce-vue"
-import { type EditorOptions } from "tinymce"
+import type { EditorOptions, Editor as TinyMCEEditor } from "tinymce"
 import { parseChart, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings } from "@/utils/settings"
@@ -11,24 +11,25 @@ import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfo
 import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
 import { open } from "@tauri-apps/plugin-dialog"
-import { ref, watch, onMounted, onActivated, onDeactivated } from "vue"
+import { ref, onMounted, onActivated, onDeactivated } from "vue"
 
 const lyricsInput = ref("")
-const syllablesCount = ref("<p>0/2<br>0/0</p><p>0/2<br>0/0</p>")
+const syllablesCount = ref("")
 const lineNumbers = ref("<p>1</p>")
 const highlightedLines = ref<string[]>([]) // Array of lines to display in the highlighted lines container
 const highlightedIndices = ref<number[]>([]) // Indices of the lines that should be highlighted
 
 const syllablesDiv = ref<HTMLDivElement | null>(null)
 const lineNumbersDiv = ref<HTMLDivElement | null>(null)
-const lyricsEditor = ref<any>(null)
 const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
+let lyricsEditor: TinyMCEEditor | null = null
 
 // Settings
 let isRereadOnChange = false
 let isGayMode = ref<boolean>(false)
 
 const editorOptions: Partial<EditorOptions> = {
+  id: "lyrics-editor",
   plugins: [
     "code",
     "fullscreen",
@@ -48,7 +49,6 @@ const editorOptions: Partial<EditorOptions> = {
   statusbar: false,
   inline: true,
   valid_elements: "p,br,span[*],b,i,b/strong,i/em",
-  //placeholder: isGayMode.value ? "Ca-co-rro" : "",
   setup(editor) {
     // Botón personalizado
     editor.ui.registry.addButton("replaceSpaces", {
@@ -73,12 +73,18 @@ const editorOptions: Partial<EditorOptions> = {
     // Scroll event to synchronize scroll between the editor and the other elements
     // (Thanks, Copilot)
     editor.on("init", () => {
+      lyricsEditor = editor
       editor.getBody().addEventListener("scroll", (e) => {
         const scrollTop = (e.target as HTMLElement).scrollTop
         syllablesDiv.value?.scrollTo({ top: scrollTop })
         lineNumbersDiv.value?.scrollTo({ top: scrollTop })
         highlightedLinesContainer.value?.scrollTo({ top: scrollTop })
       })
+    })
+
+    // Triggers on editor change
+    editor.on("input", () => {
+      watchLyricsTextRef()
     })
   },
 }
@@ -88,13 +94,6 @@ function syncScroll(event: any) {
   syllablesDiv.value?.scrollTo({ top: scrollTop })
   lineNumbersDiv.value?.scrollTo({ top: scrollTop })
   highlightedLinesContainer.value?.scrollTo({ top: scrollTop })
-
-  if (lyricsEditor.value && lyricsEditor.value.editor) {
-    const editorElement = lyricsEditor.value.editor.getBody()
-    if (editorElement) {
-      editorElement.scrollTop = scrollTop
-    }
-  }
 }
 
 function updateHighlightedLines() {
@@ -119,7 +118,10 @@ async function loadFile() {
   path = selectedPath
 
   chart = await parseChart(path)
-  lyricsInput.value = chart.parsed.chartLyrics
+  if (lyricsEditor) {
+    lyricsEditor.setContent(chart.parsed.chartLyrics)
+    lyricsInput.value = lyricsEditor.getContent()
+  }
 
   setupFileWatcher()
 }
@@ -133,16 +135,17 @@ async function saveFile() {
 function setupFileWatcher() {
   createFileWatcher(path, isRereadOnChange, (updatedChart) => {
     chart = updatedChart
-    watchLyricsTextRef()
   })
+  watchLyricsTextRef()
 }
 
 async function watchLyricsTextRef() {
-  lineNumbers.value = updateLineNumbers(lyricsInput.value)
+  if (!lyricsEditor) return
+  lineNumbers.value = updateLineNumbers(lyricsEditor.getContent())
+  syllablesCount.value = updateSyllableCount(chart.parsed, lyricsEditor.getContent())
 
-  /* if (!isRereadOnChange) chart = await parseChart(path) // Original LyricAdder behavior
+  /* 
 
-  syllablesCount.value = updateSyllableCount(chart.parsed, lyricsInput.value.split("\n"))
   lineNumbers.value = updateLineNumbers(lyricsInput.value)
   highlightedIndices.value = wrongPhrases(
     syllablesCount.value.split("\n"),
@@ -151,8 +154,7 @@ async function watchLyricsTextRef() {
   updateHighlightedLines() */
 }
 
-// HOOKS:
-watch(lyricsInput, watchLyricsTextRef)
+///////// HOOKS:
 
 onMounted(() => {
   ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
@@ -213,7 +215,7 @@ onDeactivated(() => {
     <div style="position: inherit; width: 100%">
       <div class="lyricsBG"></div>
       <editor
-        ref="lyricsEditor"
+        :placeholder="isGayMode ? 'Ca-co-rro' : ''"
         class="lyrics"
         api-key="qagffr3pkuv17a8on1afax661irst1hbr4e6tbv888sz91jc"
         v-model="lyricsInput"
@@ -263,20 +265,17 @@ onDeactivated(() => {
   background-image: linear-gradient(to right, var(--error-500), transparent);
 }
 
-textarea {
-  z-index: 1;
-  overflow: hidden;
-  resize: none;
-  color: var(--text-900);
-  overflow-wrap: normal;
-}
-
 .syllables {
+  z-index: 1;
   border-radius: var(--border-small) 0 0 var(--border-small);
   background: var(--background-100);
   width: 5ch;
   min-width: 5ch;
+  overflow: hidden;
+  resize: none;
+  color: var(--text-900);
   text-align: right;
+  overflow-wrap: normal;
 }
 
 .line-numbers {

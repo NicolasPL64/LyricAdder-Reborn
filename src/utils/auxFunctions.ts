@@ -6,8 +6,19 @@ export function isLyricEvent(event: ChartEvent): boolean {
     )
 }
 
+/**
+ * Removes trailing empty elements from an array of strings.
+ * This function is useful for cleaning up arrays that may have
+ * unnecessary empty strings or <br> tags at the end.
+ *
+ * @param {string[]} arr - The array of strings to clean.
+ * @returns {string[]} - The cleaned array with trailing empty elements removed.
+ */
 export function removeTrailingEmptyElements(arr: string[]): string[] {
-    while (arr.length > 0 && arr[arr.length - 1].trim() === "") {
+    while (
+        arr.length > 0 &&
+        (arr[arr.length - 1].trim() === "" || arr[arr.length - 1] === "<br>")
+    ) {
         arr.pop()
     }
     return arr
@@ -93,4 +104,15 @@ export function fixTags(html: string): string {
     }
 
     return closeTagsBeforeBreaks(html)
+}
+
+export function replaceMultiSyllableSpans(html: string): string {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, "text/html")
+
+    doc.body.querySelectorAll("span.multi-syllable").forEach((el) => {
+        el.replaceWith(document.createTextNode("a"))
+    })
+
+    return doc.body.innerHTML
 }
