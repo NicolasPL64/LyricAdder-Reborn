@@ -58,41 +58,14 @@ export function updateLineNumbers(lyricsHtml: string): string {
     return result + "<p></p>"
 }
 
-function extractPhrasesFromHtml(html: string): string[] {
-    if (html === "") return []
-
-    const phrases: string[] = []
-
-    // Replace empty paragraphs with a <br> tag (same logic as updateLineNumbers)
-    html = html.replace(/<p><\/p>/g, "<p><br></p>")
-
-    const paragraphRegex = /<p>(.*?)<\/p>/gs
-    const anyHtmlTagRegex = /<[^>]*>/g
-
-    html.replace(paragraphRegex, (_, innerContent: string) => {
-        // Clean HTML tags but preserve <br> tags (same logic as updateLineNumbers)
-        let cleanedContent = innerContent
-        cleanedContent = cleanedContent.replace(/<br>/g, "###BR###")
-        cleanedContent = cleanedContent.replace(anyHtmlTagRegex, "")
-        cleanedContent = cleanedContent.replace(/###BR###/g, "<br>")
-
-        // Split by <br> tags to get individual phrases
-        const parts = cleanedContent.split(/(<br>)/)
-
-        parts.forEach((part: string) => {
-            if (part === "<br>") {
-                phrases.push(part)
-            } else {
-                phrases.push(part.trim())
-            }
-        })
-
-        return "" // We don't need the return value, just processing
-    })
-    return phrases
-}
-
-// Concatenates the syllable count of the current lyrics with the syllable count of the chart
+/**
+ * Updates the syllable count in the lyrics input HTML based on the chart's syllable counts.
+ * Each line of lyrics is replaced with a format "currentSyllables/chartSyllablesCount[index]".
+ *
+ * @param {ParsedChart} chart - The parsed chart containing syllable counts.
+ * @param {string} lyricsInputHtml - The HTML string containing lyrics input.
+ * @returns {string} - The updated HTML string with syllable counts.
+ */
 export function updateSyllableCount(chart: ParsedChart, lyricsInputHtml: string): string {
     if (!chart?.chartSyllablesCount) return ""
     let sanitized = replaceMultiSyllableSpans(lyricsInputHtml)
@@ -156,24 +129,13 @@ export function updateSyllableCount(chart: ParsedChart, lyricsInputHtml: string)
     return result + "<p></p>"
 }
 
-function mapChartSyllables(chart: ParsedChart, lines: string[]): string[] {
-    lines = removeTrailingEmptyElements(lines)
-    let emptyLines = 0
-    const result = lines.map((line, index) => {
-        if (line.trim() === "") {
-            emptyLines++
-            return ""
-        }
-        return (chart.chartSyllablesCount[index - emptyLines] ?? "-1").toString()
-    })
-
-    // If chart.chartSyllablesCount is longer than the number of lines, append the remaining counts
-    const remainingCounts = chart.chartSyllablesCount
-        .slice(lines.length - emptyLines)
-        .map((count) => count.toString())
-    return result.concat(remainingCounts)
-}
-
+/**
+ * Counts the syllables in a phrase.
+ * Syllables are counted based on spaces, hyphens, and equal signs.
+ *
+ * @param {string} line - The line of lyrics to count syllables in.
+ * @returns {string} - The number of syllables as a string.
+ */
 function countSyllables(line: string): string {
     // Eliminate content inside HTML tags
     const cleanedLine = line.replace(/<[^>]*>/g, "")
