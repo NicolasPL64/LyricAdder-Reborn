@@ -1,4 +1,4 @@
 export interface ChartEvent {
-  type: "E"
-  name: string
+    type: "E"
+    name: string
 }

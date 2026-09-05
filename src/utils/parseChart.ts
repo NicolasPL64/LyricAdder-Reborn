@@ -6,69 +6,70 @@ export type ParsedChart = { chartSyllablesCount: number[]; chartLyrics: string }
 export type ParsedChartWithOriginal = { parsed: ParsedChart; original: Chart }
 
 export async function parseChart(path: string): Promise<{ parsed: ParsedChart; original: any }> {
-  const chart = await ChartIO.load(path)
-  return { parsed: extractLyrics(chart.Events), original: chart }
+    const chart = await ChartIO.load(path)
+    return { parsed: extractLyrics(chart.Events), original: chart }
 }
 
 function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
-  const lyrics: string[] = []
-  const syllablesCount: number[] = []
-  let currentPhrase: string[] = []
-  let syllables = 0
-  let previousLyricEndsWithHyphen = false
-  let sectionsSpaceCount = 0
-  const maxSectionSeparators = parseInt(
-    localStorage.getItem("maxSectionSeparators") ?? defaultSettings.maxSectionSeparators.toString()
-  )
+    const lyrics: string[] = []
+    const syllablesCount: number[] = []
+    let currentPhrase: string[] = []
+    let syllables = 0
+    let previousLyricEndsWithHyphen = false
+    let sectionsSpaceCount = 0
+    const maxSectionSeparators = parseInt(
+        localStorage.getItem("maxSectionSeparators") ??
+            defaultSettings.maxSectionSeparators.toString()
+    )
 
-  for (const eventList of Object.values(events)) {
-    eventList.forEach((event) => {
-      //FIXME: Bug with 'Berried Alive - Crusty'
-      //FIXME: If there is a = symbol in the middle of an event, it will be always considered a syllable separator
-      if (
-        lyrics.length > 0 &&
-        sectionsSpaceCount < maxSectionSeparators &&
-        event.name.startsWith("section")
-      ) {
-        lyrics.push("")
-        sectionsSpaceCount++
-        // WARN: What happens if there are two phrase_start events in a row? A: error in console
-      } else if (event.name === "phrase_start" && currentPhrase.length > 0) {
-        // Save the phrase
+    for (const eventList of Object.values(events)) {
+        eventList.forEach((event) => {
+            //FIXME: Bug with 'Berried Alive - Crusty'
+            //FIXME: If there is a = symbol in the middle of an event, it will be always considered a syllable separator
+            if (
+                lyrics.length > 0 &&
+                sectionsSpaceCount < maxSectionSeparators &&
+                event.name.startsWith("section")
+            ) {
+                lyrics.push("")
+                sectionsSpaceCount++
+                // WARN: What happens if there are two phrase_start events in a row? A: error in console
+            } else if (event.name === "phrase_start" && currentPhrase.length > 0) {
+                // Save the phrase
+                lyrics.push(currentPhrase.join(" ").trim())
+                syllablesCount.push(syllables)
+                // Reset variables for the next phrase
+                currentPhrase = []
+                syllables = 0
+                sectionsSpaceCount = 0
+                previousLyricEndsWithHyphen = false
+            } else if (isLyricEvent(event)) {
+                const lyricArray = event.name.split(" ")
+                let lyricText = ""
+
+                // In case there is a space in the middle of the event
+                if (lyricArray.length > 2) lyricText = lyricArray.slice(1).join("§")
+                else lyricText = lyricArray[1] ?? ""
+                syllables++
+                if (previousLyricEndsWithHyphen) {
+                    currentPhrase[currentPhrase.length - 1] += lyricText
+                    previousLyricEndsWithHyphen = false
+                } else {
+                    currentPhrase.push(lyricText)
+                }
+                previousLyricEndsWithHyphen = lyricText.endsWith("-") || lyricText.endsWith("=")
+            }
+        })
+    }
+
+    // Add last phrase
+    if (currentPhrase.length > 0) {
         lyrics.push(currentPhrase.join(" ").trim())
         syllablesCount.push(syllables)
-        // Reset variables for the next phrase
-        currentPhrase = []
-        syllables = 0
-        sectionsSpaceCount = 0
-        previousLyricEndsWithHyphen = false
-      } else if (isLyricEvent(event)) {
-        const lyricArray = event.name.split(" ")
-        let lyricText = ""
+    }
 
-        // In case there is a space in the middle of the event
-        if (lyricArray.length > 2) lyricText = lyricArray.slice(1).join("§")
-        else lyricText = lyricArray[1] ?? ""
-        syllables++
-        if (previousLyricEndsWithHyphen) {
-          currentPhrase[currentPhrase.length - 1] += lyricText
-          previousLyricEndsWithHyphen = false
-        } else {
-          currentPhrase.push(lyricText)
-        }
-        previousLyricEndsWithHyphen = lyricText.endsWith("-") || lyricText.endsWith("=")
-      }
-    })
-  }
-
-  // Add last phrase
-  if (currentPhrase.length > 0) {
-    lyrics.push(currentPhrase.join(" ").trim())
-    syllablesCount.push(syllables)
-  }
-
-  return {
-    chartLyrics: removeTrailingEmptyElements(lyrics).join("\n"),
-    chartSyllablesCount: syllablesCount,
-  }
+    return {
+        chartLyrics: removeTrailingEmptyElements(lyrics).join("\n"),
+        chartSyllablesCount: syllablesCount,
+    }
 }

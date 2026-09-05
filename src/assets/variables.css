@@ -8,7 +8,7 @@
   font-family: "Roboto", sans-serif;
 
   /* Doing this makes reloading the page look ugly af. But I wanted it for the theme selection transitions */
-  /* transition: all 0.2s var(--elastic); */ 
+  /* transition: all 0.2s var(--elastic); */
 }
 
 ::-webkit-scrollbar {
@@ -65,4 +65,3 @@ button:disabled {
   cursor: not-allowed;
   background-color: var(--background-300);
 }
-
