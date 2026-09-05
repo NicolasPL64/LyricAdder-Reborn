@@ -52,7 +52,15 @@
       ></textarea>
     </div>
   </div>
-  <button @click="saveFile" :disabled="highlightedIndices.length > 0">
+  <button
+    @click="saveFile"
+    :disabled="highlightedIndices.length > 0"
+    v-tooltip="
+      highlightedIndices.length > 0
+        ? { value: 'Fix the highlighted phrases before saving', showDelay: 0 }
+        : ''
+    "
+  >
     <IconSave />Save chart
   </button>
 </template>
@@ -121,7 +129,7 @@ async function loadFile() {
 }
 
 async function saveFile() {
-  // TODO: If highlightedIndices.length > 0, disable the save button and show a message to the user when trying to click the button
+  // WARN: Supposedly, mouseenter events don't trigger on disabled elements on some browsers
   if (!path) return
   await parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
 }
