@@ -172,8 +172,7 @@ onDeactivated(() => {
 :root {
   --lyrics-container-font-size: 0.9rem;
   --lyrics-container-line-height: 1.5;
-  --lyrics-font-family: monospace;
-  /* TODO: Yet to implement user option */
+  --lyrics-font-family: monospace; /* TODO: Yet to implement user option */
 }
 
 .container {

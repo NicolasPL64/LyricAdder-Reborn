@@ -1,0 +1,30 @@
+﻿[Song]
+{
+  Offset = 0
+  Resolution = 192
+  Player2 = bass
+  Difficulty = 0
+  PreviewStart = 0
+  PreviewEnd = 0
+  Genre = "rock"
+  MediaType = "cd"
+}
+[SyncTrack]
+{
+  0 = TS 4
+  0 = B 120000
+}
+[Events]
+{
+  192 = E "phrase_start"
+  240 = E "lyric ñ"
+  288 = E "Default"
+  336 = E "lyric a"
+  384 = E "phrase_start"
+  432 = E "Default"
+  480 = E "lyric é"
+}
+[ExpertSingle]
+{
+  384 = N 0 0
+}
