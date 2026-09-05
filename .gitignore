@@ -31,3 +31,6 @@ coverage
 
 .env
 .secrets
+
+/test-results/
+/playwright-report/

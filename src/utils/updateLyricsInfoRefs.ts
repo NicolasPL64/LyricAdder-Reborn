@@ -1,6 +1,11 @@
 import { removeTrailingEmptyElements } from "./auxFunctions"
 import type { ParsedChart } from "./parseChart"
 
+/**
+ * Updates the line numbers for a list of strings.
+ * @param lines The lyrics' textarea splitted lines.
+ * @returns A string with line numbers separated by newlines.
+ */
 export function updateLineNumbers(lines: string[]) {
     return lines.map((_, index) => `${index + 1}`).join("\n") + "\n"
 }

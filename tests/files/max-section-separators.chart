@@ -1,0 +1,16 @@
+[Song]
+{
+  Name = "Max section separators test"
+}
+[Events]
+{
+  0 = E "phrase_start"
+  1 = E "lyric first"
+  2 = E "phrase_start"
+  3 = E "lyric alpha"
+  4 = E "section First"
+  5 = E "section Second"
+  6 = E "section Third"
+  7 = E "phrase_start"
+  8 = E "lyric beta"
+}
