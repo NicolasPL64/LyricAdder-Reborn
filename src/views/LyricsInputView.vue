@@ -55,7 +55,11 @@
   <button
     @click="saveFile"
     :disabled="highlightedIndices.length > 0 || chartErrors.length > 0"
-    v-tooltip="{ value: saveTooltipMessage, showDelay: 0 }"
+    v-tooltip="{
+      value: saveTooltipMessage,
+      showDelay: 0,
+      pt: { root: { style: 'max-width: 50rem' } },
+    }"
   >
     <IconSave />Save chart
   </button>
@@ -83,9 +87,12 @@ const chartErrors = ref<ChartError[]>([]) // Structural errors in the loaded cha
 
 const saveTooltipMessage = computed(() => {
   if (chartErrors.value.length > 0) {
-    return chartErrors.value
-      .map((error) => `${error.message} (@${error.timestamps.join(",")})`)
-      .join("\n")
+    return (
+      "Some errors were found within the chart:\n" +
+      chartErrors.value
+        .map((error) => `• ${error.message} (@${error.timestamps.join(",")})`)
+        .join("\n")
+    )
   }
   if (highlightedIndices.value.length > 0) {
     return "Fix the highlighted phrases before saving"
@@ -214,6 +221,7 @@ onDeactivated(() => {
 .highlighted-lines {
   position: absolute;
   top: 2px;
+  padding-left: 4px;
   width: 100%;
   height: calc(100% - 2px);
   overflow: hidden;
@@ -257,6 +265,7 @@ textarea {
   box-sizing: border-box;
   border-radius: 0 var(--border-small) var(--border-small) 0;
   background: transparent;
+  padding-left: 5px;
   width: 100%;
   height: 100%;
   overflow: auto;
