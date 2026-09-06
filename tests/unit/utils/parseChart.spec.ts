@@ -6,12 +6,8 @@ import { ChartIO } from "@/utils/herochartio"
 
 import specialCharactersChart from "../../files/test1.chart?raw"
 
-function buildChartText(events: string) {
-    return `[Song]\n{\n}\n[Events]\n{\n${events}\n}\n`
-}
-
-function buildEvents(events: string) {
-    return ChartIO.parse(buildChartText(events)).Events
+function buildChart(events: string) {
+    return ChartIO.parse(`[Song]\n{\n}\n[Events]\n{\n${events}\n}\n`)
 }
 
 describe("parseChart", () => {
@@ -21,17 +17,15 @@ describe("parseChart", () => {
     })
 
     it("extracts phrases and syllable counts from a loaded chart", async () => {
-        const chart = ChartIO.parse(
-            buildChartText(`
-                0 = E "phrase_start"
-                1 = E "lyric hel-"
-                2 = E "lyric lo"
-                3 = E "phrase_end"
-                4 = E "phrase_start"
-                5 = E "lyric world"
-                6 = E "phrase_end"
-            `)
-        )
+        const chart = buildChart(`
+            0 = E "phrase_start"
+            1 = E "lyric hel-"
+            2 = E "lyric lo"
+            3 = E "phrase_end"
+            4 = E "phrase_start"
+            5 = E "lyric world"
+            6 = E "phrase_end"
+        `)
         localStorage.setItem("maxSectionSeparators", "3")
         vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
 
@@ -42,22 +36,20 @@ describe("parseChart", () => {
     })
 
     it("respects the maxSectionSeparators setting", async () => {
-        const chart = ChartIO.parse(
-            buildChartText(`
-                0 = E "phrase_start"
-                1 = E "lyric first"
-                2 = E "phrase_end"
-                3 = E "phrase_start"
-                4 = E "lyric alpha"
-                5 = E "section First"
-                6 = E "section Second"
-                7 = E "section Third"
-                8 = E "phrase_end"
-                9 = E "phrase_start"
-                10 = E "lyric beta"
-                11 = E "phrase_end"
-            `)
-        )
+        const chart = buildChart(`
+            0 = E "phrase_start"
+            1 = E "lyric first"
+            2 = E "phrase_end"
+            3 = E "phrase_start"
+            4 = E "lyric alpha"
+            5 = E "section First"
+            6 = E "section Second"
+            7 = E "section Third"
+            8 = E "phrase_end"
+            9 = E "phrase_start"
+            10 = E "lyric beta"
+            11 = E "phrase_end"
+        `)
         vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
 
         localStorage.setItem("maxSectionSeparators", "0")
@@ -90,12 +82,12 @@ describe("parseChart", () => {
 
     it("flags two consecutive phrase_start events without lyric events between them", () => {
         const { chartLyrics, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "phrase_start"
                 2 = E "lyric A"
                 3 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A")
@@ -109,10 +101,10 @@ describe("parseChart", () => {
 
     it("flags a last phrase that is missing its closing phrase_end", () => {
         const { chartLyrics, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric A"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A")
@@ -126,12 +118,12 @@ describe("parseChart", () => {
 
     it("flags a phrase_end with no open phrase", () => {
         const { chartLyrics, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric A"
                 2 = E "phrase_end"
                 3 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A")
@@ -142,10 +134,10 @@ describe("parseChart", () => {
 
     it("flags a phrase_end with no lyric events since the last phrase_start", () => {
         const { chartLyrics, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("")
@@ -159,12 +151,12 @@ describe("parseChart", () => {
 
     it("flags a lyric event without a preceding phrase_start", () => {
         const { chartLyrics, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "lyric A"
                 1 = E "phrase_start"
                 2 = E "lyric B"
                 3 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A B")
@@ -178,7 +170,7 @@ describe("parseChart", () => {
 
     it("produces no errors for a well-formed chart", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric A"
                 2 = E "phrase_end"
@@ -187,7 +179,7 @@ describe("parseChart", () => {
                 5 = E "phrase_start"
                 6 = E "lyric C"
                 7 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A\nB\nC")
@@ -197,11 +189,11 @@ describe("parseChart", () => {
 
     it("joins lyric events with spaces in the middle using the section symbol", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric foo bar"
                 2 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("foo§bar")
@@ -211,12 +203,12 @@ describe("parseChart", () => {
 
     it("ignores a section before the first phrase", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "section Intro"
                 1 = E "phrase_start"
                 2 = E "lyric A"
                 3 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A")
@@ -226,12 +218,12 @@ describe("parseChart", () => {
 
     it("places a mid-phrase section's blank line after the phrase", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric A"
                 2 = E "section Outro"
                 3 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A")
@@ -241,12 +233,12 @@ describe("parseChart", () => {
 
     it("concatenates lyric events ending with an equals sign", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric he="
                 2 = E "lyric llo"
                 3 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("he=llo")
@@ -256,7 +248,7 @@ describe("parseChart", () => {
 
     it("resets the section separator budget after each phrase", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric A"
                 2 = E "phrase_end"
@@ -268,7 +260,7 @@ describe("parseChart", () => {
                 8 = E "phrase_start"
                 9 = E "lyric C"
                 10 = E "phrase_end"
-            `),
+            `).Events,
             1
         )
 
@@ -279,7 +271,7 @@ describe("parseChart", () => {
 
     it("places a section between two lyrics after the completed phrase", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric A"
                 2 = E "section X"
@@ -288,7 +280,7 @@ describe("parseChart", () => {
                 5 = E "phrase_start"
                 6 = E "lyric C"
                 7 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A B\n\nC")
@@ -298,13 +290,13 @@ describe("parseChart", () => {
 
     it("joins the lyrics of a phrase split by a section into a single line", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildEvents(`
+            buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric A"
                 2 = E "section X"
                 3 = E "lyric B"
                 4 = E "phrase_end"
-            `)
+            `).Events
         )
 
         expect(chartLyrics).toBe("A B")
@@ -313,7 +305,7 @@ describe("parseChart", () => {
     })
 
     it("returns an empty result for a chart without events", () => {
-        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(buildEvents(""))
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(buildChart("").Events)
 
         expect(chartLyrics).toBe("")
         expect(chartSyllablesCount).toEqual([])
@@ -321,12 +313,10 @@ describe("parseChart", () => {
     })
 
     it("propagates structural errors when loading a chart", async () => {
-        const chart = ChartIO.parse(
-            buildChartText(`
-                0 = E "phrase_start"
-                1 = E "lyric A"
-            `)
-        )
+        const chart = buildChart(`
+            0 = E "phrase_start"
+            1 = E "lyric A"
+        `)
         vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
 
         await expect(parseChart("broken.chart")).resolves.toEqual({
