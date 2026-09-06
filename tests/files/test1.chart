@@ -20,9 +20,11 @@
   240 = E "lyric ñ"
   288 = E "Default"
   336 = E "lyric a"
+  360 = E "phrase_end"
   384 = E "phrase_start"
   432 = E "Default"
   480 = E "lyric é"
+  576 = E "phrase_end"
 }
 [ExpertSingle]
 {

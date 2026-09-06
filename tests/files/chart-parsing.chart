@@ -6,6 +6,8 @@
   0 = E "phrase_start"
   1 = E "lyric hel-"
   2 = E "lyric lo"
-  3 = E "phrase_start"
-  4 = E "lyric world"
+  3 = E "phrase_end"
+  4 = E "phrase_start"
+  5 = E "lyric world"
+  6 = E "phrase_end"
 }

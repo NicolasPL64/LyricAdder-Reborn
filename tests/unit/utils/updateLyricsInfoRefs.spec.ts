@@ -6,14 +6,12 @@ describe("lyrics editor calculations", () => {
     beforeEach(() => localStorage.clear())
 
     it("numbers every input line", () => {
-        expect(updateLineNumbers(["first line", "second line", "third line"])).toBe(
-            "1\n2\n3\n"
-        )
+        expect(updateLineNumbers(["first line", "second line", "third line"])).toBe("1\n2\n3\n")
     })
 
     it("counts syllables and ignores markup", () => {
         expect(
-            updateSyllableCount({ chartLyrics: "", chartSyllablesCount: [3, 2] }, [
+            updateSyllableCount({ chartLyrics: "", chartSyllablesCount: [3, 2], errors: [] }, [
                 "<i>one two</i> three",
                 "four-five",
                 "",
