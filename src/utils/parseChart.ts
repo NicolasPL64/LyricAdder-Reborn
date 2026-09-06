@@ -1,4 +1,5 @@
 import { isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
+import { chartErrorMessages } from "./chartErrorMessages"
 import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
 import { defaultSettings } from "./settings"
 
@@ -60,7 +61,7 @@ export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
                     flushPhrase()
                 } else if (phraseOpen) {
                     errors.push({
-                        message: "Two phrase_start events with no lyric events between them.",
+                        message: chartErrorMessages.CONSECUTIVE_PHRASE_START,
                         timestamps: [phraseStartTick, tick],
                     })
                 }
@@ -69,12 +70,12 @@ export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
             } else if (event.name === "phrase_end") {
                 if (!phraseOpen) {
                     errors.push({
-                        message: "phrase_end with no open phrase.",
+                        message: chartErrorMessages.PHRASE_END_WITHOUT_OPEN_PHRASE,
                         timestamps: [tick],
                     })
                 } else if (currentPhrase.length === 0) {
                     errors.push({
-                        message: "phrase_end with no lyric events since the last phrase_start.",
+                        message: chartErrorMessages.PHRASE_END_WITHOUT_LYRICS,
                         timestamps: [tick],
                     })
                 } else {
@@ -84,7 +85,7 @@ export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
             } else if (isLyricEvent(event)) {
                 if (!phraseOpen) {
                     errors.push({
-                        message: "Lyric event without a preceding phrase_start.",
+                        message: chartErrorMessages.LYRIC_WITHOUT_PHRASE_START,
                         timestamps: [tick],
                     })
                 }
@@ -112,7 +113,7 @@ export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
     }
     if (phraseOpen) {
         errors.push({
-            message: "The last phrase is missing its closing phrase_end.",
+            message: chartErrorMessages.MISSING_CLOSING_PHRASE_END,
             timestamps: [phraseStartTick],
         })
     }

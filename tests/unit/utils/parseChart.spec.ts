@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { extractLyrics, parseChart } from "@/utils/parseChart"
+import { chartErrorMessages } from "@/utils/chartErrorMessages"
 import { ChartIO } from "@/utils/herochartio"
 
 import parsingChart from "../../files/chart-parsing.chart?raw"
@@ -74,7 +75,7 @@ describe("parseChart", () => {
         expect(chartLyrics).toBe("A")
         expect(errors).toEqual([
             {
-                message: "Two phrase_start events with no lyric events between them.",
+                message: chartErrorMessages.CONSECUTIVE_PHRASE_START,
                 timestamps: [0, 1],
             },
         ])
@@ -91,7 +92,7 @@ describe("parseChart", () => {
         expect(chartLyrics).toBe("A")
         expect(errors).toEqual([
             {
-                message: "The last phrase is missing its closing phrase_end.",
+                message: chartErrorMessages.MISSING_CLOSING_PHRASE_END,
                 timestamps: [0],
             },
         ])
@@ -108,7 +109,9 @@ describe("parseChart", () => {
         )
 
         expect(chartLyrics).toBe("A")
-        expect(errors).toEqual([{ message: "phrase_end with no open phrase.", timestamps: [3] }])
+        expect(errors).toEqual([
+            { message: chartErrorMessages.PHRASE_END_WITHOUT_OPEN_PHRASE, timestamps: [3] },
+        ])
     })
 
     it("flags a phrase_end with no lyric events since the last phrase_start", () => {
@@ -122,7 +125,7 @@ describe("parseChart", () => {
         expect(chartLyrics).toBe("")
         expect(errors).toEqual([
             {
-                message: "phrase_end with no lyric events since the last phrase_start.",
+                message: chartErrorMessages.PHRASE_END_WITHOUT_LYRICS,
                 timestamps: [1],
             },
         ])
@@ -141,7 +144,7 @@ describe("parseChart", () => {
         expect(chartLyrics).toBe("A B")
         expect(errors).toEqual([
             {
-                message: "Lyric event without a preceding phrase_start.",
+                message: chartErrorMessages.LYRIC_WITHOUT_PHRASE_START,
                 timestamps: [0],
             },
         ])
@@ -155,12 +158,14 @@ describe("parseChart", () => {
                 2 = E "phrase_end"
                 3 = E "phrase_start"
                 4 = E "lyric B"
-                5 = E "phrase_end"
+                5 = E "phrase_start"
+                6 = E "lyric C"
+                7 = E "phrase_end"
             `)
         )
 
-        expect(chartLyrics).toBe("A\nB")
-        expect(chartSyllablesCount).toEqual([1, 1])
+        expect(chartLyrics).toBe("A\nB\nC")
+        expect(chartSyllablesCount).toEqual([1, 1, 1])
         expect(errors).toEqual([])
     })
 })
