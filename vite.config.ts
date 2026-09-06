@@ -7,15 +7,15 @@ import { PrimeVueResolver } from "@primevue/auto-import-resolver"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    Components({
-      resolvers: [PrimeVueResolver()],
-    }),
-  ],
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    plugins: [
+        vue(),
+        Components({
+            resolvers: [PrimeVueResolver()],
+        }),
+    ],
+    resolve: {
+        alias: {
+            "@": fileURLToPath(new URL("./src", import.meta.url)),
+        },
     },
-  },
 })

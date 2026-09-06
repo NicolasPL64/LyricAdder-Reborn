@@ -54,12 +54,8 @@
   </div>
   <button
     @click="saveFile"
-    :disabled="highlightedIndices.length > 0"
-    v-tooltip="
-      highlightedIndices.length > 0
-        ? { value: 'Fix the highlighted phrases before saving', showDelay: 0 }
-        : ''
-    "
+    :disabled="highlightedIndices.length > 0 || chartErrors.length > 0"
+    v-tooltip="{ value: saveTooltipMessage, showDelay: 0 }"
   >
     <IconSave />Save chart
   </button>
@@ -69,20 +65,33 @@
 import IconLoad from "@/components/icons/IconLoad.vue"
 import IconSave from "@/components/icons/IconSave.vue"
 
-import { parseChart, type ParsedChartWithOriginal } from "@/utils/parseChart"
+import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings } from "@/utils/settings"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
 import { open } from "@tauri-apps/plugin-dialog"
-import { ref, watch, onMounted, onActivated, onDeactivated } from "vue"
+import { ref, computed, watch, onMounted, onActivated, onDeactivated } from "vue"
 
 const lyricsText = ref("")
 const syllablesCount = ref("")
 const lineNumbers = ref("1")
 const highlightedLines = ref<string[]>([]) // Array of lines to display in the highlighted lines container
 const highlightedIndices = ref<number[]>([]) // Indices of the lines that should be highlighted
+const chartErrors = ref<ChartError[]>([]) // Structural errors in the loaded chart
+
+const saveTooltipMessage = computed(() => {
+  if (chartErrors.value.length > 0) {
+    return chartErrors.value
+      .map((error) => `${error.message} (@${error.timestamps.join(",")})`)
+      .join("\n")
+  }
+  if (highlightedIndices.value.length > 0) {
+    return "Fix the highlighted phrases before saving"
+  }
+  return ""
+})
 
 const syllablesTextarea = ref<HTMLTextAreaElement | null>(null)
 const lineNumbersTextarea = ref<HTMLTextAreaElement | null>(null)
@@ -123,6 +132,7 @@ async function loadFile() {
   path = selectedPath
 
   chart = await parseChart(path)
+  chartErrors.value = chart.parsed.errors
   lyricsText.value = chart.parsed.chartLyrics
 
   setupFileWatcher()
@@ -131,18 +141,23 @@ async function loadFile() {
 async function saveFile() {
   // WARN: Supposedly, mouseenter events don't trigger on disabled elements on some browsers
   if (!path) return
+  if (chartErrors.value.length > 0) return
   await parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
 }
 
 function setupFileWatcher() {
   createFileWatcher(path, isRereadOnChange, (updatedChart) => {
     chart = updatedChart
+    chartErrors.value = updatedChart.parsed.errors
     watchLyricsTextRef()
   })
 }
 
 async function watchLyricsTextRef() {
-  if (!isRereadOnChange) chart = await parseChart(path) // Original LyricAdder behavior
+  if (!isRereadOnChange) {
+    chart = await parseChart(path) // Original LyricAdder behavior
+    chartErrors.value = chart.parsed.errors
+  }
 
   syllablesCount.value = updateSyllableCount(chart.parsed, lyricsText.value.split("\n"))
   lineNumbers.value = updateLineNumbers(lyricsText.value.split("\n"))
@@ -165,6 +180,7 @@ onActivated(async () => {
   if (path) {
     if (isRereadOnChange) {
       chart = await parseChart(path)
+      chartErrors.value = chart.parsed.errors
       watchLyricsTextRef()
     }
     setupFileWatcher()
