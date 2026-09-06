@@ -8,9 +8,12 @@ import parsingChart from "../../files/chart-parsing.chart?raw"
 import maxSectionSepChart from "../../files/max-section-separators.chart?raw"
 import specialCharactersChart from "../../files/test1.chart?raw"
 
+function buildChartText(events: string) {
+    return `[Song]\n{\n}\n[Events]\n{\n${events}\n}\n`
+}
+
 function buildEvents(events: string) {
-    const chartText = `[Song]\n{\n}\n[Events]\n{\n${events}\n}\n`
-    return ChartIO.parse(chartText).Events
+    return ChartIO.parse(buildChartText(events)).Events
 }
 
 describe("parseChart", () => {
@@ -41,12 +44,12 @@ describe("parseChart", () => {
 
         localStorage.setItem("maxSectionSeparators", "1")
         await expect(parseChart("notes.chart")).resolves.toMatchObject({
-            parsed: { chartLyrics: "first\n\nalpha\nbeta" },
+            parsed: { chartLyrics: "first\nalpha\n\nbeta" },
         })
 
         localStorage.setItem("maxSectionSeparators", "2")
         await expect(parseChart("notes.chart")).resolves.toMatchObject({
-            parsed: { chartLyrics: "first\n\n\nalpha\nbeta" },
+            parsed: { chartLyrics: "first\nalpha\n\n\nbeta" },
         })
     })
 
@@ -167,5 +170,151 @@ describe("parseChart", () => {
         expect(chartLyrics).toBe("A\nB\nC")
         expect(chartSyllablesCount).toEqual([1, 1, 1])
         expect(errors).toEqual([])
+    })
+
+    it("joins lyric events with spaces in the middle using the section symbol", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildEvents(`
+                0 = E "phrase_start"
+                1 = E "lyric foo bar"
+                2 = E "phrase_end"
+            `)
+        )
+
+        expect(chartLyrics).toBe("foo§bar")
+        expect(chartSyllablesCount).toEqual([1])
+        expect(errors).toEqual([])
+    })
+
+    it("ignores a section before the first phrase", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildEvents(`
+                0 = E "section Intro"
+                1 = E "phrase_start"
+                2 = E "lyric A"
+                3 = E "phrase_end"
+            `)
+        )
+
+        expect(chartLyrics).toBe("A")
+        expect(chartSyllablesCount).toEqual([1])
+        expect(errors).toEqual([])
+    })
+
+    it("places a mid-phrase section's blank line after the phrase", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildEvents(`
+                0 = E "phrase_start"
+                1 = E "lyric A"
+                2 = E "section Outro"
+                3 = E "phrase_end"
+            `)
+        )
+
+        expect(chartLyrics).toBe("A")
+        expect(chartSyllablesCount).toEqual([1])
+        expect(errors).toEqual([])
+    })
+
+    it("concatenates lyric events ending with an equals sign", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildEvents(`
+                0 = E "phrase_start"
+                1 = E "lyric he="
+                2 = E "lyric llo"
+                3 = E "phrase_end"
+            `)
+        )
+
+        expect(chartLyrics).toBe("he=llo")
+        expect(chartSyllablesCount).toEqual([2])
+        expect(errors).toEqual([])
+    })
+
+    it("resets the section separator budget after each phrase", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildEvents(`
+                0 = E "phrase_start"
+                1 = E "lyric A"
+                2 = E "phrase_end"
+                3 = E "section X"
+                4 = E "phrase_start"
+                5 = E "lyric B"
+                6 = E "phrase_end"
+                7 = E "section Y"
+                8 = E "phrase_start"
+                9 = E "lyric C"
+                10 = E "phrase_end"
+            `),
+            1
+        )
+
+        expect(chartLyrics).toBe("A\n\nB\n\nC")
+        expect(chartSyllablesCount).toEqual([1, 1, 1])
+        expect(errors).toEqual([])
+    })
+
+    it("places a section between two lyrics after the completed phrase", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildEvents(`
+                0 = E "phrase_start"
+                1 = E "lyric A"
+                2 = E "section X"
+                3 = E "lyric B"
+                4 = E "phrase_end"
+                5 = E "phrase_start"
+                6 = E "lyric C"
+                7 = E "phrase_end"
+            `)
+        )
+
+        expect(chartLyrics).toBe("A B\n\nC")
+        expect(chartSyllablesCount).toEqual([2, 1])
+        expect(errors).toEqual([])
+    })
+
+    it("joins the lyrics of a phrase split by a section into a single line", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildEvents(`
+                0 = E "phrase_start"
+                1 = E "lyric A"
+                2 = E "section X"
+                3 = E "lyric B"
+                4 = E "phrase_end"
+            `)
+        )
+
+        expect(chartLyrics).toBe("A B")
+        expect(chartSyllablesCount).toEqual([2])
+        expect(errors).toEqual([])
+    })
+
+    it("returns an empty result for a chart without events", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(buildEvents(""))
+
+        expect(chartLyrics).toBe("")
+        expect(chartSyllablesCount).toEqual([])
+        expect(errors).toEqual([])
+    })
+
+    it("propagates structural errors when loading a chart", async () => {
+        const chart = ChartIO.parse(
+            buildChartText(`
+                0 = E "phrase_start"
+                1 = E "lyric A"
+            `)
+        )
+        vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
+
+        await expect(parseChart("broken.chart")).resolves.toEqual({
+            parsed: {
+                chartLyrics: "A",
+                chartSyllablesCount: [1],
+                errors: [
+                    { message: chartErrorMessages.MISSING_CLOSING_PHRASE_END, timestamps: [0] },
+                ],
+            },
+            original: chart,
+        })
     })
 })

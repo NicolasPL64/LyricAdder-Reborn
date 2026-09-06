@@ -34,6 +34,7 @@ export function extractLyrics(
     let syllables = 0
     let previousLyricEndsWithHyphen = false
     let sectionsSpaceCount = 0
+    let pendingSections = 0
     let phraseOpen = false
     let phraseStartTick = 0
 
@@ -44,9 +45,11 @@ export function extractLyrics(
     const flushPhrase = () => {
         lyrics.push(currentPhrase.join(" ").trim())
         syllablesCount.push(syllables)
+        for (let i = 0; i < pendingSections; i++) lyrics.push("")
         currentPhrase = []
         syllables = 0
         sectionsSpaceCount = 0
+        pendingSections = 0
         previousLyricEndsWithHyphen = false
     }
 
@@ -63,12 +66,15 @@ export function extractLyrics(
         const tick = parseInt(time)
         for (const event of eventList) {
             if (
-                lyrics.length > 0 &&
-                sectionsSpaceCount < maxSectionSeparators &&
+                sectionsSpaceCount + pendingSections < maxSectionSeparators &&
                 event.name.startsWith("section")
             ) {
-                lyrics.push("")
-                sectionsSpaceCount++
+                if (currentPhrase.length > 0) {
+                    pendingSections++
+                } else if (lyrics.length > 0) {
+                    lyrics.push("")
+                    sectionsSpaceCount++
+                }
             } else if (event.name === "phrase_start") {
                 if (phraseOpen && currentPhrase.length > 0) {
                     // Save the phrase
