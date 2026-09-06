@@ -14,12 +14,19 @@ export type ParsedChart = {
 }
 export type ParsedChartWithOriginal = { parsed: ParsedChart; original: Chart }
 
-export async function parseChart(path: string): Promise<{ parsed: ParsedChart; original: any }> {
+export async function parseChart(path: string): Promise<ParsedChartWithOriginal> {
     const chart = await ChartIO.load(path)
-    return { parsed: extractLyrics(chart.Events), original: chart }
+    const maxSectionSeparators = parseInt(
+        localStorage.getItem("maxSectionSeparators") ??
+            defaultSettings.maxSectionSeparators.toString()
+    )
+    return { parsed: extractLyrics(chart.Events, maxSectionSeparators), original: chart }
 }
 
-export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
+export function extractLyrics(
+    events: ChartTrack<ChartEvent>,
+    maxSectionSeparators: number = defaultSettings.maxSectionSeparators
+): ParsedChart {
     const lyrics: string[] = []
     const syllablesCount: number[] = []
     const errors: ChartError[] = []
@@ -29,10 +36,10 @@ export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
     let sectionsSpaceCount = 0
     let phraseOpen = false
     let phraseStartTick = 0
-    const maxSectionSeparators = parseInt(
-        localStorage.getItem("maxSectionSeparators") ??
-            defaultSettings.maxSectionSeparators.toString()
-    )
+
+    const pushError = (message: string, timestamps: number[]) => {
+        errors.push({ message, timestamps })
+    }
 
     const flushPhrase = () => {
         lyrics.push(currentPhrase.join(" ").trim())
@@ -43,11 +50,18 @@ export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
         previousLyricEndsWithHyphen = false
     }
 
+    const parseLyricText = (event: ChartEvent): string => {
+        //FIXME: Bug with 'Berried Alive - Crusty'
+        //FIXME: If there is a = symbol in the middle of an event, it will be always considered a syllable separator
+        const lyricArray = event.name.split(" ")
+        // In case there is a space in the middle of the event
+        if (lyricArray.length > 2) return lyricArray.slice(1).join("§")
+        return lyricArray[1] ?? ""
+    }
+
     for (const [time, eventList] of Object.entries(events)) {
         const tick = parseInt(time)
         for (const event of eventList) {
-            //FIXME: Bug with 'Berried Alive - Crusty'
-            //FIXME: If there is a = symbol in the middle of an event, it will be always considered a syllable separator
             if (
                 lyrics.length > 0 &&
                 sectionsSpaceCount < maxSectionSeparators &&
@@ -60,41 +74,24 @@ export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
                     // Save the phrase
                     flushPhrase()
                 } else if (phraseOpen) {
-                    errors.push({
-                        message: chartErrorMessages.CONSECUTIVE_PHRASE_START,
-                        timestamps: [phraseStartTick, tick],
-                    })
+                    pushError(chartErrorMessages.CONSECUTIVE_PHRASE_START, [phraseStartTick, tick])
                 }
                 phraseOpen = true
                 phraseStartTick = tick
             } else if (event.name === "phrase_end") {
                 if (!phraseOpen) {
-                    errors.push({
-                        message: chartErrorMessages.PHRASE_END_WITHOUT_OPEN_PHRASE,
-                        timestamps: [tick],
-                    })
+                    pushError(chartErrorMessages.PHRASE_END_WITHOUT_OPEN_PHRASE, [tick])
                 } else if (currentPhrase.length === 0) {
-                    errors.push({
-                        message: chartErrorMessages.PHRASE_END_WITHOUT_LYRICS,
-                        timestamps: [tick],
-                    })
+                    pushError(chartErrorMessages.PHRASE_END_WITHOUT_LYRICS, [tick])
                 } else {
                     flushPhrase()
                 }
                 phraseOpen = false
             } else if (isLyricEvent(event)) {
                 if (!phraseOpen) {
-                    errors.push({
-                        message: chartErrorMessages.LYRIC_WITHOUT_PHRASE_START,
-                        timestamps: [tick],
-                    })
+                    pushError(chartErrorMessages.LYRIC_WITHOUT_PHRASE_START, [tick])
                 }
-                const lyricArray = event.name.split(" ")
-                let lyricText = ""
-
-                // In case there is a space in the middle of the event
-                if (lyricArray.length > 2) lyricText = lyricArray.slice(1).join("§")
-                else lyricText = lyricArray[1] ?? ""
+                const lyricText = parseLyricText(event)
                 syllables++
                 if (previousLyricEndsWithHyphen) {
                     currentPhrase[currentPhrase.length - 1] += lyricText
@@ -112,10 +109,7 @@ export function extractLyrics(events: ChartTrack<ChartEvent>): ParsedChart {
         flushPhrase()
     }
     if (phraseOpen) {
-        errors.push({
-            message: chartErrorMessages.MISSING_CLOSING_PHRASE_END,
-            timestamps: [phraseStartTick],
-        })
+        pushError(chartErrorMessages.MISSING_CLOSING_PHRASE_END, [phraseStartTick])
     }
 
     return {
