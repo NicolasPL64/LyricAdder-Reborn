@@ -104,14 +104,16 @@ describe("parseChart", () => {
             buildChart(`
                 0 = E "phrase_start"
                 1 = E "lyric A"
+                2 = E "phrase_start"
+                3 = E "lyric B"
             `).Events
         )
 
-        expect(chartLyrics).toBe("A")
+        expect(chartLyrics).toBe("A\nB")
         expect(errors).toEqual([
             {
                 message: chartErrorMessages.MISSING_CLOSING_PHRASE_END,
-                timestamps: [0],
+                timestamps: [2],
             },
         ])
     })
