@@ -4,8 +4,6 @@ import { extractLyrics, parseChart } from "@/utils/parseChart"
 import { chartErrorMessages } from "@/utils/chartErrorMessages"
 import { ChartIO } from "@/utils/herochartio"
 
-import parsingChart from "../../files/chart-parsing.chart?raw"
-import maxSectionSepChart from "../../files/max-section-separators.chart?raw"
 import specialCharactersChart from "../../files/test1.chart?raw"
 
 function buildChartText(events: string) {
@@ -23,7 +21,17 @@ describe("parseChart", () => {
     })
 
     it("extracts phrases and syllable counts from a loaded chart", async () => {
-        const chart = ChartIO.parse(parsingChart)
+        const chart = ChartIO.parse(
+            buildChartText(`
+                0 = E "phrase_start"
+                1 = E "lyric hel-"
+                2 = E "lyric lo"
+                3 = E "phrase_end"
+                4 = E "phrase_start"
+                5 = E "lyric world"
+                6 = E "phrase_end"
+            `)
+        )
         localStorage.setItem("maxSectionSeparators", "3")
         vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
 
@@ -34,7 +42,22 @@ describe("parseChart", () => {
     })
 
     it("respects the maxSectionSeparators setting", async () => {
-        const chart = ChartIO.parse(maxSectionSepChart)
+        const chart = ChartIO.parse(
+            buildChartText(`
+                0 = E "phrase_start"
+                1 = E "lyric first"
+                2 = E "phrase_end"
+                3 = E "phrase_start"
+                4 = E "lyric alpha"
+                5 = E "section First"
+                6 = E "section Second"
+                7 = E "section Third"
+                8 = E "phrase_end"
+                9 = E "phrase_start"
+                10 = E "lyric beta"
+                11 = E "phrase_end"
+            `)
+        )
         vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
 
         localStorage.setItem("maxSectionSeparators", "0")
