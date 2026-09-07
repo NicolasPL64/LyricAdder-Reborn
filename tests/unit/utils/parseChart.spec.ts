@@ -5,10 +5,7 @@ import { chartErrorMessages } from "@/utils/chartErrorMessages"
 import { ChartIO } from "@/utils/herochartio"
 
 import specialCharactersChart from "../../files/test1.chart?raw"
-
-function buildChart(events: string) {
-    return ChartIO.parse(`[Song]\n{\n}\n[Events]\n{\n${events}\n}\n`)
-}
+import { buildChart } from "../helpers/chart"
 
 describe("parseChart", () => {
     beforeEach(() => {

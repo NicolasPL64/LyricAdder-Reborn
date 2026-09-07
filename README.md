@@ -62,12 +62,3 @@ pnpm test:all
 # Keep unit tests running while editing
 pnpm test:watch
 ```
-
-Playwright starts Vite automatically and uses the browser version installed in the local Playwright cache. The E2E suite intentionally avoids the native Tauri file picker; that boundary should be covered separately with a manual smoke check in `pnpm tauri dev` or with Tauri-specific automation.
-
-Recommended next tests, in priority order:
-
-1. Load a real fixture and verify the lyrics textarea, syllable counts and highlighted invalid phrases.
-2. Edit a valid phrase to an invalid count and verify that saving is disabled; correct it and verify the generated chart events.
-3. Test settings persistence for theme, font size, line height and section separators.
-4. Add a native Tauri smoke test for opening and saving a `.chart` file.
