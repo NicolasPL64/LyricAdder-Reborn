@@ -5,7 +5,8 @@
       "release-type": "node",
       "package-name": "lyricadder-reborn",
       "draft": true,
-      "force-tag-creation": true
+      "force-tag-creation": true,
+      "include-component-in-tag": false
     }
   }
 }
