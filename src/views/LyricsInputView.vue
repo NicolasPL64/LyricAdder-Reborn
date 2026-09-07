@@ -142,22 +142,31 @@ async function loadFile() {
   chartErrors.value = chart.parsed.errors
   lyricsText.value = chart.parsed.chartLyrics
 
-  setupFileWatcher()
+  await setupFileWatcher()
 }
 
 async function saveFile() {
   // WARN: Supposedly, mouseenter events don't trigger on disabled elements on some browsers
   if (!path) return
   if (chartErrors.value.length > 0) return
-  await parseLyricsToChart(lyricsText.value.split("\n"), chart.original, path)
+  await parseLyricsToChart(lyricsText.value.split("\n"), path)
+
+  // Refresh the view so it reflects the saved file
+  chart = await parseChart(path)
+  chartErrors.value = chart.parsed.errors
+  watchLyricsTextRef()
 }
 
-function setupFileWatcher() {
-  createFileWatcher(path, isRereadOnChange, (updatedChart) => {
-    chart = updatedChart
-    chartErrors.value = updatedChart.parsed.errors
-    watchLyricsTextRef()
-  })
+async function setupFileWatcher() {
+  try {
+    await createFileWatcher(path, isRereadOnChange, (updatedChart) => {
+      chart = updatedChart
+      chartErrors.value = updatedChart.parsed.errors
+      watchLyricsTextRef()
+    })
+  } catch (error) {
+    console.error("Failed to set up the chart file watcher", error)
+  }
 }
 
 async function watchLyricsTextRef() {
@@ -190,7 +199,7 @@ onActivated(async () => {
       chartErrors.value = chart.parsed.errors
       watchLyricsTextRef()
     }
-    setupFileWatcher()
+    await setupFileWatcher()
   }
 })
 

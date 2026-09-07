@@ -1,10 +1,13 @@
 import { isLyricEvent } from "./auxFunctions"
-import { ChartIO, type Chart } from "./herochartio"
+import { parseChart } from "./parseChart"
+import { saveChartEventsOnly } from "./patchChartEvents"
 
-export async function parseLyricsToChart(lyrics: string[], chart: Chart, path: string) {
+export async function parseLyricsToChart(lyrics: string[], path: string) {
+    const chart = await parseChart(path)
+    const events = chart.original.Events
+
     let currentPhraseIndex = -1
     let currentPhrase: string[] = []
-    const events = chart.Events
 
     const getNextNonEmptyPhrase = () => {
         do {
@@ -37,6 +40,6 @@ export async function parseLyricsToChart(lyrics: string[], chart: Chart, path: s
         }
     }
 
-    await ChartIO.save(chart, path)
+    await saveChartEventsOnly(events, path)
     console.log("Chart saved")
 }

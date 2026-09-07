@@ -13,9 +13,15 @@
             "allow": ["**", "**/*", "/**/*"]
           },
         "fs:allow-read-file",
-        "fs:allow-write-text-file",
+        {
+            "identifier": "fs:allow-write-text-file",
+            "allow": ["**", "**/*", "/**/*"]
+        },
         "fs:allow-exists",
-        "fs:allow-watch",
+        {
+            "identifier": "fs:allow-watch",
+            "allow": ["**", "**/*", "/**/*"]
+        },
         "fs:allow-unwatch",
         "core:path:allow-extname",
         "updater:default"
