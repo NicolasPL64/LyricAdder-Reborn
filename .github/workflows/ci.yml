@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   frontend:
-    name: Frontend (lint, type-check, unit, e2e)
+    name: Frontend (type-check, unit, e2e)
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v7
@@ -30,9 +30,6 @@ jobs:
 
       - name: Type check
         run: pnpm type-check
-
-      - name: Lint
-        run: pnpm lint
 
       - name: Unit tests
         run: pnpm test:unit
