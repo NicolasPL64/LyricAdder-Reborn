@@ -7,7 +7,7 @@ import "./assets/toggle-switch.css"
 import { createApp } from "vue"
 import App from "./App.vue"
 
-import PrimeVue from "primevue/config"
+import PrimeVue from "openvue/config"
 import router from "./router"
 
 const app = createApp(App)

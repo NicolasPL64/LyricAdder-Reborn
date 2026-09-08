@@ -23,9 +23,9 @@ declare module 'vue' {
     Sidebar: typeof import('./src/components/sidebar/Sidebar.vue')['default']
     SidebarLink: typeof import('./src/components/sidebar/SidebarLink.vue')['default']
     ThemeDropdownMenu: typeof import('./src/components/ThemeDropdownMenu.vue')['default']
-    ToggleSwitch: typeof import('primevue/toggleswitch')['default']
+    ToggleSwitch: typeof import('openvue/toggleswitch')['default']
   }
   export interface GlobalDirectives {
-    Tooltip: typeof import('primevue/tooltip')['default']
+    Tooltip: typeof import('openvue/tooltip')['default']
   }
 }
