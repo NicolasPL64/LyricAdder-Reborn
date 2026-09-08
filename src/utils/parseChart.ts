@@ -101,7 +101,6 @@ export function extractLyrics(
                 syllables++
                 if (previousLyricEndsWithHyphen) {
                     currentPhrase[currentPhrase.length - 1] += lyricText
-                    previousLyricEndsWithHyphen = false
                 } else {
                     currentPhrase.push(lyricText)
                 }
