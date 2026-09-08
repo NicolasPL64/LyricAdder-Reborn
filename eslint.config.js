@@ -18,6 +18,7 @@ export default defineConfigWithVueTs(
       "**/test-results/**",
       "**/playwright-report/**",
       "**/src-tauri/target/**",
+      "**/src/utils/herochartio/**",
     ],
   },
   js.configs.recommended,

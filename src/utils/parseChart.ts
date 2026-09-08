@@ -1,4 +1,4 @@
-import { isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
+import { compareEventPriority, isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
 import { chartErrorMessages } from "./chartErrorMessages"
 import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
 import { defaultSettings } from "./settings"
@@ -64,7 +64,9 @@ export function extractLyrics(
 
     for (const [time, eventList] of Object.entries(events)) {
         const tick = parseInt(time)
-        for (const event of eventList) {
+        const eventsToProcess =
+            eventList.length > 1 ? [...eventList].sort(compareEventPriority) : eventList
+        for (const event of eventsToProcess) {
             if (
                 sectionsSpaceCount + pendingSections < maxSectionSeparators &&
                 event.name.startsWith("section")

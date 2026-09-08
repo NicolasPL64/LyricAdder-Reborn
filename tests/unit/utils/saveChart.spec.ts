@@ -74,4 +74,26 @@ describe("parseLyricsToChart", () => {
             "lyric b",
         ])
     })
+
+    it("assigns lyrics correctly when they share a tick with phrase_start", async () => {
+        const chart = buildChart(`
+            192 = E "phrase_start"
+            240 = E "lyric ñ"
+            384 = E "lyric test"
+            384 = E "phrase_start"
+            384 = E "section Default"
+            528 = E "phrase_end"
+        `)
+        vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
+        vi.mocked(patchChartEvents.saveChartEventsOnly).mockResolvedValue(undefined)
+
+        await parseLyricsToChart(["ñ", "test"], "song.chart")
+
+        const events = vi.mocked(patchChartEvents.saveChartEventsOnly).mock.calls[0][0]
+        expect(lyricNames(events)).toEqual(["lyric ñ", "lyric test"])
+        expect(patchChartEvents.saveChartEventsOnly).toHaveBeenCalledWith(
+            expect.anything(),
+            "song.chart"
+        )
+    })
 })
