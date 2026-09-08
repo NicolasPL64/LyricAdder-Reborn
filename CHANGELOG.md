@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.1.0...v0.2.0) (2026-09-08)
+
+
+### Features
+
+* implement event priority handling and update tests for lyric assignment ([1d87d40](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/1d87d4080948265b0fc99f1f7e3bf3910bdc532d))
+
+
+### Bug Fixes
+
+* migrate from PrimeVue to OpenVue for component and directive imports ([e57f011](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/e57f0116d683f9b4484be0fd4ccf4ab34eec42e7))
+* remove PrimeVue overrides in package.json after migrating to OpenVue ([34f97ff](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/34f97ff3c330eaa4339faeec518b8baee0e5cdb3))
+* update apostrophe handling and separator character in lyrics extraction ([c81ee15](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/c81ee1555982045e55779387a0cb35bcd8d9d503))
+* update event priority order to include 'lyric', 'Default', and 'phrase_end' ([4530b0e](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/4530b0e9920f340aab532294f48118192f578b7b))
+
 ## [0.1.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/lyricadder-reborn-v0.0.7...lyricadder-reborn-v0.1.0) (2026-09-07)
 
 
