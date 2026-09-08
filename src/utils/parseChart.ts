@@ -1,4 +1,4 @@
-import { isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
+import { compareEventPriority, isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
 import { chartErrorMessages } from "./chartErrorMessages"
 import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
 import { defaultSettings } from "./settings"
@@ -58,13 +58,15 @@ export function extractLyrics(
         //FIXME: If there is a = symbol in the middle of an event, it will be always considered a syllable separator
         const lyricArray = event.name.split(" ")
         // In case there is a space in the middle of the event
-        if (lyricArray.length > 2) return lyricArray.slice(1).join("§")
+        if (lyricArray.length > 2) return lyricArray.slice(1).join("_")
         return lyricArray[1] ?? ""
     }
 
     for (const [time, eventList] of Object.entries(events)) {
         const tick = parseInt(time)
-        for (const event of eventList) {
+        const eventsToProcess =
+            eventList.length > 1 ? [...eventList].sort(compareEventPriority) : eventList
+        for (const event of eventsToProcess) {
             if (
                 sectionsSpaceCount + pendingSections < maxSectionSeparators &&
                 event.name.startsWith("section")
@@ -101,7 +103,6 @@ export function extractLyrics(
                 syllables++
                 if (previousLyricEndsWithHyphen) {
                     currentPhrase[currentPhrase.length - 1] += lyricText
-                    previousLyricEndsWithHyphen = false
                 } else {
                     currentPhrase.push(lyricText)
                 }

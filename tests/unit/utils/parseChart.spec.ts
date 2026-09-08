@@ -148,6 +148,41 @@ describe("parseChart", () => {
         ])
     })
 
+    it("assigns a lyric at the same tick as a phrase_start to the new phrase", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildChart(`
+                192 = E "phrase_start"
+                240 = E "lyric A"
+                384 = E "lyric B"
+                384 = E "phrase_start"
+                384 = E "section Default"
+                480 = E "Default"
+                528 = E "phrase_end"
+            `).Events
+        )
+
+        expect(chartLyrics).toBe("A\n\nB")
+        expect(chartSyllablesCount).toEqual([1, 2])
+        expect(errors).toEqual([])
+    })
+
+    it("does not flag phrase_end without lyrics when the phrase_start shares a tick with the lyric", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildChart(`
+                192 = E "phrase_start"
+                240 = E "lyric A"
+                384 = E "lyric B"
+                384 = E "phrase_start"
+                384 = E "section Default"
+                528 = E "phrase_end"
+            `).Events
+        )
+
+        expect(chartLyrics).toBe("A\n\nB")
+        expect(chartSyllablesCount).toEqual([1, 1])
+        expect(errors).toEqual([])
+    })
+
     it("flags a lyric event without a preceding phrase_start", () => {
         const { chartLyrics, errors } = extractLyrics(
             buildChart(`
@@ -195,7 +230,7 @@ describe("parseChart", () => {
             `).Events
         )
 
-        expect(chartLyrics).toBe("foo§bar")
+        expect(chartLyrics).toBe("foo_bar")
         expect(chartSyllablesCount).toEqual([1])
         expect(errors).toEqual([])
     })

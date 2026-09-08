@@ -109,8 +109,8 @@ const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
 let isRereadOnChange = false
 const isGayMode = ref<boolean>(false)
 
-function syncScroll(event: any) {
-  const scrollTop = event.target.scrollTop
+function syncScroll(event: Event) {
+  const scrollTop = (event.currentTarget as HTMLTextAreaElement).scrollTop
   syllablesTextarea.value?.scrollTo({ top: scrollTop })
   lineNumbersTextarea.value?.scrollTo({ top: scrollTop })
   lyricsTextarea.value?.scrollTo({ top: scrollTop })

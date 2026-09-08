@@ -1,4 +1,4 @@
-import { isLyricEvent } from "./auxFunctions"
+import { compareEventPriority, isLyricEvent } from "./auxFunctions"
 import { parseChart } from "./parseChart"
 import { saveChartEventsOnly } from "./patchChartEvents"
 
@@ -31,7 +31,9 @@ export async function parseLyricsToChart(lyrics: string[], path: string) {
     }
 
     for (const eventList of Object.values(events)) {
-        for (const event of eventList) {
+        const eventsToProcess =
+            eventList.length > 1 ? [...eventList].sort(compareEventPriority) : eventList
+        for (const event of eventsToProcess) {
             if (event.name === "phrase_start") {
                 currentPhrase = getNextNonEmptyPhrase()
             } else if (isLyricEvent(event)) {
