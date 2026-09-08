@@ -195,7 +195,7 @@ describe("parseChart", () => {
             `).Events
         )
 
-        expect(chartLyrics).toBe("foo§bar")
+        expect(chartLyrics).toBe("foo_bar")
         expect(chartSyllablesCount).toEqual([1])
         expect(errors).toEqual([])
     })

@@ -58,7 +58,7 @@ export function extractLyrics(
         //FIXME: If there is a = symbol in the middle of an event, it will be always considered a syllable separator
         const lyricArray = event.name.split(" ")
         // In case there is a space in the middle of the event
-        if (lyricArray.length > 2) return lyricArray.slice(1).join("§")
+        if (lyricArray.length > 2) return lyricArray.slice(1).join("_")
         return lyricArray[1] ?? ""
     }
 
