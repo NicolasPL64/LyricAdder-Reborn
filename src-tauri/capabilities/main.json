@@ -24,6 +24,8 @@
         },
         "fs:allow-unwatch",
         "core:path:allow-extname",
-        "updater:default"
+        "updater:default",
+        "process:default",
+        "dialog:allow-ask"
     ]
 }
