@@ -57,10 +57,5 @@
     "vite": "^8.2.2",
     "vitest": "^5.0.0",
     "vue-tsc": "^3.3.11"
-  },
-  "pnpm": {
-    "overrides": {
-      "primevue": "npm:openvue@1.0.0-rc.0"
-    }
   }
 }
