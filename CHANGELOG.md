@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.2.0...v0.2.1) (2026-09-09)
+
+
+### Features
+
+* add update checking functionality with user confirmation dialog ([d156e73](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/d156e7318fc7946387a3a3d6c0df279b92a49bc8))
+
+
+### Miscellaneous Chores
+
+* remove unnecessary RELEASING.md file ([be619b8](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/be619b8a976664537902cb02e7c5c7014f37fdd5))
+
 ## [0.2.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.1.0...v0.2.0) (2026-09-08)
 
 
