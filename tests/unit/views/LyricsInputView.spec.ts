@@ -122,4 +122,110 @@ describe("LyricsInputView", () => {
             "song.chart"
         )
     })
+
+    it("renders the lyrics as rich text when rich mode is enabled", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric <i>one"
+                2 = E "lyric two_three"
+                3 = E "phrase_end"
+            `)
+        )
+
+        expect(wrapper.find(".lyrics-editor").exists()).toBe(false)
+
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        const editor = wrapper.find(".lyrics-editor")
+        expect(editor.exists()).toBe(true)
+        expect(editor.element.innerHTML).toBe(
+            '<div><i>one <span class="joined">two three</span></i></div>'
+        )
+    })
+
+    it("serializes the rich editor back to plain lyrics on input", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        const editor = wrapper.find(".lyrics-editor")
+        editor.element.innerHTML = "<div>one <b>two</b></div>"
+        await editor.trigger("input")
+        await flushPromises()
+
+        await findButton(wrapper, "Plain text").trigger("click")
+        await flushPromises()
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("one <b>two</b>")
+    })
+
+    it("toggles bold on the editor selection", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        const editor = wrapper.find(".lyrics-editor")
+        editor.element.innerHTML = "<div>one two</div>"
+        document.execCommand = vi.fn()
+
+        await findButton(wrapper, "B").trigger("click")
+        await flushPromises()
+
+        expect(document.execCommand).toHaveBeenCalledWith("bold")
+    })
+
+    it("preserves the scroll position when toggling between rich and plain mode", async () => {
+        const wrapper = mountView()
+        const manyLines = Array.from(
+            { length: 40 },
+            (_, i) => `    ${i * 4} = E "phrase_start"
+    ${i * 4 + 1} = E "lyric word${i}"`
+        ).join("\n")
+        await loadChart(
+            wrapper,
+            buildChart(`
+                ${manyLines}
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.scrollTop = 120
+        expect(textarea.scrollTop).toBe(120)
+
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        const editor = wrapper.find(".lyrics-editor")
+        expect(editor.element.scrollTop).toBe(120)
+
+        editor.element.scrollTop = 80
+
+        await findButton(wrapper, "Plain text").trigger("click")
+        await flushPromises()
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toContain("word0")
+        expect((wrapper.find("textarea.lyrics").element as HTMLTextAreaElement).scrollTop).toBe(80)
+    })
 })

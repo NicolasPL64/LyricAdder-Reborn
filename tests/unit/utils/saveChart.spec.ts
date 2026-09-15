@@ -22,11 +22,11 @@ describe("parseLyricsToChart", () => {
     it("rewrites lyric events to match the edited lines", async () => {
         const chart = buildChart(`
             0 = E "phrase_start"
-            1 = E "lyric a"
-            2 = E "lyric b"
+            1 = E "lyric"
+            2 = E "lyric"
             3 = E "phrase_end"
             4 = E "phrase_start"
-            5 = E "lyric c"
+            5 = E "lyric"
             6 = E "phrase_end"
         `)
         vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
@@ -45,17 +45,17 @@ describe("parseLyricsToChart", () => {
     it("splits syllables on spaces, hyphens and equals signs", async () => {
         const chart = buildChart(`
             0 = E "phrase_start"
-            1 = E "lyric a"
-            2 = E "lyric b"
+            1 = E "lyric"
+            2 = E "lyric"
             3 = E "phrase_end"
             4 = E "phrase_start"
-            5 = E "lyric c"
-            6 = E "lyric d"
-            7 = E "lyric e"
+            5 = E "lyric"
+            6 = E "lyric"
+            7 = E "lyric"
             8 = E "phrase_end"
             9 = E "phrase_start"
-            10 = E "lyric f"
-            11 = E "lyric g"
+            10 = E "lyric"
+            11 = E "lyric"
             12 = E "phrase_end"
         `)
         vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
@@ -72,6 +72,29 @@ describe("parseLyricsToChart", () => {
             "lyric bat",
             "lyric a=",
             "lyric b",
+        ])
+    })
+
+    it("keeps joined syllables (underscore) and markup within a single lyric event", async () => {
+        const chart = buildChart(`
+            0 = E "phrase_start"
+            1 = E "lyric"
+            2 = E "lyric"
+            3 = E "lyric"
+            4 = E "lyric"
+            5 = E "phrase_end"
+        `)
+        vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
+        vi.mocked(patchChartEvents.saveChartEventsOnly).mockResolvedValue(undefined)
+
+        await parseLyricsToChart(["In_the be-gin-ning"], "song.chart")
+
+        const events = vi.mocked(patchChartEvents.saveChartEventsOnly).mock.calls[0][0]
+        expect(lyricNames(events)).toEqual([
+            "lyric In_the",
+            "lyric be-",
+            "lyric gin-",
+            "lyric ning",
         ])
     })
 

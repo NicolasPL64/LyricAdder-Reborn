@@ -18,4 +18,13 @@ describe("lyrics editor calculations", () => {
             ])
         ).toBe("3/3\n2/2\n\n")
     })
+
+    it("counts joined syllables (underscore) as a single syllable", () => {
+        expect(
+            updateSyllableCount({ chartLyrics: "", chartSyllablesCount: [1, 2], errors: [] }, [
+                "one_two",
+                "three_four five",
+            ])
+        ).toBe("1/1\n2/2\n")
+    })
 })
