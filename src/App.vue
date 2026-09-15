@@ -17,7 +17,7 @@ import { setTheme, getSystemTheme, type ThemeId } from "./utils/settings"
 import { checkForUpdates } from "./composables/useUpdater"
 
 onMounted(async () => {
-  checkForUpdates()
+  if (import.meta.env.PROD) checkForUpdates()
   const savedTheme = localStorage.getItem("theme") as ThemeId
   if (savedTheme) {
     setTheme(savedTheme)
