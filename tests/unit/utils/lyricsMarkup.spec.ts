@@ -16,8 +16,22 @@ describe("renderMarkup", () => {
         )
     })
 
-    it("renders underline, strikethrough, letter case and monospace tags", () => {
+    it("renders underline and strikethrough tags", () => {
         expect(renderMarkup("<u>under</u> <s>strike</s>")).toBe("<u>under</u> <s>strike</s>")
+    })
+
+    it("renders letter case tags", () => {
+        expect(renderMarkup("<lowercase>low</lowercase> <uppercase>UP</uppercase>")).toBe(
+            '<span class="lowercase">low</span> <span class="uppercase">UP</span>'
+        )
+        expect(renderMarkup("<smallcaps>sc</smallcaps>")).toBe('<span class="smallcaps">sc</span>')
+    })
+
+    it("escapes an empty mspace tag but renders one with a value", () => {
+        expect(renderMarkup("<mspace>mono</mspace>")).toBe("&lt;mspace&gt;mono&lt;/mspace&gt;")
+        expect(renderMarkup("<mspace=2.75em>mono</mspace>")).toBe(
+            '<span data-tmp="mspace" data-tmp-value="2.75em" style="letter-spacing:2.75em">mono</span>'
+        )
     })
 
     it("escapes non-whitelisted tags as literal text", () => {
@@ -44,12 +58,32 @@ describe("renderMarkup", () => {
         expect(renderMarkup("<color=red>x</color>")).toBe(
             '<span data-tmp="color" data-tmp-value="red" style="color:red">x</span>'
         )
+        expect(renderMarkup("<color=#00FF00>x</color>")).toBe(
+            '<span data-tmp="color" data-tmp-value="#00FF00" style="color:#00FF00">x</span>'
+        )
+        expect(renderMarkup("<color=#00FF00FF>x</color>")).toBe(
+            '<span data-tmp="color" data-tmp-value="#00FF00FF" style="color:#00FF00FF">x</span>'
+        )
         expect(renderMarkup("<cspace=2>x</cspace>")).toBe(
             '<span data-tmp="cspace" data-tmp-value="2" style="letter-spacing:2px">x</span>'
+        )
+        expect(renderMarkup("<cspace=-0.5em>x</cspace>")).toBe(
+            '<span data-tmp="cspace" data-tmp-value="-0.5em" style="letter-spacing:-0.5em">x</span>'
+        )
+        expect(renderMarkup("<cspace=1em>x</cspace>")).toBe(
+            '<span data-tmp="cspace" data-tmp-value="1em" style="letter-spacing:1em">x</span>'
         )
         expect(renderMarkup('<color="a;b" onmouseover="x">y</color>')).toBe(
             "&lt;color=&quot;a;b&quot; onmouseover=&quot;x&quot;&gt;y&lt;/color&gt;"
         )
+    })
+
+    it("escapes colors that are not valid in TextMeshPro", () => {
+        expect(renderMarkup("<color=crimson>x</color>")).toBe(
+            "&lt;color=crimson&gt;x&lt;/color&gt;"
+        )
+        expect(renderMarkup("<color=#ABC>x</color>")).toBe("&lt;color=#ABC&gt;x&lt;/color&gt;")
+        expect(renderMarkup("<cspace=abc>x</cspace>")).toBe("&lt;cspace=abc&gt;x&lt;/cspace&gt;")
     })
 
     it("keeps unmatched closing tags as literal text", () => {
@@ -116,6 +150,17 @@ describe("serializeEditableHtml", () => {
                 '<div><span data-tmp="cspace" data-tmp-value="2" style="letter-spacing:2px">x</span></div>'
             )
         ).toBe("<cspace=2>x</cspace>")
+    })
+
+    it("serializes mspace and letter case spans back to their markup", () => {
+        expect(
+            serializeEditableHtml(
+                '<div><span data-tmp="mspace" data-tmp-value="2.75em" style="letter-spacing:2.75em">mono</span></div>'
+            )
+        ).toBe("<mspace=2.75em>mono</mspace>")
+        expect(serializeEditableHtml('<div><span class="uppercase">UP</span></div>')).toBe(
+            "<uppercase>UP</uppercase>"
+        )
     })
 
     it("strips unknown elements but keeps their content", () => {

@@ -24,7 +24,6 @@ const SPAN_TAGS = {
     lowercase: "lowercase",
     uppercase: "uppercase",
     smallcaps: "smallcaps",
-    mspace: "mspace",
 } as const
 
 // Tags rendered as <span> with inline styles.
@@ -35,8 +34,12 @@ function valueStyle(tag: string, value: string): string | null {
                 ? `data-tmp="color" data-tmp-value="${value}" style="color:${value}"`
                 : null
         case "cspace":
-            return isValidNumber(value)
-                ? `data-tmp="cspace" data-tmp-value="${value.trim()}" style="letter-spacing:${value.trim()}px"`
+            return isValidLength(value)
+                ? `data-tmp="cspace" data-tmp-value="${value.trim()}" style="letter-spacing:${formatLength(value)}"`
+                : null
+        case "mspace":
+            return isValidLength(value)
+                ? `data-tmp="mspace" data-tmp-value="${value.trim()}" style="letter-spacing:${formatLength(value)}"`
                 : null
         default:
             return null
@@ -45,11 +48,20 @@ function valueStyle(tag: string, value: string): string | null {
 
 function isValidColor(value: string): boolean {
     const color = value.trim()
-    return /^#[0-9a-fA-F]{3,8}$/.test(color) || /^[a-z]{3,20}$/i.test(color)
+    const namedColors = ["black", "blue", "green", "orange", "purple", "red", "white", "yellow"]
+    return (
+        /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(color) ||
+        namedColors.includes(color.toLowerCase())
+    )
 }
 
-function isValidNumber(value: string): boolean {
-    return /^\d+(\.\d+)?$/.test(value.trim())
+function isValidLength(value: string): boolean {
+    return /^-?\d+(\.\d+)?(px|em)?$/.test(value.trim())
+}
+
+function formatLength(value: string): string {
+    const trimmed = value.trim()
+    return /(px|em)$/.test(trimmed) ? trimmed : `${trimmed}px`
 }
 
 function escapeHtml(text: string): string {
@@ -86,9 +98,10 @@ function closeFor(name: string): string {
 
 function openFor(name: string, value: string): string | null {
     if (isHtmlTag(name)) return `<${name}>`
-    if (isSpanTag(name)) return `<span class="${SPAN_TAGS[name]}">`
     const style = valueStyle(name, value)
-    return style === null ? null : `<span ${style}>`
+    if (style !== null) return `<span ${style}>`
+    if (isSpanTag(name)) return `<span class="${SPAN_TAGS[name]}">`
+    return null
 }
 
 function renderLine(line: string): string {

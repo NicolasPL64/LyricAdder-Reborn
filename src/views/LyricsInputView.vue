@@ -349,10 +349,6 @@ onDeactivated(() => {
   font-variant: small-caps;
 }
 
-.lyrics-editor :deep(.mspace) {
-  font-family: monospace;
-}
-
 .highlighted-lines {
   position: absolute;
   top: 2px;
