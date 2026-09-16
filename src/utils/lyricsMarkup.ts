@@ -9,6 +9,13 @@
 
 const TAG_REGEX = /(<[^>]*>)/g
 
+// Internal marker used in the plain lyrics text to represent an "=" that belongs
+// to a single syllable (e.g. the single event `lyric A=B`). A trailing "=" that
+// joins two events is kept as a literal "=". The marker is a private-use Unicode
+// char that cannot appear in real charts.
+export const INTERNAL_EQUALS = "\uE000"
+const INTERNAL_EQUALS_REGEX = /[\uE000]/g
+
 // Tags rendered as plain HTML elements (opening/closing pairs).
 const HTML_TAGS = ["i", "b", "s", "u"] as const
 
@@ -53,12 +60,15 @@ function escapeHtml(text: string): string {
         .replace(/"/g, "&quot;")
 }
 
-// Wraps text that contains underscores (joined syllables) in a highlighted span,
-// replacing the underscores with spaces so the user can see the full syllable.
+// Wraps text that contains underscores (joined syllables) or the internal-equals
+// marker in a highlighted span. Underscores become spaces; the internal marker
+// becomes a literal "=" so the user sees the full syllable.
 function markJoinedInText(text: string): string {
-    return text.replace(/(\S*_+\S*)/g, (match) => {
-        if (!match.includes("_")) return match
-        return `<span class="joined">${match.replace(/_/g, " ")}</span>`
+    return text.replace(/(\S+)/g, (match) => {
+        if (!match.includes("_") && !match.includes(INTERNAL_EQUALS)) return match
+        return `<span class="joined">${match
+            .replace(/_/g, " ")
+            .replace(INTERNAL_EQUALS_REGEX, "=")}</span>`
     })
 }
 
@@ -176,8 +186,15 @@ function inline(el: HTMLElement): string {
     if (tag === "span") {
         const cls = typeof el.className === "string" ? el.className : ""
         if (cls.split(/\s+/).includes("joined")) {
-            // A joined syllable: any internal space is a literal space marker
-            return inlineChildren(el).replace(/\s+/g, "_")
+            // A joined syllable: spaces are literal space markers and any "=" in
+            // the text content is an internal equals (single syllable). Tags are
+            // protected so their own attributes (e.g. <color=red>) stay intact.
+            return inlineChildren(el)
+                .replace(/(<[^>]*>)/g, (match) => `\uE001${match}\uE002`)
+                .replace(/=/g, INTERNAL_EQUALS)
+                .replace(/\s+/g, "_")
+                .replace(/\uE002/g, "")
+                .replace(/\uE001/g, "")
         }
 
         const tmpTag = el.getAttribute("data-tmp")

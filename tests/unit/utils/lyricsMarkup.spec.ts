@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+    INTERNAL_EQUALS,
     joinSyllables,
     renderEditableHtml,
     renderMarkup,
@@ -33,6 +34,10 @@ describe("renderMarkup", () => {
         expect(renderMarkup("In_the be-gin-ning")).toBe(
             '<span class="joined">In the</span> be-gin-ning'
         )
+    })
+
+    it("renders internal equals markers as a literal equals inside a joined span", () => {
+        expect(renderMarkup(`A${INTERNAL_EQUALS}B C=D`)).toBe('<span class="joined">A=B</span> C=D')
     })
 
     it("renders color and cspace tags with safe values", () => {
@@ -88,6 +93,18 @@ describe("serializeEditableHtml", () => {
         )
     })
 
+    it("serializes an internal equals in a joined span back to the marker", () => {
+        expect(serializeEditableHtml('<div><span class="joined">A=B</span></div>')).toBe(
+            `A${INTERNAL_EQUALS}B`
+        )
+    })
+
+    it("serializes joined spans with nested tags back to their markup", () => {
+        expect(serializeEditableHtml('<div><span class="joined">A=<b>B</b></span></div>')).toBe(
+            `A${INTERNAL_EQUALS}<b>B</b>`
+        )
+    })
+
     it("serializes color and cspace spans back to their markup", () => {
         expect(
             serializeEditableHtml(
@@ -112,6 +129,11 @@ describe("serializeEditableHtml", () => {
 
     it("round-trips section separator empty lines", () => {
         const original = "first\nsecond\n\n\nthird"
+        expect(serializeEditableHtml(renderEditableHtml(original))).toBe(original)
+    })
+
+    it("round-trips internal equals markers through the editor HTML", () => {
+        const original = `A${INTERNAL_EQUALS}B C=D`
         expect(serializeEditableHtml(renderEditableHtml(original))).toBe(original)
     })
 })
