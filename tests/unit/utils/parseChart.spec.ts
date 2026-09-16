@@ -281,6 +281,21 @@ describe("parseChart", () => {
         expect(errors).toEqual([])
     })
 
+    it("keeps a trailing equals sign joining two events as a literal separator", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric A B="
+                2 = E "lyric C"
+                3 = E "phrase_end"
+            `).Events
+        )
+
+        expect(chartLyrics).toBe("A_B=C")
+        expect(chartSyllablesCount).toEqual([2])
+        expect(errors).toEqual([])
+    })
+
     it("marks an internal equals sign as a single syllable while keeping joined events separate", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
             buildChart(`

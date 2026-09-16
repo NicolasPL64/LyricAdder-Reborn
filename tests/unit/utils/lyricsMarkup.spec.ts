@@ -50,8 +50,24 @@ describe("renderMarkup", () => {
         )
     })
 
-    it("renders internal equals markers as a literal equals inside a joined span", () => {
-        expect(renderMarkup(`A${INTERNAL_EQUALS}B C=D`)).toBe('<span class="joined">A=B</span> C=D')
+    it("keeps literal equals and hyphen separators outside the joined span", () => {
+        expect(renderMarkup("A_B=C")).toBe('<span class="joined">A B</span>=C')
+        expect(renderMarkup("he_llo-wor_ld")).toBe(
+            '<span class="joined">he llo</span>-<span class="joined">wor ld</span>'
+        )
+        expect(renderMarkup("kick=kick_it_")).toBe('kick=<span class="joined">kick it </span>')
+    })
+
+    it("keeps internal equals inside the joined span but literal equals outside", () => {
+        expect(renderMarkup(`A${INTERNAL_EQUALS}B_C=D`)).toBe(
+            '<span class="joined">A<span class="internal-equals">=</span>B C</span>=D'
+        )
+    })
+
+    it("renders internal equals markers as a distinguishable equals inside a joined span", () => {
+        expect(renderMarkup(`A${INTERNAL_EQUALS}B C=D`)).toBe(
+            '<span class="joined">A<span class="internal-equals">=</span>B</span> C=D'
+        )
     })
 
     it("renders color and cspace tags with safe values", () => {
@@ -128,15 +144,26 @@ describe("serializeEditableHtml", () => {
     })
 
     it("serializes an internal equals in a joined span back to the marker", () => {
-        expect(serializeEditableHtml('<div><span class="joined">A=B</span></div>')).toBe(
-            `A${INTERNAL_EQUALS}B`
-        )
+        expect(
+            serializeEditableHtml(
+                '<div><span class="joined">A<span class="internal-equals">=</span>B</span></div>'
+            )
+        ).toBe(`A${INTERNAL_EQUALS}B`)
+    })
+
+    it("keeps a literal equals sign inside a joined span as a literal", () => {
+        expect(serializeEditableHtml('<div><span class="joined">A=B</span></div>')).toBe("A=B")
     })
 
     it("serializes joined spans with nested tags back to their markup", () => {
         expect(serializeEditableHtml('<div><span class="joined">A=<b>B</b></span></div>')).toBe(
-            `A${INTERNAL_EQUALS}<b>B</b>`
+            "A=<b>B</b>"
         )
+        expect(
+            serializeEditableHtml(
+                '<div><span class="joined">A<span class="internal-equals">=</span><b>B</b></span></div>'
+            )
+        ).toBe(`A${INTERNAL_EQUALS}<b>B</b>`)
     })
 
     it("serializes color and cspace spans back to their markup", () => {
@@ -179,6 +206,16 @@ describe("serializeEditableHtml", () => {
 
     it("round-trips internal equals markers through the editor HTML", () => {
         const original = `A${INTERNAL_EQUALS}B C=D`
+        expect(serializeEditableHtml(renderEditableHtml(original))).toBe(original)
+    })
+
+    it("round-trips a literal equals sign that joins two syllables", () => {
+        expect(serializeEditableHtml(renderEditableHtml("A_B=C"))).toBe("A_B=C")
+        expect(serializeEditableHtml(renderEditableHtml("kick=kick_it_"))).toBe("kick=kick_it_")
+    })
+
+    it("round-trips internal and literal equals signs side by side", () => {
+        const original = `A${INTERNAL_EQUALS}B_C=D`
         expect(serializeEditableHtml(renderEditableHtml(original))).toBe(original)
     })
 

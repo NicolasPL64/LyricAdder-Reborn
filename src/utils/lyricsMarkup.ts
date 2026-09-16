@@ -77,13 +77,24 @@ function escapeHtml(text: string): string {
 
 // Wraps text that contains underscores (joined syllables) or the internal-equals
 // marker in a highlighted span. Underscores become spaces; the internal marker
-// becomes a literal "=" so the user sees the full syllable.
+// becomes a distinguishable "=" span so serialization can tell it apart from a
+// real "=" that joins two syllables. A literal "=" or "-" separates two
+// syllables/events, so it is never highlighted as part of a joined syllable.
 function markJoinedInText(text: string): string {
     return text.replace(/(\S+)/g, (match) => {
         if (!match.includes("_") && !match.includes(INTERNAL_EQUALS)) return match
-        return `<span class="joined">${match
-            .replace(/_/g, " ")
-            .replace(INTERNAL_EQUALS_REGEX, "=")}</span>`
+        return match
+            .split(/([=-])/g)
+            .map((segment) => {
+                if (!segment.includes("_") && !segment.includes(INTERNAL_EQUALS)) return segment
+                return `<span class="joined">${segment
+                    .replace(/_/g, " ")
+                    .replace(
+                        INTERNAL_EQUALS_REGEX,
+                        '<span class="internal-equals">=</span>'
+                    )}</span>`
+            })
+            .join("")
     })
 }
 
@@ -201,13 +212,14 @@ function inline(el: HTMLElement): string {
 
     if (tag === "span") {
         const cls = typeof el.className === "string" ? el.className : ""
+        // An internal equals (a single syllable like `lyric A=B`): it must come
+        // back as the marker, never as a literal "=" that would split syllables.
+        if (cls.split(/\s+/).includes("internal-equals")) return INTERNAL_EQUALS
         if (cls.split(/\s+/).includes("joined")) {
-            // A joined syllable: spaces are literal space markers and any "=" in
-            // the text content is an internal equals (single syllable). Tags are
+            // A joined syllable: spaces are literal space markers. Tags are
             // protected so their own attributes (e.g. <color=red>) stay intact.
             return inlineChildren(el)
                 .replace(/(<[^>]*>)/g, (match) => `\uE001${match}\uE002`)
-                .replace(/=/g, INTERNAL_EQUALS)
                 .replace(/[\u0020\u00A0]/g, "_")
                 .replace(/\uE002/g, "")
                 .replace(/\uE001/g, "")

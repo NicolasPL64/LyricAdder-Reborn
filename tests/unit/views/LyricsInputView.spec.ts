@@ -195,6 +195,36 @@ describe("LyricsInputView", () => {
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("____Wit_it!")
     })
 
+    it("preserves literal equals signs (syllable separators) through a rich-mode edit", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric a="
+                2 = E "lyric b c"
+                3 = E "phrase_end"
+            `)
+        )
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("a=b_c")
+        expect(textareaValue(wrapper, "textarea.syllables")).toBe("2/2\n")
+        expect(wrapper.findAll(".highlighted-lines .highlight")).toHaveLength(0)
+
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        await wrapper.find(".lyrics-editor").trigger("input")
+        await flushPromises()
+
+        await findButton(wrapper, "Plain text").trigger("click")
+        await flushPromises()
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("a=b_c")
+        expect(textareaValue(wrapper, "textarea.syllables")).toBe("2/2\n")
+        expect(wrapper.findAll(".highlighted-lines .highlight")).toHaveLength(0)
+    })
+
     it("toggles bold on the editor selection", async () => {
         const wrapper = mountView()
         await loadChart(
