@@ -5,6 +5,9 @@
  * Only tags that do not change the line box are rendered, so the editor stays
  * aligned with the syllables / line-number columns. Everything else is escaped
  * and shown as literal text.
+ *
+ * //REF (TextMeshPro docs): https://docs.unity3d.com/Packages/com.unity.textmeshpro@3.2/manual/RichTextSupportedTags.html
+ *  //REF (whitelisted CH tags): https://strikeline.myjetbrains.com/youtrack/issue/CH-226
  */
 
 const TAG_REGEX = /(<[^>]*>)/g
@@ -205,7 +208,7 @@ function inline(el: HTMLElement): string {
             return inlineChildren(el)
                 .replace(/(<[^>]*>)/g, (match) => `\uE001${match}\uE002`)
                 .replace(/=/g, INTERNAL_EQUALS)
-                .replace(/\s+/g, "_")
+                .replace(/[\u0020\u00A0]/g, "_")
                 .replace(/\uE002/g, "")
                 .replace(/\uE001/g, "")
         }

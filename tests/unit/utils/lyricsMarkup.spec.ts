@@ -181,6 +181,21 @@ describe("serializeEditableHtml", () => {
         const original = `A${INTERNAL_EQUALS}B C=D`
         expect(serializeEditableHtml(renderEditableHtml(original))).toBe(original)
     })
+
+    it("preserves runs of consecutive underscores through the editor HTML", () => {
+        expect(serializeEditableHtml(renderEditableHtml("____Wit"))).toBe("____Wit")
+        expect(serializeEditableHtml(renderEditableHtml("a____b"))).toBe("a____b")
+        expect(serializeEditableHtml(renderEditableHtml("Wit_it!____<sub>x"))).toBe(
+            "Wit_it!____<sub>x"
+        )
+    })
+
+    it("normalizes unclosed tags while preserving padding runs", () => {
+        const original = "<b><color=#F4A11F>________________Wit</color>_it!________________<sub>."
+        expect(serializeEditableHtml(renderEditableHtml(original))).toBe(
+            "<b><color=#F4A11F>________________Wit</color>_it!________________<sub>.</b>"
+        )
+    })
 })
 
 describe("toggleTag", () => {

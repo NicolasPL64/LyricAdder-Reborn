@@ -172,6 +172,29 @@ describe("LyricsInputView", () => {
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("one <b>two</b>")
     })
 
+    it("preserves runs of underscores when editing in rich mode", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric ____Wit_it!"
+                2 = E "phrase_end"
+            `)
+        )
+
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        await wrapper.find(".lyrics-editor").trigger("input")
+        await flushPromises()
+
+        await findButton(wrapper, "Plain text").trigger("click")
+        await flushPromises()
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("____Wit_it!")
+    })
+
     it("toggles bold on the editor selection", async () => {
         const wrapper = mountView()
         await loadChart(
