@@ -13,10 +13,22 @@
   <p>Input the lyrics in the box below using the appropriate syntax:</p>
   <div class="toolbar" v-if="richMode">
     <button @click="applyFormatting('bold')" v-tooltip="{ value: 'Bold', showDelay: 400 }">
-      B
+      <IconBold />
     </button>
     <button @click="applyFormatting('italic')" v-tooltip="{ value: 'Italic', showDelay: 400 }">
-      I
+      <IconItalics />
+    </button>
+    <button
+      @click="applyFormatting('underline')"
+      v-tooltip="{ value: 'Underline', showDelay: 400 }"
+    >
+      <IconUnderline />
+    </button>
+    <button
+      @click="applyFormatting('strikeThrough')"
+      v-tooltip="{ value: 'Strikethrough', showDelay: 400 }"
+    >
+      <IconStrikethrough />
     </button>
     <button @click="applyJoinSyllables" v-tooltip="{ value: 'Join syllables', showDelay: 400 }">
       Join syllables
@@ -90,6 +102,10 @@
 <script setup lang="ts">
 import IconLoad from "@/components/icons/IconLoad.vue"
 import IconSave from "@/components/icons/IconSave.vue"
+import IconBold from "@/components/icons/text/IconBold.vue"
+import IconItalics from "@/components/icons/text/IconItalics.vue"
+import IconUnderline from "@/components/icons/text/IconUnderline.vue"
+import IconStrikethrough from "@/components/icons/text/IconStrikethrough.vue"
 
 import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
@@ -175,7 +191,7 @@ function onEditorInput() {
   lyricsText.value = serializeEditableHtml(editor.innerHTML)
 }
 
-function applyFormatting(command: "bold" | "italic") {
+function applyFormatting(command: "bold" | "italic" | "underline" | "strikeThrough") {
   const editor = lyricsEditor.value
   if (!editor) return
   editor.focus()
@@ -309,6 +325,11 @@ onDeactivated(() => {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.toolbar button {
+  margin: 0;
+  padding: 0.5em;
 }
 
 .container * {
