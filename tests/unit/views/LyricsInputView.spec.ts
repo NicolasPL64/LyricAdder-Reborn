@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import LyricsInputView from "@/views/LyricsInputView.vue"
 import * as patchChartEvents from "@/utils/patchChartEvents"
+import { INTERNAL_EQUALS } from "@/utils/lyricsMarkup"
 import { ChartIO, type Chart } from "@/utils/herochartio"
 import { open } from "@tauri-apps/plugin-dialog"
 
@@ -44,6 +45,41 @@ async function loadChart(wrapper: VueWrapper, chart: Chart) {
     vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
     await findButton(wrapper, "Load chart").trigger("click")
     await flushPromises()
+}
+
+// jsdom's Selection.addRange relies on internals hidden behind vitest's global
+// proxy, so stub the selection with a plain object.
+function mockSelection(range: Range) {
+    vi.spyOn(window, "getSelection").mockReturnValue({
+        rangeCount: 1,
+        isCollapsed: false,
+        getRangeAt: () => range,
+        removeAllRanges: vi.fn(),
+        addRange: vi.fn(),
+    } as unknown as Selection)
+}
+
+// Maps a plain-text offset to a DOM point across the editor's text nodes.
+function domPoint(root: HTMLElement, offset: number): { node: Node; offset: number } {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    let remaining = offset
+    let node = walker.nextNode()
+    while (node) {
+        const length = (node.textContent ?? "").length
+        if (remaining <= length) return { node, offset: remaining }
+        remaining -= length
+        node = walker.nextNode()
+    }
+    throw new Error(`Offset ${offset} out of bounds`)
+}
+
+function rangeOver(root: HTMLElement, start: number, end: number): Range {
+    const startPoint = domPoint(root, start)
+    const endPoint = domPoint(root, end)
+    const range = document.createRange()
+    range.setStart(startPoint.node, startPoint.offset)
+    range.setEnd(endPoint.node, endPoint.offset)
+    return range
 }
 
 describe("LyricsInputView", () => {
@@ -247,6 +283,126 @@ describe("LyricsInputView", () => {
         await flushPromises()
 
         expect(document.execCommand).toHaveBeenCalledWith("bold")
+    })
+
+    it("un-joins a joined selection in plain mode", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric aaa_bbb_ccc"
+                2 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(4, 10) // "bb_ccc"
+        await findButton(wrapper, "Join syllables").trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("aaa_bbb ccc")
+    })
+
+    it("un-joins a joined selection in rich mode", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric aaa_bbb_ccc"
+                2 = E "phrase_end"
+            `)
+        )
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        const editor = wrapper.find(".lyrics-editor")
+        mockSelection(rangeOver(editor.element as HTMLElement, 4, 10)) // "bb_ccc"
+
+        await findButton(wrapper, "Join syllables").trigger("click")
+        await flushPromises()
+
+        expect(editor.element.innerHTML).toBe('<div><span class="joined">aaa bbb</span> ccc</div>')
+
+        await findButton(wrapper, "Plain text").trigger("click")
+        await flushPromises()
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("aaa_bbb ccc")
+    })
+
+    it("converts a literal equals into an internal equals when joining in plain mode", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric a="
+                2 = E "lyric b"
+                3 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 3) // "a=b"
+        await findButton(wrapper, "Join syllables").trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe(`a${INTERNAL_EQUALS}b`)
+    })
+
+    it("joins a selection partially overlapping a joined span into one span", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric aaa"
+                2 = E "lyric bbb_ccc"
+                3 = E "phrase_end"
+            `)
+        )
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        const editor = wrapper.find(".lyrics-editor")
+        mockSelection(rangeOver(editor.element as HTMLElement, 0, 5)) // "aaa bb"
+
+        await findButton(wrapper, "Join syllables").trigger("click")
+        await flushPromises()
+
+        expect(editor.element.innerHTML).toBe('<div><span class="joined">aaa bbb ccc</span></div>')
+
+        await findButton(wrapper, "Plain text").trigger("click")
+        await flushPromises()
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("aaa_bbb_ccc")
+    })
+
+    it("joins a selection adjacent to a joined span into one span", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric aa"
+                2 = E "lyric bb_cc"
+                3 = E "phrase_end"
+            `)
+        )
+        await findButton(wrapper, "Rich text").trigger("click")
+        await flushPromises()
+
+        const editor = wrapper.find(".lyrics-editor")
+        mockSelection(rangeOver(editor.element as HTMLElement, 0, 3)) // "aa "
+
+        await findButton(wrapper, "Join syllables").trigger("click")
+        await flushPromises()
+
+        expect(editor.element.innerHTML).toBe('<div><span class="joined">aa bb cc</span></div>')
+
+        await findButton(wrapper, "Plain text").trigger("click")
+        await flushPromises()
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("aa_bb_cc")
     })
 
     it("preserves the scroll position when toggling between rich and plain mode", async () => {

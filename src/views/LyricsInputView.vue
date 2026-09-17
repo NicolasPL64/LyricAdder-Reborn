@@ -115,7 +115,10 @@ import {
   serializeEditableHtml,
   toggleTag,
   joinSyllables,
+  unjoinSyllables,
+  INTERNAL_EQUALS,
 } from "@/utils/lyricsMarkup"
+import { unjoinJoinedSpans, joinSelectionSpan } from "@/utils/richJoin"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
@@ -228,14 +231,29 @@ function applyJoinSyllables() {
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return
     if (!editor.contains(selection.getRangeAt(0).commonAncestorContainer)) return
 
-    const span = document.createElement("span")
-    span.className = "joined"
     const range = selection.getRangeAt(0)
-    span.appendChild(range.extractContents())
-    range.insertNode(span)
+    const unjoined = unjoinJoinedSpans(range, editor)
+    if (unjoined?.modified) {
+      onEditorInput()
+      if (unjoined.first && unjoined.last) {
+        const restoredRange = document.createRange()
+        restoredRange.setStartBefore(unjoined.first)
+        restoredRange.setEndAfter(unjoined.last)
+        selection.removeAllRanges()
+        selection.addRange(restoredRange)
+      }
+      return
+    }
 
-    onEditorInput()
-    return
+    const joined = joinSelectionSpan(range, editor)
+    if (joined) {
+      onEditorInput()
+      const restoredRange = document.createRange()
+      restoredRange.setStartBefore(joined)
+      restoredRange.setEndAfter(joined)
+      selection.removeAllRanges()
+      selection.addRange(restoredRange)
+    }
   }
 
   const textarea = lyricsTextarea.value
@@ -244,7 +262,8 @@ function applyJoinSyllables() {
   const end = textarea.selectionEnd
   if (start === end) return
   const selected = lyricsText.value.slice(start, end)
-  const replacement = joinSyllables(selected)
+  const alreadyJoined = selected.includes("_") || selected.includes(INTERNAL_EQUALS)
+  const replacement = alreadyJoined ? unjoinSyllables(selected) : joinSyllables(selected)
   lyricsText.value = lyricsText.value.slice(0, start) + replacement + lyricsText.value.slice(end)
   textarea.focus()
   nextTick(() => textarea.setSelectionRange(start, start + replacement.length))

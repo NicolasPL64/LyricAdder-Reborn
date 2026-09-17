@@ -312,8 +312,29 @@ export function toggleTag(selected: string, tag: string): string {
 
 /**
  * Joins the words of a selection into a single syllable, using the chart's
- * `_` marker for a literal space inside a syllable.
+ * `_` marker for a literal space inside a syllable. Literal "=" separators
+ * become internal equals (INTERNAL_EQUALS) since they now belong to one
+ * syllable. Tags are protected so the "=" in their attributes stays intact.
  */
 export function joinSyllables(selection: string): string {
-    return selection.replace(/\s+/g, "_")
+    const tags = new Map<string, string>()
+    let tagIndex = 0
+    const protectedSelection = selection.replace(/(<[^>]*>)/g, (tag) => {
+        const key = `\uE001${tagIndex++}\uE002`
+        tags.set(key, tag)
+        return key
+    })
+    return protectedSelection
+        .replace(/\s+/g, "_")
+        .replace(/=/g, INTERNAL_EQUALS)
+        .replace(/\uE001\d+\uE002/g, (key) => tags.get(key) ?? key)
+}
+
+/**
+ * Un-joins a selection that is already joined: `_` become literal spaces and
+ * an internal `=` (INTERNAL_EQUALS marker) becomes a literal trailing "=" tie.
+ * Literal "=" and "-" separators are left untouched.
+ */
+export function unjoinSyllables(selection: string): string {
+    return selection.replace(/_/g, " ").replace(INTERNAL_EQUALS_REGEX, "=")
 }

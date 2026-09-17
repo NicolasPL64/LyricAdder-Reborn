@@ -7,6 +7,7 @@ import {
     renderMarkup,
     serializeEditableHtml,
     toggleTag,
+    unjoinSyllables,
 } from "@/utils/lyricsMarkup"
 
 describe("renderMarkup", () => {
@@ -256,5 +257,31 @@ describe("joinSyllables", () => {
 
     it("collapses multiple spaces", () => {
         expect(joinSyllables("a   b")).toBe("a_b")
+    })
+
+    it("converts literal equals into an internal equals marker", () => {
+        expect(joinSyllables("A=B C")).toBe(`A${INTERNAL_EQUALS}B_C`)
+    })
+
+    it("protects the equals inside tag attributes", () => {
+        expect(joinSyllables("A <color=red>B")).toBe("A_<color=red>B")
+    })
+})
+
+describe("unjoinSyllables", () => {
+    it("replaces underscores with spaces", () => {
+        expect(unjoinSyllables("bb_ccc")).toBe("bb ccc")
+    })
+
+    it("converts an internal equals marker to a literal equals", () => {
+        expect(unjoinSyllables(`aaa${INTERNAL_EQUALS}b`)).toBe("aaa=b")
+    })
+
+    it("leaves literal equals and hyphens untouched", () => {
+        expect(unjoinSyllables("a_b=c-d")).toBe("a b=c-d")
+    })
+
+    it("leaves plain text untouched", () => {
+        expect(unjoinSyllables("In the")).toBe("In the")
     })
 })
