@@ -9,6 +9,7 @@ import { open } from "@tauri-apps/plugin-dialog"
 
 import test1ChartContent from "../../files/test1.chart?raw"
 import { buildChart, lyricNames } from "../helpers/chart"
+import { mockSelection, rangeOver } from "../helpers/dom"
 
 vi.mock("@tauri-apps/plugin-dialog", () => ({
     open: vi.fn(),
@@ -45,41 +46,6 @@ async function loadChart(wrapper: VueWrapper, chart: Chart) {
     vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
     await findButton(wrapper, "Load chart").trigger("click")
     await flushPromises()
-}
-
-// jsdom's Selection.addRange relies on internals hidden behind vitest's global
-// proxy, so stub the selection with a plain object.
-function mockSelection(range: Range) {
-    vi.spyOn(window, "getSelection").mockReturnValue({
-        rangeCount: 1,
-        isCollapsed: false,
-        getRangeAt: () => range,
-        removeAllRanges: vi.fn(),
-        addRange: vi.fn(),
-    } as unknown as Selection)
-}
-
-// Maps a plain-text offset to a DOM point across the editor's text nodes.
-function domPoint(root: HTMLElement, offset: number): { node: Node; offset: number } {
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-    let remaining = offset
-    let node = walker.nextNode()
-    while (node) {
-        const length = (node.textContent ?? "").length
-        if (remaining <= length) return { node, offset: remaining }
-        remaining -= length
-        node = walker.nextNode()
-    }
-    throw new Error(`Offset ${offset} out of bounds`)
-}
-
-function rangeOver(root: HTMLElement, start: number, end: number): Range {
-    const startPoint = domPoint(root, start)
-    const endPoint = domPoint(root, end)
-    const range = document.createRange()
-    range.setStart(startPoint.node, startPoint.offset)
-    range.setEnd(endPoint.node, endPoint.offset)
-    return range
 }
 
 describe("LyricsInputView", () => {
