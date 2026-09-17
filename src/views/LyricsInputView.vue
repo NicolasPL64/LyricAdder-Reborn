@@ -334,7 +334,21 @@ onDeactivated(() => {
 }
 
 .lyrics-editor :deep(.joined) {
-  background: #b96ad9;
+  position: relative;
+  background: transparent;
+}
+
+.lyrics-editor :deep(.joined)::before {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0.5;
+  z-index: -1;
+  border-radius: var(--border-small);
+  background: var(--background-500);
+  content: "";
 }
 
 .lyrics-editor :deep(.lowercase) {
