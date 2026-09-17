@@ -11,7 +11,7 @@
     <IconLoad />Load chart
   </button>
   <p>Input the lyrics in the box below using the appropriate syntax:</p>
-  <div class="toolbar" v-if="richMode">
+  <div class="toolbar">
     <button @click="applyFormatting('bold')" v-tooltip="{ value: 'Bold', showDelay: 400 }">
       <IconBold />
     </button>
@@ -110,7 +110,12 @@ import IconStrikethrough from "@/components/icons/text/IconStrikethrough.vue"
 import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings } from "@/utils/settings"
-import { renderEditableHtml, serializeEditableHtml } from "@/utils/lyricsMarkup"
+import {
+  renderEditableHtml,
+  serializeEditableHtml,
+  toggleTag,
+  joinSyllables,
+} from "@/utils/lyricsMarkup"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
@@ -192,28 +197,57 @@ function onEditorInput() {
 }
 
 function applyFormatting(command: "bold" | "italic" | "underline" | "strikeThrough") {
-  const editor = lyricsEditor.value
-  if (!editor) return
-  editor.focus()
-  document.execCommand(command)
-  onEditorInput()
+  if (richMode.value) {
+    const editor = lyricsEditor.value
+    if (!editor) return
+    editor.focus()
+    document.execCommand(command)
+    onEditorInput()
+    return
+  }
+
+  const textarea = lyricsTextarea.value
+  if (!textarea) return
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  if (start === end) return
+  const tag = { bold: "b", italic: "i", underline: "u", strikeThrough: "s" }[command]
+  const selected = lyricsText.value.slice(start, end)
+  const replacement = toggleTag(selected, tag)
+  lyricsText.value = lyricsText.value.slice(0, start) + replacement + lyricsText.value.slice(end)
+  textarea.focus()
+  nextTick(() => textarea.setSelectionRange(start, start + replacement.length))
 }
 
 function applyJoinSyllables() {
-  const editor = lyricsEditor.value
-  if (!editor) return
-  editor.focus()
-  const selection = window.getSelection()
-  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return
-  if (!editor.contains(selection.getRangeAt(0).commonAncestorContainer)) return
+  if (richMode.value) {
+    const editor = lyricsEditor.value
+    if (!editor) return
+    editor.focus()
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return
+    if (!editor.contains(selection.getRangeAt(0).commonAncestorContainer)) return
 
-  const span = document.createElement("span")
-  span.className = "joined"
-  const range = selection.getRangeAt(0)
-  span.appendChild(range.extractContents())
-  range.insertNode(span)
+    const span = document.createElement("span")
+    span.className = "joined"
+    const range = selection.getRangeAt(0)
+    span.appendChild(range.extractContents())
+    range.insertNode(span)
 
-  onEditorInput()
+    onEditorInput()
+    return
+  }
+
+  const textarea = lyricsTextarea.value
+  if (!textarea) return
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  if (start === end) return
+  const selected = lyricsText.value.slice(start, end)
+  const replacement = joinSyllables(selected)
+  lyricsText.value = lyricsText.value.slice(0, start) + replacement + lyricsText.value.slice(end)
+  textarea.focus()
+  nextTick(() => textarea.setSelectionRange(start, start + replacement.length))
 }
 
 function updateHighlightedLines() {
