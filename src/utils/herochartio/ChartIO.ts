@@ -1,4 +1,4 @@
-import { readTextFile, writeTextFile, exists } from "@tauri-apps/plugin-fs"
+import { readTextFile, exists } from "@tauri-apps/plugin-fs"
 import { extname } from "@tauri-apps/api/path"
 
 import type { ChartSync } from "./ChartSync"
@@ -21,11 +21,6 @@ export class ChartIO {
         else if (await exists(path + ".mid")) return this.load(path + ".mid")
 
         throw new Error(`Could not find suitable chart for "${path}"`)
-    }
-
-    static async save(chart: Chart, path: string): Promise<void> {
-        const str = ChartIO.stringify(chart)
-        return await writeTextFile(path, str)
     }
 
     static parse(content: string, options?: ChartOptions): Chart {
@@ -113,91 +108,6 @@ export class ChartIO {
         }
 
         return chart
-    }
-
-    static stringify(chart: Chart): string {
-        let str = "[Song]\n"
-        str += "{\n"
-        if (chart.Song.Name != undefined) str += `  Name = ${JSON.stringify(chart.Song.Name)}\n`
-        if (chart.Song.Artist != undefined)
-            str += `  Artist = ${JSON.stringify(chart.Song.Artist)}\n`
-        if (chart.Song.ArtistText != undefined)
-            str += `  ArtistText = ${JSON.stringify(chart.Song.ArtistText)}\n`
-        if (chart.Song.Charter != undefined)
-            str += `  Charter = ${JSON.stringify(chart.Song.Charter)}\n`
-        if (chart.Song.Album != undefined) str += `  Album = ${JSON.stringify(chart.Song.Album)}\n`
-        if (chart.Song.Year != undefined) str += `  Year = ${JSON.stringify(chart.Song.Year)}\n`
-        if (chart.Song.CountOff != undefined)
-            str += `  CountOff = ${JSON.stringify(chart.Song.CountOff)}\n`
-        if (chart.Song.Offset != undefined)
-            str += `  Offset = ${JSON.stringify(chart.Song.Offset)}\n`
-        if (chart.Song.Resolution != undefined)
-            str += `  Resolution = ${JSON.stringify(chart.Song.Resolution)}\n`
-        if (chart.Song.Player2 != undefined) str += `  Player2 = ${chart.Song.Player2}\n`
-        if (chart.Song.Difficulty != undefined)
-            str += `  Difficulty = ${JSON.stringify(chart.Song.Difficulty)}\n`
-        if (chart.Song.PreviewStart != undefined)
-            str += `  PreviewStart = ${JSON.stringify(chart.Song.PreviewStart)}\n`
-        if (chart.Song.PreviewEnd != undefined)
-            str += `  PreviewEnd = ${JSON.stringify(chart.Song.PreviewEnd)}\n`
-        if (chart.Song.GuitarVol != undefined)
-            str += `  GuitarVol = ${JSON.stringify(chart.Song.GuitarVol)}\n`
-        if (chart.Song.BandVol != undefined)
-            str += `  BandVol = ${JSON.stringify(chart.Song.BandVol)}\n`
-        if (chart.Song.HoPo != undefined) str += `  HoPo = ${JSON.stringify(chart.Song.HoPo)}\n`
-        if (chart.Song.Singer != undefined)
-            str += `  Singer = ${JSON.stringify(chart.Song.Singer)}\n`
-        if (chart.Song.OriginalArtist != undefined)
-            str += `  OriginalArtist = ${JSON.stringify(chart.Song.OriginalArtist)}\n`
-        if (chart.Song.Genre != undefined) str += `  Genre = ${JSON.stringify(chart.Song.Genre)}\n`
-        if (chart.Song.MediaType != undefined)
-            str += `  MediaType = ${JSON.stringify(chart.Song.MediaType)}\n`
-        if (chart.Song.MusicStream != undefined)
-            str += `  MusicStream = ${JSON.stringify(chart.Song.MusicStream)}\n`
-        if (chart.Song.GuitarStream != undefined)
-            str += `  GuitarStream = ${JSON.stringify(chart.Song.GuitarStream)}\n`
-        if (chart.Song.BassStream != undefined)
-            str += `  BassStream = ${JSON.stringify(chart.Song.BassStream)}\n`
-        if (chart.Song.RhythmStream != undefined)
-            str += `  RhythmStream = ${JSON.stringify(chart.Song.RhythmStream)}\n`
-        if (chart.Song.DrumStream != undefined)
-            str += `  DrumStream = ${JSON.stringify(chart.Song.DrumStream)}\n`
-        if (chart.Song.VocalStream != undefined)
-            str += `  VocalStream = ${JSON.stringify(chart.Song.VocalStream)}\n`
-        str += "}\n"
-        str += "[SyncTrack]\n"
-        str += "{\n"
-        for (const k in chart.SyncTrack) {
-            for (const ev of chart.SyncTrack[k]) {
-                str += `  ${k} = ${ev.type} ${ev.value}\n`
-            }
-        }
-        str += "}\n"
-        str += "[Events]\n"
-        str += "{\n"
-        for (const k in chart.Events) {
-            for (const ev of chart.Events[k]) {
-                str += `  ${k} = ${ev.type} ${JSON.stringify(ev.name)}\n`
-            }
-        }
-        str += "}\n"
-        for (const trackName in chart.tracks) {
-            str += `[${trackName}]\n`
-            str += "{\n"
-            for (const k in chart.tracks[trackName]) {
-                for (const ev of chart.tracks[trackName][k]) {
-                    if (ev.type == "N") {
-                        if (ChartIO.moonscraper_style && ev.touch == 5)
-                            str += `  ${k} = N ${ev.touch} ${ev.duration}\n`
-                        else str += `  ${k} = N ${ev.touch} ${ev.duration}\n`
-                    } else if (ev.type == "E") str += `  ${k} = E ${ev.name}\n`
-                    else if (ev.type == "S") str += `  ${k} = S ${ev.value} ${ev.duration}\n`
-                }
-            }
-            str += "}\n"
-        }
-
-        return str
     }
 
     private static chartToObject(content: string, options?: ChartOptions): any {

@@ -12,20 +12,30 @@
   </button>
   <p>Input the lyrics in the box below using the appropriate syntax:</p>
   <div class="toolbar">
-    <button @click="applyFormatting('bold')" v-tooltip="{ value: 'Bold', showDelay: 400 }">
+    <button
+      @click="applyFormatting('bold')"
+      aria-label="Bold"
+      v-tooltip="{ value: 'Bold', showDelay: 400 }"
+    >
       <IconBold />
     </button>
-    <button @click="applyFormatting('italic')" v-tooltip="{ value: 'Italic', showDelay: 400 }">
+    <button
+      @click="applyFormatting('italic')"
+      aria-label="Italic"
+      v-tooltip="{ value: 'Italic', showDelay: 400 }"
+    >
       <IconItalics />
     </button>
     <button
       @click="applyFormatting('underline')"
+      aria-label="Underline"
       v-tooltip="{ value: 'Underline', showDelay: 400 }"
     >
       <IconUnderline />
     </button>
     <button
       @click="applyFormatting('strikeThrough')"
+      aria-label="Strikethrough"
       v-tooltip="{ value: 'Strikethrough', showDelay: 400 }"
     >
       <IconStrikethrough />
@@ -42,7 +52,6 @@
       spellcheck="false"
       disabled="true"
       readonly
-      @scroll="syncScroll"
     ></textarea>
     <textarea
       class="line-numbers"
@@ -50,7 +59,6 @@
       v-model="lineNumbers"
       disabled="true"
       readonly
-      @scroll="syncScroll"
     ></textarea>
 
     <div class="highlighted-lines" ref="highlightedLinesContainer" readonly>
@@ -158,6 +166,12 @@ const lyricsEditor = ref<HTMLElement | null>(null)
 let isRereadOnChange = false
 const isGayMode = ref<boolean>(false)
 
+// Coalesces the high-frequency scroll events of the scrollable lyrics column
+// into a single DOM update per frame, so the follower columns (syllable count,
+// line numbers, highlighted lines) stay in sync without jank.
+let scrollRaf: number | null = null
+let pendingScrollTop = 0
+
 function syncColumnsTo(scrollTop: number) {
   if (syllablesTextarea.value) syllablesTextarea.value.scrollTop = scrollTop
   if (lineNumbersTextarea.value) lineNumbersTextarea.value.scrollTop = scrollTop
@@ -167,7 +181,12 @@ function syncColumnsTo(scrollTop: number) {
 }
 
 function syncScroll(event: Event) {
-  syncColumnsTo((event.currentTarget as HTMLElement).scrollTop)
+  pendingScrollTop = (event.currentTarget as HTMLElement).scrollTop
+  if (scrollRaf !== null) return
+  scrollRaf = requestAnimationFrame(() => {
+    scrollRaf = null
+    syncColumnsTo(pendingScrollTop)
+  })
 }
 
 function toggleRichMode() {

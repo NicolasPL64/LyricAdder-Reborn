@@ -1,7 +1,7 @@
-import { compareEventPriority, isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
+import { isLyricEvent, removeTrailingEmptyElements, sortEventsByPriority } from "./auxFunctions"
 import { chartErrorMessages } from "./chartErrorMessages"
 import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
-import { defaultSettings } from "./settings"
+import { defaultSettings, getStored, storageKeys } from "./settings"
 import { INTERNAL_EQUALS } from "./lyricsMarkup"
 
 export type ChartError = {
@@ -17,9 +17,9 @@ export type ParsedChartWithOriginal = { parsed: ParsedChart; original: Chart }
 
 export async function parseChart(path: string): Promise<ParsedChartWithOriginal> {
     const chart = await ChartIO.load(path)
-    const maxSectionSeparators = parseInt(
-        localStorage.getItem("maxSectionSeparators") ??
-            defaultSettings.maxSectionSeparators.toString()
+    const maxSectionSeparators = getStored(
+        storageKeys.maxSectionSeparators,
+        defaultSettings.maxSectionSeparators
     )
     return { parsed: extractLyrics(chart.Events, maxSectionSeparators), original: chart }
 }
@@ -79,8 +79,7 @@ export function extractLyrics(
 
     for (const [time, eventList] of Object.entries(events)) {
         const tick = parseInt(time)
-        const eventsToProcess =
-            eventList.length > 1 ? [...eventList].sort(compareEventPriority) : eventList
+        const eventsToProcess = sortEventsByPriority(eventList)
         for (const event of eventsToProcess) {
             if (
                 sectionsSpaceCount + pendingSections < maxSectionSeparators &&

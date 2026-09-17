@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import IconInfo from "@/components/icons/IconAbout.vue"
 import ThemeDropdownMenu from "@/components/ThemeDropdownMenu.vue"
-import { defaultSettings } from "@/utils/settings"
+import { defaultSettings, getStored, setStored, storageKeys } from "@/utils/settings"
 import { onMounted, ref, watch } from "vue"
 
 const lyricsFontSize = ref<number>(defaultSettings.lyricsFontSize)
@@ -79,39 +79,34 @@ function resetDefaultSettings() {
 }
 
 onMounted(() => {
-  lyricsFontSize.value = parseFloat(
-    localStorage.getItem("lyricsFontSize") || defaultSettings.lyricsFontSize.toString()
+  lyricsFontSize.value = getStored(storageKeys.lyricsFontSize, defaultSettings.lyricsFontSize)
+  lyricsLineHeight.value = getStored(storageKeys.lyricsLineHeight, defaultSettings.lyricsLineHeight)
+  isRereadOnChange.value = getStored(storageKeys.isRereadOnChange, defaultSettings.isRereadOnChange)
+  maxSectionSeparators.value = getStored(
+    storageKeys.maxSectionSeparators,
+    defaultSettings.maxSectionSeparators
   )
-
-  lyricsLineHeight.value = parseFloat(
-    localStorage.getItem("lyricsLineHeight") || defaultSettings.lyricsLineHeight.toString()
-  )
-  isRereadOnChange.value =
-    localStorage.getItem("isRereadOnChange") === (!defaultSettings.isRereadOnChange).toString()
-  maxSectionSeparators.value = parseInt(
-    localStorage.getItem("maxSectionSeparators") || defaultSettings.maxSectionSeparators.toString()
-  )
-  isGayMode.value = localStorage.getItem("isGayMode") === (!defaultSettings.isGayMode).toString()
+  isGayMode.value = getStored(storageKeys.isGayMode, defaultSettings.isGayMode)
 })
 
 watch(lyricsFontSize, (newVal) => {
-  if (newVal) localStorage.setItem("lyricsFontSize", newVal.toString())
+  if (newVal) setStored(storageKeys.lyricsFontSize, newVal)
 })
 
 watch(lyricsLineHeight, (newVal) => {
-  if (newVal) localStorage.setItem("lyricsLineHeight", newVal.toString())
+  if (newVal) setStored(storageKeys.lyricsLineHeight, newVal)
 })
 
 watch(isRereadOnChange, (newVal) => {
-  localStorage.setItem("isRereadOnChange", newVal.toString())
+  setStored(storageKeys.isRereadOnChange, newVal)
 })
 
 watch(maxSectionSeparators, (newVal) => {
-  if (newVal) localStorage.setItem("maxSectionSeparators", newVal.toString())
+  if (newVal) setStored(storageKeys.maxSectionSeparators, newVal)
 })
 
 watch(isGayMode, (newVal) => {
-  localStorage.setItem("isGayMode", newVal.toString())
+  setStored(storageKeys.isGayMode, newVal)
 })
 </script>
 

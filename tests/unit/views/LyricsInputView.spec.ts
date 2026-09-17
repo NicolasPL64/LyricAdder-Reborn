@@ -279,7 +279,7 @@ describe("LyricsInputView", () => {
         editor.element.innerHTML = "<div>one two</div>"
         document.execCommand = vi.fn()
 
-        await findButton(wrapper, "B").trigger("click")
+        await wrapper.find('button[aria-label="Bold"]').trigger("click")
         await flushPromises()
 
         expect(document.execCommand).toHaveBeenCalledWith("bold")

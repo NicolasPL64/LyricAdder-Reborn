@@ -27,6 +27,10 @@ export function compareEventPriority(a: ChartEvent, b: ChartEvent): number {
     return eventPriority(a) - eventPriority(b)
 }
 
+export function sortEventsByPriority(events: ChartEvent[]): ChartEvent[] {
+    return events.length > 1 ? [...events].sort(compareEventPriority) : events
+}
+
 export function removeTrailingEmptyElements(arr: string[]): string[] {
     while (arr.length > 0 && arr[arr.length - 1].trim() === "") {
         arr.pop()

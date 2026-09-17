@@ -17,7 +17,9 @@ const TAG_REGEX = /(<[^>]*>)/g
 // joins two events is kept as a literal "=". The marker is a private-use Unicode
 // char that cannot appear in real charts.
 export const INTERNAL_EQUALS = "\uE000"
-const INTERNAL_EQUALS_REGEX = /[\uE000]/g
+export const INTERNAL_EQUALS_REGEX = /[\uE000]/g
+
+const TAG_PLACEHOLDER_REGEX = /\uE001\d+\uE002/g
 
 // Tags rendered as plain HTML elements (opening/closing pairs).
 const HTML_TAGS = ["i", "b", "s", "u"] as const
@@ -311,23 +313,38 @@ export function toggleTag(selected: string, tag: string): string {
 }
 
 /**
+ * Protects markup tags (`<...>`) with placeholders that contain no separator
+ * characters, so a transform can freely manipulate spaces, "=" or "-" without
+ * touching tag attributes. The original tags are restored afterwards.
+ */
+export function protectMarkupTags<T extends string | string[]>(
+    text: string,
+    transform: (protectedText: string) => T
+): T {
+    const tags = new Map<string, string>()
+    let tagIndex = 0
+    const protectedText = text.replace(TAG_REGEX, (tag) => {
+        const key = `\uE001${tagIndex++}\uE002`
+        tags.set(key, tag)
+        return key
+    })
+
+    const restore = (value: string): string =>
+        value.replace(TAG_PLACEHOLDER_REGEX, (key) => tags.get(key) ?? key)
+    const result = transform(protectedText)
+    return (Array.isArray(result) ? result.map(restore) : restore(result)) as T
+}
+
+/**
  * Joins the words of a selection into a single syllable, using the chart's
  * `_` marker for a literal space inside a syllable. Literal "=" separators
  * become internal equals (INTERNAL_EQUALS) since they now belong to one
  * syllable. Tags are protected so the "=" in their attributes stays intact.
  */
 export function joinSyllables(selection: string): string {
-    const tags = new Map<string, string>()
-    let tagIndex = 0
-    const protectedSelection = selection.replace(/(<[^>]*>)/g, (tag) => {
-        const key = `\uE001${tagIndex++}\uE002`
-        tags.set(key, tag)
-        return key
-    })
-    return protectedSelection
-        .replace(/\s+/g, "_")
-        .replace(/=/g, INTERNAL_EQUALS)
-        .replace(/\uE001\d+\uE002/g, (key) => tags.get(key) ?? key)
+    return protectMarkupTags(selection, (protectedSelection) =>
+        protectedSelection.replace(/\s+/g, "_").replace(/=/g, INTERNAL_EQUALS)
+    )
 }
 
 /**
