@@ -207,10 +207,17 @@ function inlineChildren(el: Element): string {
 function inline(el: HTMLElement): string {
     const tag = el.tagName.toLowerCase()
 
-    if (tag === "b" || tag === "strong") return `<b>${inlineChildren(el)}</b>`
-    if (tag === "i" || tag === "em") return `<i>${inlineChildren(el)}</i>`
-    if (tag === "s") return `<s>${inlineChildren(el)}</s>`
-    if (tag === "u") return `<u>${inlineChildren(el)}</u>`
+    // An empty formatting wrapper (e.g. `<b><br></b>` on a blank line) has no
+    // content to format, so it serializes to nothing instead of `<b></b>`.
+    const htmlTag = (name: string) => {
+        const content = inlineChildren(el)
+        return content === "" ? "" : `<${name}>${content}</${name}>`
+    }
+
+    if (tag === "b" || tag === "strong") return htmlTag("b")
+    if (tag === "i" || tag === "em") return htmlTag("i")
+    if (tag === "s") return htmlTag("s")
+    if (tag === "u") return htmlTag("u")
 
     if (tag === "span") {
         const cls = typeof el.className === "string" ? el.className : ""

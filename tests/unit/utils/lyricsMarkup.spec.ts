@@ -129,6 +129,12 @@ describe("serializeEditableHtml", () => {
         expect(serializeEditableHtml("<div>one</div><div>two</div>")).toBe("one\ntwo")
     })
 
+    it("ignores empty formatting wrappers on blank lines", () => {
+        expect(
+            serializeEditableHtml("<div><b>a</b></div><div><b><br></b></div><div><b>b</b></div>")
+        ).toBe("<b>a</b>\n\n<b>b</b>")
+    })
+
     it("maps inline tags back to their original markup", () => {
         expect(serializeEditableHtml("<div><b>bold</b> <i>italic</i></div>")).toBe(
             "<b>bold</b> <i>italic</i>"
