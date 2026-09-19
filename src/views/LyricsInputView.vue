@@ -18,6 +18,7 @@
       v-tooltip="{ value: 'Bold', showDelay: 400 }"
     >
       <IconBold />
+      <span class="shortcut">Ctrl+B</span>
     </button>
     <button
       @click="applyFormatting('italic')"
@@ -25,6 +26,7 @@
       v-tooltip="{ value: 'Italic', showDelay: 400 }"
     >
       <IconItalics />
+      <span class="shortcut">Ctrl+I</span>
     </button>
     <button
       @click="applyFormatting('underline')"
@@ -32,6 +34,7 @@
       v-tooltip="{ value: 'Underline', showDelay: 400 }"
     >
       <IconUnderline />
+      <span class="shortcut">Ctrl+U</span>
     </button>
     <button
       @click="applyFormatting('strikeThrough')"
@@ -39,9 +42,17 @@
       v-tooltip="{ value: 'Strikethrough', showDelay: 400 }"
     >
       <IconStrikethrough />
+      <span class="shortcut">Ctrl+Shift+S</span>
     </button>
-    <button @click="applyJoinSyllables" v-tooltip="{ value: 'Join syllables', showDelay: 400 }">
+    <button
+      @click="applyJoinSyllables"
+      v-tooltip="{
+        value: 'Joins two or more syllables together by replacing spaces with underscores',
+        showDelay: 400,
+      }"
+    >
       Join syllables
+      <span class="shortcut">Ctrl+Shift+A</span>
     </button>
   </div>
   <div class="container">
@@ -131,7 +142,16 @@ import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfo
 import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
 import { open } from "@tauri-apps/plugin-dialog"
-import { ref, computed, watch, nextTick, onMounted, onActivated, onDeactivated } from "vue"
+import {
+  ref,
+  computed,
+  watch,
+  nextTick,
+  onMounted,
+  onActivated,
+  onDeactivated,
+  onUnmounted,
+} from "vue"
 
 const lyricsText = ref("")
 const syllablesCount = ref("")
@@ -288,6 +308,28 @@ function applyJoinSyllables() {
   nextTick(() => textarea.setSelectionRange(start, start + replacement.length))
 }
 
+function handleKeydown(event: KeyboardEvent) {
+  if (!event.ctrlKey || event.altKey || event.metaKey) return
+  const key = event.key.toLowerCase()
+
+  if (key === "b" && !event.shiftKey) {
+    event.preventDefault()
+    applyFormatting("bold")
+  } else if (key === "i" && !event.shiftKey) {
+    event.preventDefault()
+    applyFormatting("italic")
+  } else if (key === "u" && !event.shiftKey) {
+    event.preventDefault()
+    applyFormatting("underline")
+  } else if (key === "s" && event.shiftKey) {
+    event.preventDefault()
+    applyFormatting("strikeThrough")
+  } else if (key === "a" && event.shiftKey) {
+    event.preventDefault()
+    applyJoinSyllables()
+  }
+}
+
 function updateHighlightedLines() {
   highlightedLines.value = lyricsText.value.split("\n").map((line) => (line === "" ? " " : line))
   highlightedLines.value.push(" ")
@@ -361,10 +403,12 @@ watch(lyricsText, watchLyricsTextRef)
 
 onMounted(() => {
   ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
+  window.addEventListener("keydown", handleKeydown)
 })
 
 onActivated(async () => {
   ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
+  window.addEventListener("keydown", handleKeydown)
   if (path) {
     if (isRereadOnChange) {
       chart = await parseChart(path)
@@ -376,7 +420,12 @@ onActivated(async () => {
 })
 
 onDeactivated(() => {
+  window.removeEventListener("keydown", handleKeydown)
   removeFileWatcher()
+})
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown)
 })
 </script>
 
@@ -400,8 +449,17 @@ onDeactivated(() => {
 }
 
 .toolbar button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25em;
   margin: 0;
   padding: 0.5em;
+}
+
+.toolbar .shortcut {
+  opacity: 0.6;
+  font-size: 0.7em;
 }
 
 .container * {
