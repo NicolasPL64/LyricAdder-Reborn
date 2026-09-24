@@ -491,7 +491,7 @@ onUnmounted(() => {
   position: absolute;
   z-index: 2;
   box-sizing: border-box;
-  outline: none;
+  border: 1px solid var(--background-400);
   border-radius: 0 var(--border-small) var(--border-small) 0;
   background: transparent;
   padding-left: 5px;
@@ -578,6 +578,7 @@ textarea {
 .lyrics {
   position: absolute;
   box-sizing: border-box;
+  border: 1px solid var(--background-400);
   border-radius: 0 var(--border-small) var(--border-small) 0;
   background: transparent;
   padding-left: 5px;
@@ -585,6 +586,12 @@ textarea {
   height: 100%;
   overflow: auto;
   text-align: left;
+}
+
+.lyrics:focus-visible,
+.lyrics-editor:focus-visible {
+  outline: 2px solid var(--primary-400);
+  outline-offset: -1px;
 }
 
 .lyricsBG {
