@@ -37,6 +37,17 @@ function findButton(wrapper: VueWrapper, text: string) {
     return button
 }
 
+function findToggle(wrapper: VueWrapper) {
+    const toggle = wrapper.find(".p-toggleswitch-input")
+    if (!toggle.exists()) throw new Error("Rich text toggle not found")
+    return toggle
+}
+
+async function toggleRichMode(wrapper: VueWrapper) {
+    await findToggle(wrapper).trigger("change")
+    await flushPromises()
+}
+
 function textareaValue(wrapper: VueWrapper, selector: string) {
     return (wrapper.find(selector).element as HTMLTextAreaElement).value
 }
@@ -139,8 +150,7 @@ describe("LyricsInputView", () => {
 
         expect(wrapper.find(".lyrics-editor").exists()).toBe(false)
 
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         const editor = wrapper.find(".lyrics-editor")
         expect(editor.exists()).toBe(true)
@@ -160,16 +170,14 @@ describe("LyricsInputView", () => {
                 3 = E "phrase_end"
             `)
         )
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         const editor = wrapper.find(".lyrics-editor")
         editor.element.innerHTML = "<div>one <b>two</b></div>"
         await editor.trigger("input")
         await flushPromises()
 
-        await findButton(wrapper, "Plain text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("one <b>two</b>")
     })
@@ -185,14 +193,12 @@ describe("LyricsInputView", () => {
             `)
         )
 
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         await wrapper.find(".lyrics-editor").trigger("input")
         await flushPromises()
 
-        await findButton(wrapper, "Plain text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("____Wit_it!")
     })
@@ -213,14 +219,12 @@ describe("LyricsInputView", () => {
         expect(textareaValue(wrapper, "textarea.syllables")).toBe("2/2\n")
         expect(wrapper.findAll(".highlighted-lines .highlight")).toHaveLength(0)
 
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         await wrapper.find(".lyrics-editor").trigger("input")
         await flushPromises()
 
-        await findButton(wrapper, "Plain text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("a=b_c")
         expect(textareaValue(wrapper, "textarea.syllables")).toBe("2/2\n")
@@ -238,8 +242,7 @@ describe("LyricsInputView", () => {
                 3 = E "phrase_end"
             `)
         )
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         const editor = wrapper.find(".lyrics-editor")
         editor.element.innerHTML = "<div>one two</div>"
@@ -279,8 +282,7 @@ describe("LyricsInputView", () => {
                 2 = E "phrase_end"
             `)
         )
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         const editor = wrapper.find(".lyrics-editor")
         mockSelection(rangeOver(editor.element as HTMLElement, 4, 10)) // "bb_ccc"
@@ -290,8 +292,7 @@ describe("LyricsInputView", () => {
 
         expect(editor.element.innerHTML).toBe('<div><span class="joined">aaa bbb</span> ccc</div>')
 
-        await findButton(wrapper, "Plain text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("aaa_bbb ccc")
     })
@@ -326,8 +327,7 @@ describe("LyricsInputView", () => {
                 3 = E "phrase_end"
             `)
         )
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         const editor = wrapper.find(".lyrics-editor")
         mockSelection(rangeOver(editor.element as HTMLElement, 0, 5)) // "aaa bb"
@@ -337,8 +337,7 @@ describe("LyricsInputView", () => {
 
         expect(editor.element.innerHTML).toBe('<div><span class="joined">aaa bbb ccc</span></div>')
 
-        await findButton(wrapper, "Plain text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("aaa_bbb_ccc")
     })
@@ -354,8 +353,7 @@ describe("LyricsInputView", () => {
                 3 = E "phrase_end"
             `)
         )
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         const editor = wrapper.find(".lyrics-editor")
         mockSelection(rangeOver(editor.element as HTMLElement, 0, 3)) // "aa "
@@ -365,8 +363,7 @@ describe("LyricsInputView", () => {
 
         expect(editor.element.innerHTML).toBe('<div><span class="joined">aa bb cc</span></div>')
 
-        await findButton(wrapper, "Plain text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("aa_bb_cc")
     })
@@ -389,16 +386,14 @@ describe("LyricsInputView", () => {
         textarea.scrollTop = 120
         expect(textarea.scrollTop).toBe(120)
 
-        await findButton(wrapper, "Rich text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         const editor = wrapper.find(".lyrics-editor")
         expect(editor.element.scrollTop).toBe(120)
 
         editor.element.scrollTop = 80
 
-        await findButton(wrapper, "Plain text").trigger("click")
-        await flushPromises()
+        await toggleRichMode(wrapper)
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toContain("word0")
         expect((wrapper.find("textarea.lyrics").element as HTMLTextAreaElement).scrollTop).toBe(80)

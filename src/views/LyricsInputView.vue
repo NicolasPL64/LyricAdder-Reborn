@@ -108,18 +108,27 @@
       ></textarea>
     </div>
   </div>
-  <button @click="toggleRichMode">{{ richMode ? "Plain text" : "Rich text" }}</button>
-  <button
-    @click="saveFile"
-    :disabled="highlightedIndices.length > 0 || chartErrors.length > 0"
-    v-tooltip="{
-      value: saveTooltipMessage,
-      showDelay: 0,
-      pt: { root: { style: 'max-width: 50rem' } },
-    }"
-  >
-    <IconSave />Save chart
-  </button>
+  <div class="bottom-bar">
+    <button
+      @click="saveFile"
+      :disabled="highlightedIndices.length > 0 || chartErrors.length > 0"
+      v-tooltip="{
+        value: saveTooltipMessage,
+        showDelay: 0,
+        pt: { root: { style: 'max-width: 50rem' } },
+      }"
+    >
+      <IconSave />Save chart
+    </button>
+    <div class="rich-text-toggle">
+      Rich text
+      <ToggleSwitch
+        :model-value="richMode"
+        @update:model-value="setRichMode"
+        aria-label="Rich text"
+      />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -129,6 +138,7 @@ import IconBold from "@/components/icons/text/IconBold.vue"
 import IconItalics from "@/components/icons/text/IconItalics.vue"
 import IconUnderline from "@/components/icons/text/IconUnderline.vue"
 import IconStrikethrough from "@/components/icons/text/IconStrikethrough.vue"
+import ToggleSwitch from "openvue/toggleswitch"
 
 import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
@@ -213,11 +223,12 @@ function syncScroll(event: Event) {
   })
 }
 
-function toggleRichMode() {
+function setRichMode(value: boolean) {
+  if (value === richMode.value) return
   // Preserve the scroll position across the v-if/v-else switch, since the
   // active element is destroyed and recreated.
   const scrollTop = lyricsEditor.value?.scrollTop ?? lyricsTextarea.value?.scrollTop ?? 0
-  richMode.value = !richMode.value
+  richMode.value = value
   nextTick(() => {
     if (richMode.value) {
       const editor = lyricsEditor.value
@@ -578,5 +589,17 @@ textarea {
   background: var(--background-100);
   width: 100%;
   height: 100%;
+}
+
+.bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rich-text-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
 }
 </style>
