@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.3.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.2.1...v0.3.0) (2026-09-24)
+
+
+### Features
+
+* add changelog modal and functionality to display updates ([d5ac813](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/d5ac813c71b9a9d6c68603ff5ab0d067dac70d56))
+* add dynamic placeholder for lyrics editor and style for empty state ([6bac78d](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/6bac78d1c5c19d767b3d160b207b27f1c2c26033))
+* add keyboard shortcuts for text formatting and joining syllables in the lyrics editor ([3311078](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/3311078576c31f987d66fa17df19ad7c213d573b))
+* add tauri-plugin-opener and integrate with changelog modal ([74646a3](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/74646a3b69e2aadf82943b11866c978abe0c6c10))
+* add text formatting icons for bold, italics, underline, and strikethrough in the lyrics editor ([c55de9f](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/c55de9fd3d2fe83328a6479d4384302cb56ef252))
+* allow toolbar in plain mode too ([a99f328](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/a99f328358a077c28165bbe2dbb9c6db398f3abf))
+* enhance lyrics editor styling with background and positioning adjustments for joined elements ([ac516b8](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/ac516b8a2dc4d6dfca40463fafe739370c40f8ed))
+* enhance lyrics editor with rich text toggle and update save functionality ([8271529](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/8271529ae30c3e30f9c363fb74f4c8ec026ac1ed))
+* enhance markup rendering for mspace and letter case tags with validation and serialization ([086f947](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/086f9477ff21d5051e82677370f937f0d4627107))
+* implement join and unjoin functionality for syllables in the lyrics editor ([af644a9](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/af644a97226e37abbc296151f261eae48f8832e8))
+* implement rich text editing for lyrics with formatting options and joined syllables support ([058028c](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/058028c342d3cf4bc83b2e8f2c841cbdbffd198f))
+* introduce internal equals marker for joined syllables and update related parsing logic ([98053f7](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/98053f77b2b2cb2c098f50cd1c469c5d10f2bbae))
+* set application title to include version information on startup ([bff485b](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/bff485b327efa36dce55f835ddd3e4c077085ffc))
+
+
+### Bug Fixes
+
+* conditionally check for updates only in production environment ([fb4ef5f](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/fb4ef5f5aae155006c645218421e06725cf36d43))
+* enhance handling of internal equals markers and literal equals in joined syllables for improved serialization and rendering ([f9ec7f0](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/f9ec7f065690952f39b1640e8170fa830c1f4de9))
+* enhance serialization to preserve underscores and normalize unclosed tags in rich text editing ([3cdff55](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/3cdff554343163763d407b5270a6004618225f73))
+* ignore empty formatting wrappers on blank lines in serializeEditableHtml ([4c4a16b](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/4c4a16bfdccf90c22e03b4b9e68cccbaa1386015))
+* update textarea borders and focus styles for improved accessibility ([a5162ff](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/a5162ff1752704ef17018dddd38421b4b9143ab4))
+
 ## [0.2.1](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.2.0...v0.2.1) (2026-09-09)
 
 
