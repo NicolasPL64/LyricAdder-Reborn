@@ -3,6 +3,7 @@ import "./assets/themes.css"
 import "./assets/variables.css"
 import "./assets/v-tooltip.css"
 import "./assets/toggle-switch.css"
+import "./assets/changelog-dialog.css"
 
 import { createApp } from "vue"
 import App from "./App.vue"

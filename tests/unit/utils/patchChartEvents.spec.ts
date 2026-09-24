@@ -1,7 +1,18 @@
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs"
 
 import type { ChartEvent, ChartTrack } from "@/utils/herochartio"
-import { replaceEventsSection, serializeEventsBlock } from "@/utils/patchChartEvents"
+import {
+    replaceEventsSection,
+    saveChartEventsOnly,
+    serializeEventsBlock,
+} from "@/utils/patchChartEvents"
+
+vi.mock("@tauri-apps/plugin-fs", () => ({
+    readTextFile: vi.fn(),
+    writeTextFile: vi.fn(),
+}))
 
 describe("serializeEventsBlock", () => {
     it("serializes events with the canonical chart format", () => {
@@ -53,5 +64,31 @@ describe("replaceEventsSection", () => {
         const block = `[Events]\n{\n  240 = E "lyric a"\n}`
 
         expect(replaceEventsSection(content, block)).toBe(content)
+    })
+})
+
+describe("saveChartEventsOnly", () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+    })
+
+    it("reads the file, replaces the Events section and writes it back", async () => {
+        const content =
+            `[Song]\n{\n  Offset = 0\n}\n[Events]\n{\n` +
+            `  192 = E "phrase_start"\n}\n[ExpertSingle]\n{\n  384 = N 0 0\n}\n`
+        const events: ChartTrack<ChartEvent> = {
+            192: [{ type: "E", name: "phrase_start" }],
+            240: [{ type: "E", name: "lyric a" }],
+        }
+        vi.mocked(readTextFile).mockResolvedValue(content)
+
+        await saveChartEventsOnly(events, "song.chart")
+
+        expect(readTextFile).toHaveBeenCalledWith("song.chart")
+        expect(writeTextFile).toHaveBeenCalledWith(
+            "song.chart",
+            `[Song]\n{\n  Offset = 0\n}\n[Events]\n{\n  192 = E "phrase_start"\n` +
+                `  240 = E "lyric a"\n}\n[ExpertSingle]\n{\n  384 = N 0 0\n}\n`
+        )
     })
 })

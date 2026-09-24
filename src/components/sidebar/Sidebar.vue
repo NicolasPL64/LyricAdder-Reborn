@@ -25,7 +25,7 @@ import IconLyricsInput from "../icons/IconLyricsInput.vue"
 import IconMusic from "../icons/IconMusic.vue"
 import IconAbout from "../icons/IconAbout.vue"
 import IconSettings from "../icons/IconSettings.vue"
-import { onMounted, ref } from "vue"
+import { onBeforeUnmount, onMounted, ref } from "vue"
 
 const hover = ref(false)
 const sidebar = ref<HTMLElement | null>(null)
@@ -54,6 +54,10 @@ const handleClick = () => {
 
 onMounted(() => {
   document.addEventListener("mousemove", handleMouseMove)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener("mousemove", handleMouseMove)
 })
 </script>
 

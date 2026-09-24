@@ -21,14 +21,25 @@
 
 <script setup lang="ts">
 import IconArrowDown from "./icons/IconArrowDown.vue"
-import { computed, ref } from "vue"
-import { themesArray, setTheme, getSystemTheme, type ThemeId } from "@/utils/settings"
+import { computed, onMounted, ref } from "vue"
+import { themesArray, setTheme, getSystemTheme, storageKeys, type ThemeId } from "@/utils/settings"
 
 const themes = ref(themesArray)
 
 const dropdownOpen = ref<boolean>(false)
-const originalTheme = ref<ThemeId>((localStorage.getItem("theme") || getSystemTheme()) as ThemeId)
-const currentTheme = ref<ThemeId>(originalTheme.value as ThemeId)
+const currentTheme = ref<ThemeId>((localStorage.getItem(storageKeys.theme) as ThemeId) || "dark")
+const originalTheme = ref<ThemeId>(currentTheme.value)
+
+onMounted(async () => {
+  // If no theme was saved, use the system theme
+  if (!localStorage.getItem(storageKeys.theme)) {
+    const systemTheme = await getSystemTheme()
+    if (!localStorage.getItem(storageKeys.theme)) {
+      currentTheme.value = systemTheme
+      originalTheme.value = systemTheme
+    }
+  }
+})
 
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value

@@ -1,7 +1,8 @@
-import { compareEventPriority, isLyricEvent, removeTrailingEmptyElements } from "./auxFunctions"
+import { isLyricEvent, removeTrailingEmptyElements, sortEventsByPriority } from "./auxFunctions"
 import { chartErrorMessages } from "./chartErrorMessages"
 import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
-import { defaultSettings } from "./settings"
+import { defaultSettings, getStored, storageKeys } from "./settings"
+import { INTERNAL_EQUALS } from "./lyricsMarkup"
 
 export type ChartError = {
     message: string
@@ -16,9 +17,9 @@ export type ParsedChartWithOriginal = { parsed: ParsedChart; original: Chart }
 
 export async function parseChart(path: string): Promise<ParsedChartWithOriginal> {
     const chart = await ChartIO.load(path)
-    const maxSectionSeparators = parseInt(
-        localStorage.getItem("maxSectionSeparators") ??
-            defaultSettings.maxSectionSeparators.toString()
+    const maxSectionSeparators = getStored(
+        storageKeys.maxSectionSeparators,
+        defaultSettings.maxSectionSeparators
     )
     return { parsed: extractLyrics(chart.Events, maxSectionSeparators), original: chart }
 }
@@ -55,17 +56,30 @@ export function extractLyrics(
 
     const parseLyricText = (event: ChartEvent): string => {
         //FIXME: Bug with 'Berried Alive - Crusty'
-        //FIXME: If there is a = symbol in the middle of an event, it will be always considered a syllable separator
         const lyricArray = event.name.split(" ")
         // In case there is a space in the middle of the event
         if (lyricArray.length > 2) return lyricArray.slice(1).join("_")
         return lyricArray[1] ?? ""
     }
 
+    // A single event like `lyric A=B` is ONE syllable. Its internal "=" is not a
+    // syllable separator, so it is replaced with an internal marker to keep it
+    // distinct from the trailing "=" that joins two events (e.g. `C=` + `D`).
+    // Equals signs inside angle brackets (tag attributes like <color=red>) are
+    // left untouched.
+    const markInternalEquals = (text: string): string =>
+        text
+            .split(/(<[^>]*>)/g)
+            .map((part) =>
+                part.startsWith("<") && part.endsWith(">")
+                    ? part
+                    : part.replace(/=(?!$)/g, INTERNAL_EQUALS)
+            )
+            .join("")
+
     for (const [time, eventList] of Object.entries(events)) {
         const tick = parseInt(time)
-        const eventsToProcess =
-            eventList.length > 1 ? [...eventList].sort(compareEventPriority) : eventList
+        const eventsToProcess = sortEventsByPriority(eventList)
         for (const event of eventsToProcess) {
             if (
                 sectionsSpaceCount + pendingSections < maxSectionSeparators &&
@@ -99,7 +113,7 @@ export function extractLyrics(
                 if (!phraseOpen) {
                     pushError(chartErrorMessages.LYRIC_WITHOUT_PHRASE_START, [tick])
                 }
-                const lyricText = parseLyricText(event)
+                const lyricText = markInternalEquals(parseLyricText(event))
                 syllables++
                 if (previousLyricEndsWithHyphen) {
                     currentPhrase[currentPhrase.length - 1] += lyricText

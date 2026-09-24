@@ -1,3 +1,5 @@
+use tauri::Manager;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -5,6 +7,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -13,6 +16,11 @@ pub fn run() {
                         .build(),
                 )?;
             }
+            let version = app.package_info().version.to_string();
+            let title = format!("LyricAdder Reborn v{version}");
+            app.get_webview_window("main")
+                .expect("no main window")
+                .set_title(&title)?;
             Ok(())
         })
         .run(tauri::generate_context!())

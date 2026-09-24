@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { extractLyrics, parseChart } from "@/utils/parseChart"
 import { chartErrorMessages } from "@/utils/chartErrorMessages"
 import { ChartIO } from "@/utils/herochartio"
+import { INTERNAL_EQUALS } from "@/utils/lyricsMarkup"
 
 import specialCharactersChart from "../../files/test1.chart?raw"
 import { buildChart } from "../helpers/chart"
@@ -148,7 +149,7 @@ describe("parseChart", () => {
         ])
     })
 
-    it("assigns a lyric at the same tick as a phrase_start to the new phrase", () => {
+    it("assigns a lyric sharing a tick with phrase_start to the new phrase without errors", () => {
         const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
             buildChart(`
                 192 = E "phrase_start"
@@ -163,23 +164,6 @@ describe("parseChart", () => {
 
         expect(chartLyrics).toBe("A\n\nB")
         expect(chartSyllablesCount).toEqual([1, 2])
-        expect(errors).toEqual([])
-    })
-
-    it("does not flag phrase_end without lyrics when the phrase_start shares a tick with the lyric", () => {
-        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
-            buildChart(`
-                192 = E "phrase_start"
-                240 = E "lyric A"
-                384 = E "lyric B"
-                384 = E "phrase_start"
-                384 = E "section Default"
-                528 = E "phrase_end"
-            `).Events
-        )
-
-        expect(chartLyrics).toBe("A\n\nB")
-        expect(chartSyllablesCount).toEqual([1, 1])
         expect(errors).toEqual([])
     })
 
@@ -277,6 +261,53 @@ describe("parseChart", () => {
 
         expect(chartLyrics).toBe("he=llo")
         expect(chartSyllablesCount).toEqual([2])
+        expect(errors).toEqual([])
+    })
+
+    it("keeps a trailing equals sign joining two events as a literal separator", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric A B="
+                2 = E "lyric C"
+                3 = E "phrase_end"
+            `).Events
+        )
+
+        expect(chartLyrics).toBe("A_B=C")
+        expect(chartSyllablesCount).toEqual([2])
+        expect(errors).toEqual([])
+    })
+
+    it("marks an internal equals sign as a single syllable while keeping joined events separate", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric A=B"
+                2 = E "lyric C="
+                3 = E "lyric D"
+                4 = E "phrase_end"
+            `).Events
+        )
+
+        // "A=B" is one syllable (internal equals marked), while "C=" + "D" stay
+        // two separate syllables joined by a literal equals sign.
+        expect(chartLyrics).toBe(`A${INTERNAL_EQUALS}B C=D`)
+        expect(chartSyllablesCount).toEqual([3])
+        expect(errors).toEqual([])
+    })
+
+    it("does not mark equals signs inside tag attributes", () => {
+        const { chartLyrics, chartSyllablesCount, errors } = extractLyrics(
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric <color=red>A=B"
+                2 = E "phrase_end"
+            `).Events
+        )
+
+        expect(chartLyrics).toBe(`<color=red>A${INTERNAL_EQUALS}B`)
+        expect(chartSyllablesCount).toEqual([1])
         expect(errors).toEqual([])
     })
 

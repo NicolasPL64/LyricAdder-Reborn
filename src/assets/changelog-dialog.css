@@ -1,0 +1,133 @@
+.p-dialog-mask {
+  backdrop-filter: blur(1px);
+  background-color: rgba(0, 0, 0, 0.3);
+  animation: changelog-mask-in 0.5s var(--elastic);
+  transition: backdrop-filter 0.5s var(--elastic), background-color 0.5s var(--elastic);
+}
+
+.p-dialog-mask.p-overlay-mask-leave-active {
+  backdrop-filter: blur(0);
+  background-color: rgba(0, 0, 0, 0);
+}
+
+@keyframes changelog-mask-in {
+  from {
+    backdrop-filter: blur(0);
+    background-color: rgba(0, 0, 0, 0);
+  }
+}
+
+.p-dialog {
+  overflow: hidden;
+  border-radius: var(--border-large);
+  background-color: var(--background-100);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 80vw;
+  max-height: 80vh;
+}
+
+.p-dialog-enter-active,
+.p-dialog-leave-active {
+  transition: opacity 0.5s var(--elastic);
+}
+
+.p-dialog-enter-from,
+.p-dialog-leave-to {
+  opacity: 0;
+}
+
+.p-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--background-300);
+  background-color: var(--background-200);
+  padding: 1em 1.5em;
+}
+
+.p-dialog-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-800);
+}
+
+.p-dialog-close-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--border-small);
+  background-color: transparent;
+  width: 2rem;
+  height: 2rem;
+  color: var(--text-800);
+}
+
+.p-dialog-close-button:hover {
+  background-color: var(--background-300);
+}
+
+.changelog-dialog-content {
+  overflow-y: auto;
+  padding: 1.5em;
+  min-height: 0;
+  color: var(--text-800);
+}
+
+.changelog-content h1 {
+  margin: 0 0 0.5em;
+  font-size: 1.5rem;
+  color: var(--text-900);
+}
+
+.changelog-content h2 {
+  margin: 1.5em 0 0.5em;
+  font-size: 1.2rem;
+  color: var(--text-800);
+}
+
+.changelog-content h3 {
+  margin: 1em 0 0.5em;
+  font-size: 1rem;
+  color: var(--text-700);
+}
+
+.changelog-content p {
+  margin: 0.5em 0;
+  line-height: 1.5;
+}
+
+.changelog-content ul {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.changelog-content li {
+  margin: 0.25em 0;
+}
+
+.changelog-content a {
+  color: var(--primary-500);
+  text-decoration: none;
+  overflow-wrap: break-word;
+}
+
+.changelog-content a:hover {
+  text-decoration: underline;
+}
+
+.changelog-content strong {
+  font-weight: 700;
+}
+
+.changelog-content code {
+  border-radius: 0.25em;
+  background-color: var(--background-200);
+  padding: 0.1em 0.35em;
+  font-family: monospace;
+}
+
+.changelog-content hr {
+  margin: 1.5em 0;
+  border: 0;
+  border-top: 1px solid var(--background-300);
+}
