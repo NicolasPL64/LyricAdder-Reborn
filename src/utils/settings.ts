@@ -22,6 +22,7 @@ export const storageKeys = {
     lyricsFontSize: "lyricsFontSize",
     lyricsLineHeight: "lyricsLineHeight",
     maxSectionSeparators: "maxSectionSeparators",
+    lastSeenChangelogVersion: "lastSeenChangelogVersion",
 } as const
 
 export function getStored(key: string, fallback: string): string

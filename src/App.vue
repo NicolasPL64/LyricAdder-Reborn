@@ -7,17 +7,26 @@
       </keep-alive>
     </router-view>
   </div>
+  <ChangelogModal ref="changelogModal" />
 </template>
 
 <script setup lang="ts">
 import { RouterView } from "vue-router"
 import Sidebar from "./components/sidebar/Sidebar.vue"
-import { onMounted } from "vue"
+import ChangelogModal from "./components/ChangelogModal.vue"
+import { onMounted, ref } from "vue"
 import { setTheme, getSystemTheme, storageKeys, type ThemeId } from "./utils/settings"
 import { checkForUpdates } from "./composables/useUpdater"
+import { getChangelogHtml } from "./composables/useChangelog"
+
+const changelogModal = ref<InstanceType<typeof ChangelogModal> | null>(null)
 
 onMounted(async () => {
-  if (import.meta.env.PROD) checkForUpdates()
+  //if (import.meta.env.PROD) {
+  checkForUpdates()
+  const changelogHtml = await getChangelogHtml()
+  if (changelogHtml) changelogModal.value?.open(changelogHtml)
+  //}
   const savedTheme = localStorage.getItem(storageKeys.theme) as ThemeId
   if (savedTheme) {
     setTheme(savedTheme)

@@ -100,7 +100,11 @@
         spellcheck="false"
         @scroll="syncScroll"
         @input="updateHighlightedLines"
-        :placeholder="isGayMode ? 'Ca-co-rro' : ''"
+        :placeholder="
+          isGayMode
+            ? 'Ca-co-rro'
+            : 'In-put the lyrics here\nSyl-la-ble by syl-la-ble\nEach line is a phrase in the chart'
+        "
       ></textarea>
     </div>
   </div>

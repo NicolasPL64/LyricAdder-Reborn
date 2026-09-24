@@ -24,6 +24,7 @@
     "@tauri-apps/plugin-fs": "~2.5.2",
     "@tauri-apps/plugin-process": "~2.3.1",
     "@tauri-apps/plugin-updater": "~2.11.0",
+    "marked": "^18.0.14",
     "midi-file": "^1.2.4",
     "openvue": "1.0.0-rc.0",
     "vue": "^3.5.42",
@@ -31,8 +32,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.63.0",
     "@openvue/auto-import-resolver": "1.0.0-rc.0",
+    "@playwright/test": "^1.63.0",
     "@tauri-apps/cli": "^2.11.4",
     "@tsconfig/node20": "^20.1.10",
     "@types/node": "^26.4.1",
