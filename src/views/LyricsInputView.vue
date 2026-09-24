@@ -87,6 +87,8 @@
         v-if="richMode"
         class="lyrics lyrics-editor"
         ref="lyricsEditor"
+        :class="{ 'is-empty': lyricsText === '' }"
+        :data-placeholder="lyricsPlaceholder"
         contenteditable="true"
         spellcheck="false"
         @input="onEditorInput"
@@ -100,11 +102,7 @@
         spellcheck="false"
         @scroll="syncScroll"
         @input="updateHighlightedLines"
-        :placeholder="
-          isGayMode
-            ? 'Ca-co-rro'
-            : 'In-put the lyrics here\nSyl-la-ble by syl-la-ble\nEach line is a phrase in the chart'
-        "
+        :placeholder="lyricsPlaceholder"
       ></textarea>
     </div>
   </div>
@@ -199,6 +197,12 @@ const lyricsEditor = ref<HTMLElement | null>(null)
 // Settings
 let isRereadOnChange = false
 const isGayMode = ref<boolean>(false)
+
+const lyricsPlaceholder = computed(() =>
+  isGayMode.value
+    ? "Ca-co-rro"
+    : "In-put the lyrics here\nSyl-la-ble by syl-la-ble\nEach line is a phrase in the chart"
+)
 
 // Coalesces the high-frequency scroll events of the scrollable lyrics column
 // into a single DOM update per frame, so the follower columns (syllable count,
@@ -589,6 +593,19 @@ textarea {
   background: var(--background-100);
   width: 100%;
   height: 100%;
+}
+
+.lyrics-editor.is-empty::before {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  pointer-events: none;
+  content: attr(data-placeholder);
+  color: var(--text-400);
+}
+
+textarea::placeholder {
+  color: var(--text-400);
 }
 
 .bottom-bar {
