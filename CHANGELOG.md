@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.3.0...v0.4.0) (2026-09-25)
+
+
+### Features
+
+* add hyphenation feature with language selection and integrate D… ([d75dc1d](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/d75dc1d72c5b95cc3e3a8ed9e20f572815f067bd))
+* add hyphenation feature with language selection and integrate DropdownMenu component ([1c8fb9e](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/1c8fb9e9beaae6b626367cd2eb464c7136380b8d))
+
 ## [0.3.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.2.1...v0.3.0) (2026-09-24)
 
 
