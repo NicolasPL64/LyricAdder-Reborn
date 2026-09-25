@@ -54,6 +54,12 @@
       Join syllables
       <span class="shortcut">Ctrl+Shift+A</span>
     </button>
+    <div class="hyphen-group">
+      <span class="tooltip-wrapper" v-tooltip.left="{ value: hyphenateTooltip, showDelay: 400 }">
+        <button @click="hyphenateSelection" :disabled="richMode">Hyphenate!</button>
+      </span>
+      <DropdownMenu v-model="hyphenLanguage" :options="hyphenLanguages" width="auto" />
+    </div>
   </div>
   <div class="container">
     <textarea
@@ -107,17 +113,18 @@
     </div>
   </div>
   <div class="bottom-bar">
-    <button
-      @click="saveFile"
-      :disabled="highlightedIndices.length > 0 || chartErrors.length > 0"
+    <span
+      class="tooltip-wrapper"
       v-tooltip="{
         value: saveTooltipMessage,
         showDelay: 0,
         pt: { root: { style: 'max-width: 50rem' } },
       }"
     >
-      <IconSave />Save chart
-    </button>
+      <button @click="saveFile" :disabled="highlightedIndices.length > 0 || chartErrors.length > 0">
+        <IconSave />Save chart
+      </button>
+    </span>
     <div class="rich-text-toggle">
       Rich text
       <ToggleSwitch
@@ -137,10 +144,12 @@ import IconItalics from "@/components/icons/text/IconItalics.vue"
 import IconUnderline from "@/components/icons/text/IconUnderline.vue"
 import IconStrikethrough from "@/components/icons/text/IconStrikethrough.vue"
 import ToggleSwitch from "openvue/toggleswitch"
+import DropdownMenu from "@/components/DropdownMenu.vue"
 
 import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings } from "@/utils/settings"
+import { hyphenateLyrics, hyphenLanguages } from "@/utils/hyphenateLyrics"
 import {
   renderEditableHtml,
   serializeEditableHtml,
@@ -172,6 +181,7 @@ const highlightedLines = ref<string[]>([]) // Array of lines to display in the h
 const highlightedIndices = ref<number[]>([]) // Indices of the lines that should be highlighted
 const chartErrors = ref<ChartError[]>([]) // Structural errors in the loaded chart
 const richMode = ref(false) // Whether the lyrics are shown as rich text or plain
+const hyphenLanguage = ref("en") // Language used by the Hyphenate button
 
 const saveTooltipMessage = computed(() => {
   if (chartErrors.value.length > 0) {
@@ -187,6 +197,10 @@ const saveTooltipMessage = computed(() => {
   }
   return ""
 })
+
+const hyphenateTooltip = computed(() =>
+  richMode.value ? "Only available in plain text mode" : "Splits the selected words into syllables"
+)
 
 const syllablesTextarea = ref<HTMLTextAreaElement | null>(null)
 const lineNumbersTextarea = ref<HTMLTextAreaElement | null>(null)
@@ -327,6 +341,20 @@ function applyJoinSyllables() {
   nextTick(() => textarea.setSelectionRange(start, start + replacement.length))
 }
 
+async function hyphenateSelection() {
+  if (richMode.value) return
+  const textarea = lyricsTextarea.value
+  if (!textarea) return
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  if (start === end) return
+  const selected = lyricsText.value.slice(start, end)
+  const hyphenated = await hyphenateLyrics(selected, hyphenLanguage.value)
+  lyricsText.value = lyricsText.value.slice(0, start) + hyphenated + lyricsText.value.slice(end)
+  textarea.focus()
+  nextTick(() => textarea.setSelectionRange(start, start + hyphenated.length))
+}
+
 function handleKeydown(event: KeyboardEvent) {
   if (!event.ctrlKey || event.altKey || event.metaKey) return
   const key = event.key.toLowerCase()
@@ -379,7 +407,6 @@ async function loadFile() {
 }
 
 async function saveFile() {
-  // WARN: Supposedly, mouseenter events don't trigger on disabled elements on some browsers
   if (!path) return
   if (chartErrors.value.length > 0) return
   await parseLyricsToChart(lyricsText.value.split("\n"), path)
@@ -479,6 +506,35 @@ onUnmounted(() => {
 .toolbar .shortcut {
   opacity: 0.6;
   font-size: 0.7em;
+}
+
+.hyphen-group {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-left: auto;
+}
+
+.hyphen-group button {
+  border-radius: var(--border-small) 0 0 var(--border-small);
+}
+
+.hyphen-group :deep(.custom-select) {
+  display: flex;
+}
+
+.hyphen-group :deep(.custom-select .selected-option) {
+  flex: 1;
+  align-items: center;
+  border-radius: 0 var(--border-small) var(--border-small) 0;
+}
+
+.tooltip-wrapper {
+  display: inline-flex;
+}
+
+.tooltip-wrapper > button:disabled {
+  pointer-events: none;
 }
 
 .container * {

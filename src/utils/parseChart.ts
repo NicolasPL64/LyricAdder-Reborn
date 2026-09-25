@@ -55,7 +55,6 @@ export function extractLyrics(
     }
 
     const parseLyricText = (event: ChartEvent): string => {
-        //FIXME: Bug with 'Berried Alive - Crusty'
         const lyricArray = event.name.split(" ")
         // In case there is a space in the middle of the event
         if (lyricArray.length > 2) return lyricArray.slice(1).join("_")

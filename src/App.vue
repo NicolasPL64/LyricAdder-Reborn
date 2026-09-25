@@ -22,11 +22,11 @@ import { getChangelogHtml } from "./composables/useChangelog"
 const changelogModal = ref<InstanceType<typeof ChangelogModal> | null>(null)
 
 onMounted(async () => {
-  //if (import.meta.env.PROD) {
-  checkForUpdates()
-  const changelogHtml = await getChangelogHtml()
-  if (changelogHtml) changelogModal.value?.open(changelogHtml)
-  //}
+  if (import.meta.env.PROD) {
+    checkForUpdates()
+    const changelogHtml = await getChangelogHtml()
+    if (changelogHtml) changelogModal.value?.open(changelogHtml)
+  }
   const savedTheme = localStorage.getItem(storageKeys.theme) as ThemeId
   if (savedTheme) {
     setTheme(savedTheme)
