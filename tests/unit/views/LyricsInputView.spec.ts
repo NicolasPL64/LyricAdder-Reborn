@@ -368,6 +368,42 @@ describe("LyricsInputView", () => {
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("aa_bb_cc")
     })
 
+    it("hyphenates only the selected words in plain mode", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric hello"
+                2 = E "lyric world"
+                3 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 5) // "hello"
+        await findButton(wrapper, "Hyphenate!").trigger("click")
+
+        await vi.waitFor(() => {
+            expect(textareaValue(wrapper, "textarea.lyrics")).toBe("hel-lo world")
+        })
+    })
+
+    it("disables the Hyphenate button in rich mode", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric hello"
+                2 = E "phrase_end"
+            `)
+        )
+        await toggleRichMode(wrapper)
+
+        expect(findButton(wrapper, "Hyphenate!").attributes("disabled")).toBeDefined()
+    })
+
     it("preserves the scroll position when toggling between rich and plain mode", async () => {
         const wrapper = mountView()
         const manyLines = Array.from(
