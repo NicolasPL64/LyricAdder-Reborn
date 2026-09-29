@@ -19,7 +19,7 @@ interface Point {
 }
 
 // Returns the DOM point at the given character offset of an element's text.
-function getTextPoint(element: HTMLElement, offset: number): Point {
+export function getTextPoint(element: HTMLElement, offset: number): Point {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
     let remaining = offset
     let node = walker.nextNode()
@@ -30,6 +30,38 @@ function getTextPoint(element: HTMLElement, offset: number): Point {
         node = walker.nextNode()
     }
     throw new Error(`Offset ${offset} is out of bounds for the element text`)
+}
+
+// Returns the global character offset of a DOM point within `root`.
+export function textOffsetAt(root: HTMLElement, node: Node, offset: number): number {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    let total = 0
+    let current = walker.nextNode()
+    while (current) {
+        if (current === node) return total + offset
+        total += (current.textContent ?? "").length
+        current = walker.nextNode()
+    }
+    return total
+}
+
+// Restores the selection over the text range [start, end) of the editor. The
+// DOM is mutated by the join/unjoin before this runs, so the range is rebuilt
+// from stable text offsets and applied in a macrotask, after the browser has
+// settled its own (collapsed) selection.
+export function restoreSelectionAt(editor: HTMLElement, start: number, end: number) {
+    requestAnimationFrame(() => {
+        editor.focus()
+        const s = getTextPoint(editor, start)
+        const e = getTextPoint(editor, end)
+        const range = document.createRange()
+        range.setStart(s.node, s.offset)
+        range.setEnd(e.node, e.offset)
+        const sel = window.getSelection()
+        if (!sel) return
+        sel.removeAllRanges()
+        sel.addRange(range)
+    })
 }
 
 // Returns the DOM point one character past the given point within `element`.
