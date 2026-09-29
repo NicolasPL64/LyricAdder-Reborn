@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { getStored, setStored } from "@/utils/settings"
+import { getStored, loadColorHistory, saveColorHistory, setStored } from "@/utils/settings"
 
 describe("getStored", () => {
     beforeEach(() => localStorage.clear())
@@ -45,5 +45,30 @@ describe("setStored", () => {
         expect(localStorage.getItem("num")).toBe("3")
         expect(localStorage.getItem("flag")).toBe("true")
         expect(localStorage.getItem("text")).toBe("abc")
+    })
+})
+
+describe("color history", () => {
+    beforeEach(() => localStorage.clear())
+
+    it("returns an empty list when nothing is stored", () => {
+        expect(loadColorHistory()).toEqual([])
+    })
+
+    it("round-trips saved colors", () => {
+        saveColorHistory(["#ff0000", "#00ff00"])
+
+        expect(loadColorHistory()).toEqual(["#ff0000", "#00ff00"])
+    })
+
+    it("ignores corrupt or non-array stored data", () => {
+        localStorage.setItem("colorHistory", "not-json")
+        expect(loadColorHistory()).toEqual([])
+
+        localStorage.setItem("colorHistory", JSON.stringify({ nope: true }))
+        expect(loadColorHistory()).toEqual([])
+
+        localStorage.setItem("colorHistory", JSON.stringify(["#fff", 3]))
+        expect(loadColorHistory()).toEqual(["#fff"])
     })
 })

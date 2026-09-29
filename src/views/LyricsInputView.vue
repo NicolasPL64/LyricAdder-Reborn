@@ -50,6 +50,7 @@
     >
       Join syllables
     </button>
+    <ColorPickerTool @opening="captureColorSelection" @apply="applyColor" />
     <div class="hyphen-group" v-tooltip.left="{ value: hyphenateTooltip, showDelay: 400 }">
       <span class="tooltip-wrapper">
         <button @click="hyphenateSelection" :disabled="richMode">Hyphenate!</button>
@@ -146,6 +147,7 @@ import IconUnderline from "@/components/icons/text/IconUnderline.vue"
 import IconStrikethrough from "@/components/icons/text/IconStrikethrough.vue"
 import ToggleSwitch from "openvue/toggleswitch"
 import DropdownMenu from "@/components/DropdownMenu.vue"
+import ColorPickerTool from "@/components/ColorPickerTool.vue"
 
 import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
@@ -339,6 +341,60 @@ function applyJoinSyllables() {
   const selected = lyricsText.value.slice(start, end)
   const alreadyJoined = selected.includes("_") || selected.includes(INTERNAL_EQUALS)
   const replacement = alreadyJoined ? unjoinSyllables(selected) : joinSyllables(selected)
+  lyricsText.value = lyricsText.value.slice(0, start) + replacement + lyricsText.value.slice(end)
+  textarea.focus()
+  nextTick(() => textarea.setSelectionRange(start, start + replacement.length))
+}
+
+// Text offsets of the rich-text selection, snapshotted when the color picker
+// opens so it survives the focus loss caused by the picker panel.
+const capturedColorSelection = ref<{ start: number; end: number } | null>(null)
+
+function captureColorSelection() {
+  if (!richMode.value) {
+    capturedColorSelection.value = null
+    return
+  }
+  const editor = lyricsEditor.value
+  if (!editor) return
+  const selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return
+  const range = selection.getRangeAt(0)
+  if (!editor.contains(range.commonAncestorContainer)) return
+  capturedColorSelection.value = {
+    start: textOffsetAt(editor, range.startContainer, range.startOffset),
+    end: textOffsetAt(editor, range.endContainer, range.endOffset),
+  }
+}
+
+// Wraps the current lyrics selection in `<color=hex>...</color>`. In rich mode
+// the selection was snapshotted when the picker opened (see
+// captureColorSelection), so applying works even though the panel stole focus.
+function applyColor(hex: string) {
+  const open = `<color=${hex}>`
+  const close = `</color>`
+
+  if (richMode.value) {
+    const editor = lyricsEditor.value
+    const captured = capturedColorSelection.value
+    if (!editor || !captured) return
+    const { start, end } = captured
+    const selected = lyricsText.value.slice(start, end)
+    const replacement = `${open}${selected}${close}`
+    lyricsText.value = lyricsText.value.slice(0, start) + replacement + lyricsText.value.slice(end)
+    capturedColorSelection.value = null
+    syncEditorFromLyrics()
+    restoreSelectionAt(editor, start, end)
+    return
+  }
+
+  const textarea = lyricsTextarea.value
+  if (!textarea) return
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  if (start === end) return
+  const selected = lyricsText.value.slice(start, end)
+  const replacement = `${open}${selected}${close}`
   lyricsText.value = lyricsText.value.slice(0, start) + replacement + lyricsText.value.slice(end)
   textarea.focus()
   nextTick(() => textarea.setSelectionRange(start, start + replacement.length))

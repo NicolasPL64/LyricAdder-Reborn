@@ -404,6 +404,56 @@ describe("LyricsInputView", () => {
         expect(findButton(wrapper, "Hyphenate!").attributes("disabled")).toBeDefined()
     })
 
+    it("wraps the plain-text selection in a color tag", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 3) // "one"
+        await wrapper.find('button[aria-label="Apply a color"]').trigger("click")
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#ff0000>one</color> two")
+    })
+
+    it("wraps the rich-text selection in a color tag", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+        await toggleRichMode(wrapper)
+
+        const editor = wrapper.find(".lyrics-editor")
+        mockSelection(rangeOver(editor.element as HTMLElement, 0, 3)) // "one"
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+        await flushPromises()
+
+        expect(editor.element.innerHTML).toBe(
+            '<div><span data-tmp="color" data-tmp-value="#ff0000" style="color:#ff0000">one</span> two</div>'
+        )
+
+        await toggleRichMode(wrapper)
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#ff0000>one</color> two")
+    })
+
     it("preserves the scroll position when toggling between rich and plain mode", async () => {
         const wrapper = mountView()
         const manyLines = Array.from(
