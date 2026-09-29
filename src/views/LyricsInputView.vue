@@ -15,50 +15,51 @@
     <button
       @click="applyFormatting('bold')"
       aria-label="Bold"
-      v-tooltip="{ value: 'Bold', showDelay: 400 }"
+      v-tooltip="{ value: 'Bold.\n(Ctrl+B)', showDelay: 400 }"
     >
       <IconBold />
-      <span class="shortcut">Ctrl+B</span>
     </button>
     <button
       @click="applyFormatting('italic')"
       aria-label="Italic"
-      v-tooltip="{ value: 'Italic', showDelay: 400 }"
+      v-tooltip="{ value: 'Italic.\n(Ctrl+I)', showDelay: 400 }"
     >
       <IconItalics />
-      <span class="shortcut">Ctrl+I</span>
     </button>
     <button
       @click="applyFormatting('underline')"
       aria-label="Underline"
-      v-tooltip="{ value: 'Underline', showDelay: 400 }"
+      v-tooltip="{ value: 'Underline.\n(Ctrl+U)', showDelay: 400 }"
     >
       <IconUnderline />
-      <span class="shortcut">Ctrl+U</span>
     </button>
     <button
       @click="applyFormatting('strikeThrough')"
       aria-label="Strikethrough"
-      v-tooltip="{ value: 'Strikethrough', showDelay: 400 }"
+      v-tooltip="{ value: 'Strikethrough.\n(Ctrl+Shift+S)', showDelay: 400 }"
     >
       <IconStrikethrough />
-      <span class="shortcut">Ctrl+Shift+S</span>
     </button>
     <button
       @click="applyJoinSyllables"
       v-tooltip="{
-        value: 'Joins two or more syllables together by replacing spaces with underscores',
+        value:
+          'Joins two or more syllables together by replacing spaces with underscores.\n(Ctrl+Shift+A)',
         showDelay: 400,
       }"
     >
       Join syllables
-      <span class="shortcut">Ctrl+Shift+A</span>
     </button>
-    <div class="hyphen-group">
-      <span class="tooltip-wrapper" v-tooltip.left="{ value: hyphenateTooltip, showDelay: 400 }">
+    <div class="hyphen-group" v-tooltip.left="{ value: hyphenateTooltip, showDelay: 400 }">
+      <span class="tooltip-wrapper">
         <button @click="hyphenateSelection" :disabled="richMode">Hyphenate!</button>
       </span>
-      <DropdownMenu v-model="hyphenLanguage" :options="hyphenLanguages" width="auto" />
+      <DropdownMenu
+        v-model="hyphenLanguage"
+        :options="hyphenLanguages"
+        :disabled="richMode"
+        width="auto"
+      />
     </div>
   </div>
   <div class="container">
@@ -158,7 +159,12 @@ import {
   unjoinSyllables,
   INTERNAL_EQUALS,
 } from "@/utils/lyricsMarkup"
-import { unjoinJoinedSpans, joinSelectionSpan } from "@/utils/richJoin"
+import {
+  unjoinJoinedSpans,
+  joinSelectionSpan,
+  textOffsetAt,
+  restoreSelectionAt,
+} from "@/utils/richJoin"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
 import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
@@ -304,27 +310,24 @@ function applyJoinSyllables() {
     if (!editor.contains(selection.getRangeAt(0).commonAncestorContainer)) return
 
     const range = selection.getRangeAt(0)
+    // The selection is rebuilt from stable text offsets after the DOM mutation.
+    // extractContents() invalidates ranges that reference the removed nodes, and
+    // the restore is deferred to a macrotask so the browser has settled its own
+    // (collapsed) selection before addRange is applied.
+    const start = textOffsetAt(editor, range.startContainer, range.startOffset)
+    const end = textOffsetAt(editor, range.endContainer, range.endOffset)
+
     const unjoined = unjoinJoinedSpans(range, editor)
     if (unjoined?.modified) {
       onEditorInput()
-      if (unjoined.first && unjoined.last) {
-        const restoredRange = document.createRange()
-        restoredRange.setStartBefore(unjoined.first)
-        restoredRange.setEndAfter(unjoined.last)
-        selection.removeAllRanges()
-        selection.addRange(restoredRange)
-      }
+      restoreSelectionAt(editor, start, end)
       return
     }
 
     const joined = joinSelectionSpan(range, editor)
     if (joined) {
       onEditorInput()
-      const restoredRange = document.createRange()
-      restoredRange.setStartBefore(joined)
-      restoredRange.setEndAfter(joined)
-      selection.removeAllRanges()
-      selection.addRange(restoredRange)
+      restoreSelectionAt(editor, start, end)
     }
   }
 
@@ -501,11 +504,6 @@ onUnmounted(() => {
   gap: 0.25em;
   margin: 0;
   padding: 0.5em;
-}
-
-.toolbar .shortcut {
-  opacity: 0.6;
-  font-size: 0.7em;
 }
 
 .hyphen-group {
