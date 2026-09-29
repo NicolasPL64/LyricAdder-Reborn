@@ -107,6 +107,14 @@ function removeColor(index: number) {
   saveColorHistory(history.value)
 }
 
+// Lets the parent pre-fill the picker with a color detected in the current
+// selection before the panel opens.
+function setColor(hex: string) {
+  color.value = hex.replace(/^#/, "")
+}
+
+defineExpose({ setColor })
+
 function onDocumentClick(event: MouseEvent) {
   if (root.value && !root.value.contains(event.target as Node)) closePanel()
 }

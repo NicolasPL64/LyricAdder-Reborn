@@ -2,6 +2,7 @@ import { flushPromises, mount, type VueWrapper } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import LyricsInputView from "@/views/LyricsInputView.vue"
+import ColorPickerTool from "@/components/ColorPickerTool.vue"
 import * as patchChartEvents from "@/utils/patchChartEvents"
 import { INTERNAL_EQUALS } from "@/utils/lyricsMarkup"
 import { ChartIO, type Chart } from "@/utils/herochartio"
@@ -418,10 +419,84 @@ describe("LyricsInputView", () => {
 
         const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
         textarea.setSelectionRange(0, 3) // "one"
-        await wrapper.find('button[aria-label="Apply a color"]').trigger("click")
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
         await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#ff0000>one</color> two")
+    })
+
+    it("detects the color of the selection and pre-fills the picker", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+        await wrapper.find("textarea.lyrics").setValue("<color=#8bd6d4>asd</color>")
+        await flushPromises()
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(15, 21) // the "asd" content (opening tag is 15 chars)
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        expect(wrapper.find(".hex-value").text()).toBe("#8bd6d4")
+    })
+
+    it("replaces the color of a fully selected marker", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+        await wrapper.find("textarea.lyrics").setValue("<color=#8bd6d4>asd</color>")
+        await flushPromises()
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 24) // whole marker (visible text "asd")
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+        wrapper.findComponent(ColorPickerTool).vm.setColor("#135c5a")
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#135c5a>asd</color>")
+    })
+
+    it("splits a partially selected marker keeping the surrounding color", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+        await wrapper.find("textarea.lyrics").setValue("<color=#8bd6d4>asdfgh</color>")
+        await flushPromises()
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(17, 19) // "df"
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+        wrapper.findComponent(ColorPickerTool).vm.setColor("#135c5a")
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe(
+            "<color=#8bd6d4>as</color><color=#135c5a>df</color><color=#8bd6d4>gh</color>"
+        )
     })
 
     it("wraps the rich-text selection in a color tag", async () => {
