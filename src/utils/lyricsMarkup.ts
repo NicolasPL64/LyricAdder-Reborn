@@ -120,55 +120,70 @@ function openFor(name: string, value: string): string | null {
     return null
 }
 
+// Renders a single tag token into safe HTML, tracking open tags in `stack`.
+// Unmatched or non-renderable tags are kept as escaped literal text.
+function renderTagToken(token: string, stack: string[]): string {
+    const inner = token.slice(1, -1)
+    const isClosing = inner.startsWith("/")
+    const body = isClosing ? inner.slice(1) : inner
+    const nameMatch = body.match(/^([a-z]+)/i)
+
+    if (!nameMatch) return escapeHtml(token)
+
+    const name = nameMatch[1].toLowerCase()
+    const value = body
+        .slice(nameMatch[1].length)
+        .replace(/^[=:\s]+/, "")
+        .replace(/^["']|["']$/g, "")
+
+    if (isClosing) {
+        const index = stack.lastIndexOf(name)
+        if (index === -1) {
+            // Unmatched closing tag: keep it as literal text
+            return escapeHtml(token)
+        }
+        let out = ""
+        while (stack.length > index) out += closeFor(stack.pop()!)
+        return out
+    }
+
+    const open = openFor(name, value)
+    if (open === null) {
+        // Not a renderable tag: keep it as literal text
+        return escapeHtml(token)
+    }
+    stack.push(name)
+    return open
+}
+
 function renderLine(line: string): string {
     const stack: string[] = []
-    let result = ""
+    const tagHtml = new Map<string, string>()
+    let flat = ""
+    let tagIndex = 0
 
+    // Render tags to HTML but replace them with placeholders in the flat string,
+    // so a joined syllable (`_` / internal equals) is detected across the whole
+    // line even when markup tags sit between its parts. Placeholders contain no
+    // spaces, "=" or "-", so they never break or trigger a joined run.
     for (const token of line.split(TAG_REGEX)) {
         if (!token) continue
 
         if (token.startsWith("<") && token.endsWith(">")) {
-            const inner = token.slice(1, -1)
-            const isClosing = inner.startsWith("/")
-            const body = isClosing ? inner.slice(1) : inner
-            const nameMatch = body.match(/^([a-z]+)/i)
-
-            if (!nameMatch) {
-                result += escapeHtml(token)
-                continue
-            }
-
-            const name = nameMatch[1].toLowerCase()
-            const value = body
-                .slice(nameMatch[1].length)
-                .replace(/^[=:\s]+/, "")
-                .replace(/^["']|["']$/g, "")
-
-            if (isClosing) {
-                const index = stack.lastIndexOf(name)
-                if (index === -1) {
-                    // Unmatched closing tag: keep it as literal text
-                    result += escapeHtml(token)
-                    continue
-                }
-                while (stack.length > index) result += closeFor(stack.pop()!)
-                continue
-            }
-
-            const open = openFor(name, value)
-            if (open === null) {
-                // Not a renderable tag: keep it as literal text
-                result += escapeHtml(token)
-                continue
-            }
-            stack.push(name)
-            result += open
+            const key = `\uE001${tagIndex++}\uE002`
+            tagHtml.set(key, renderTagToken(token, stack))
+            flat += key
         } else {
-            result += markJoinedInText(escapeHtml(token))
+            flat += escapeHtml(token)
         }
     }
 
-    // Close any tags left open at the end of the line
+    let result = markJoinedInText(flat).replace(
+        TAG_PLACEHOLDER_REGEX,
+        (key) => tagHtml.get(key) ?? key
+    )
+
+    // Close any tags left open at the end of the line, outside the joined spans
     while (stack.length) result += closeFor(stack.pop()!)
 
     return result

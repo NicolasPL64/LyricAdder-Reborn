@@ -65,6 +65,15 @@ describe("renderMarkup", () => {
         )
     })
 
+    it("keeps a joined syllable spanning markup tags inside a single span", () => {
+        expect(renderMarkup("x_<b>y</b> z")).toBe('<span class="joined">x <b>y</b></span> z')
+        expect(renderMarkup("x_<i>y</i>z_w")).toBe('<span class="joined">x <i>y</i>z w</span>')
+    })
+
+    it("keeps markup tags wrapping a whole joined syllable inside the span", () => {
+        expect(renderMarkup("<b>he_llo</b>")).toBe('<span class="joined"><b>he llo</b></span>')
+    })
+
     it("renders internal equals markers as a distinguishable equals inside a joined span", () => {
         expect(renderMarkup(`A${INTERNAL_EQUALS}B C=D`)).toBe(
             '<span class="joined">A<span class="internal-equals">=</span>B</span> C=D'
@@ -121,6 +130,18 @@ describe("renderEditableHtml", () => {
         expect(renderEditableHtml("<i>one two_three")).toBe(
             '<div><i>one <span class="joined">two three</span></i></div>'
         )
+    })
+
+    it("renders a joined syllable spanning markup tags inside a single span", () => {
+        expect(renderEditableHtml("x_<b>y</b> z")).toBe(
+            '<div><span class="joined">x <b>y</b></span> z</div>'
+        )
+    })
+
+    it("round-trips a joined syllable that spans markup tags", () => {
+        expect(serializeEditableHtml(renderEditableHtml("x_<b>y</b> z"))).toBe("x_<b>y</b> z")
+        expect(serializeEditableHtml(renderEditableHtml("x_<i>y</i>z_w"))).toBe("x_<i>y</i>z_w")
+        expect(serializeEditableHtml(renderEditableHtml("<b>he_llo</b>"))).toBe("<b>he_llo</b>")
     })
 })
 
