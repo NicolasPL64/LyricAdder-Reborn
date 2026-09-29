@@ -15,44 +15,40 @@
     <button
       @click="applyFormatting('bold')"
       aria-label="Bold"
-      v-tooltip="{ value: 'Bold', showDelay: 400 }"
+      v-tooltip="{ value: 'Bold.\n(Ctrl+B)', showDelay: 400 }"
     >
       <IconBold />
-      <span class="shortcut">Ctrl+B</span>
     </button>
     <button
       @click="applyFormatting('italic')"
       aria-label="Italic"
-      v-tooltip="{ value: 'Italic', showDelay: 400 }"
+      v-tooltip="{ value: 'Italic.\n(Ctrl+I)', showDelay: 400 }"
     >
       <IconItalics />
-      <span class="shortcut">Ctrl+I</span>
     </button>
     <button
       @click="applyFormatting('underline')"
       aria-label="Underline"
-      v-tooltip="{ value: 'Underline', showDelay: 400 }"
+      v-tooltip="{ value: 'Underline.\n(Ctrl+U)', showDelay: 400 }"
     >
       <IconUnderline />
-      <span class="shortcut">Ctrl+U</span>
     </button>
     <button
       @click="applyFormatting('strikeThrough')"
       aria-label="Strikethrough"
-      v-tooltip="{ value: 'Strikethrough', showDelay: 400 }"
+      v-tooltip="{ value: 'Strikethrough.\n(Ctrl+Shift+S)', showDelay: 400 }"
     >
       <IconStrikethrough />
-      <span class="shortcut">Ctrl+Shift+S</span>
     </button>
     <button
       @click="applyJoinSyllables"
       v-tooltip="{
-        value: 'Joins two or more syllables together by replacing spaces with underscores',
+        value:
+          'Joins two or more syllables together by replacing spaces with underscores.\n(Ctrl+Shift+A)',
         showDelay: 400,
       }"
     >
       Join syllables
-      <span class="shortcut">Ctrl+Shift+A</span>
     </button>
     <div class="hyphen-group" v-tooltip.left="{ value: hyphenateTooltip, showDelay: 400 }">
       <span class="tooltip-wrapper">
@@ -506,11 +502,6 @@ onUnmounted(() => {
   gap: 0.25em;
   margin: 0;
   padding: 0.5em;
-}
-
-.toolbar .shortcut {
-  opacity: 0.6;
-  font-size: 0.7em;
 }
 
 .hyphen-group {
