@@ -1,18 +1,20 @@
 # lyricadder-reborn
 
+Personal project I started back in Oct 2024 to learn frontend. Based on the original DarkAngel2096's [LyricAdder](https://github.com/DarkAngel2096/lyricAdder).
+
+## New features
+
++ Options to change the font size and line height
++ Built-in hyphenator supporting English, Spanish, French, German, Italian and Portuguese
++ Toolbar and keyboard shortcuts for adding bold, italics, and other markers
++ Quick auto-updater
++ Multiplatform support (Windows, Linux and Mac)
++ Color picker
+
 ## Future plans
 
 + Add user-option to auto-convert every type of apostrophe into the same custom character
-+ Add auto-hypenator (pnpm add hyphen)
-+ Color picker
 + Lyrics preview
-
-## Features
-
-### When opening
-
-+ Replace spaces for _
-+ Section separator (option)
 
 ## Project Setup
 

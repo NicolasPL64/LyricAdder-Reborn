@@ -21,7 +21,7 @@
   overflow: hidden;
   border-radius: var(--border-large);
   background-color: var(--background-100);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-drop-large);
   max-width: 80vw;
   max-height: 80vh;
 }

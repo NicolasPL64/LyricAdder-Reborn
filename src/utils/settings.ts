@@ -23,7 +23,10 @@ export const storageKeys = {
     lyricsLineHeight: "lyricsLineHeight",
     maxSectionSeparators: "maxSectionSeparators",
     lastSeenChangelogVersion: "lastSeenChangelogVersion",
+    colorHistory: "colorHistory",
 } as const
+
+export const maxColorHistory = 12
 
 export function getStored(key: string, fallback: string): string
 export function getStored(key: string, fallback: number): number
@@ -44,6 +47,22 @@ export function getStored(
 
 export function setStored(key: string, value: string | number | boolean) {
     localStorage.setItem(key, value.toString())
+}
+
+// Hex colors (#RRGGBB) the user has saved from the color picker toolbar tool.
+export function loadColorHistory(): string[] {
+    const raw = localStorage.getItem(storageKeys.colorHistory)
+    if (!raw) return []
+    try {
+        const parsed: unknown = JSON.parse(raw)
+        return Array.isArray(parsed) ? parsed.filter((c): c is string => typeof c === "string") : []
+    } catch {
+        return []
+    }
+}
+
+export function saveColorHistory(colors: string[]) {
+    localStorage.setItem(storageKeys.colorHistory, JSON.stringify(colors))
 }
 
 export function setTheme(theme: ThemeId) {

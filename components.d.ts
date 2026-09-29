@@ -12,10 +12,14 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ChangelogModal: typeof import('./src/components/ChangelogModal.vue')['default']
+    ColorPickerTool: typeof import('./src/components/ColorPickerTool.vue')['default']
     DropdownMenu: typeof import('./src/components/DropdownMenu.vue')['default']
     IconAbout: typeof import('./src/components/icons/IconAbout.vue')['default']
     IconArrowDown: typeof import('./src/components/icons/IconArrowDown.vue')['default']
     IconBold: typeof import('./src/components/icons/text/IconBold.vue')['default']
+    IconBookmark: typeof import('./src/components/icons/IconBookmark.vue')['default']
+    IconCheck: typeof import('./src/components/icons/IconCheck.vue')['default']
+    IconColorPalette: typeof import('./src/components/icons/IconColorPalette.vue')['default']
     IconItalics: typeof import('./src/components/icons/text/IconItalics.vue')['default']
     IconLoad: typeof import('./src/components/icons/IconLoad.vue')['default']
     IconLyricsInput: typeof import('./src/components/icons/IconLyricsInput.vue')['default']

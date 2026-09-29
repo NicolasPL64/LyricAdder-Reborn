@@ -24,7 +24,7 @@
 }
 
 .p-tooltip-text {
-  box-shadow: 0;
+  box-shadow: var(--shadow-drop-small);
   border-radius: var(--tooltip-border-radius);
   background: var(--tooltip-background);
   padding: var(--tooltip-padding);

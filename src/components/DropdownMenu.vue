@@ -93,7 +93,7 @@ function select(value: string) {
   top: 100%;
   right: 0;
   z-index: 10;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-drop-small);
   border-radius: var(--border-small);
   background-color: var(--primary-400);
   width: max-content;

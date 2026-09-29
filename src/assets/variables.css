@@ -2,6 +2,8 @@
   --elastic: cubic-bezier(0.075, 0.82, 0.165, 1);
   --border-small: 5px;
   --border-large: 15px;
+  --shadow-drop-small: 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-drop-large: 0 10px 40px rgba(0, 0, 0, 0.3);
 
   background-color: var(--background-50);
   color: var(--text-900);
