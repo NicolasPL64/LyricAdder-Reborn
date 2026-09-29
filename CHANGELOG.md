@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.5.0...v0.6.0) (2026-09-29)
+
+
+### Features
+
+* implement color picker tool with color history management and integrate into LyricsInputView ([ff30f39](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/ff30f39286bf5382b79984538b61bd0097fa18bb))
+* integrate color picker with selection detection and recoloring functionality ([3e28c99](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/3e28c99b55202440832f94683ab27e0ac86c46eb))
+
 ## [0.5.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.4.0...v0.5.0) (2026-09-29)
 
 
