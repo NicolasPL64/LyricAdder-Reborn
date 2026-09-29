@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.4.0...v0.5.0) (2026-09-29)
+
+
+### Features
+
+* add disabled state to DropdownMenu and integrate with LyricsInputView ([0cee86a](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/0cee86a77ac047ac323379cf258d9d72c4fe8569))
+
+
+### Bug Fixes
+
+* fixed handling of joined syllables spanning markup tags ([acb1313](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/acb1313f016cfb2b78a4a20fe15721d1b83096a4))
+* fixed Join Syllables btn in Rich Mode deselecting text (QoL) ([6712ef5](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/6712ef520a1cf178d2d1d095255a437388658c3e))
+
 ## [0.4.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.3.0...v0.4.0) (2026-09-25)
 
 
