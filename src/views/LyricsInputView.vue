@@ -54,11 +54,16 @@
       Join syllables
       <span class="shortcut">Ctrl+Shift+A</span>
     </button>
-    <div class="hyphen-group">
-      <span class="tooltip-wrapper" v-tooltip.left="{ value: hyphenateTooltip, showDelay: 400 }">
+    <div class="hyphen-group" v-tooltip.left="{ value: hyphenateTooltip, showDelay: 400 }">
+      <span class="tooltip-wrapper">
         <button @click="hyphenateSelection" :disabled="richMode">Hyphenate!</button>
       </span>
-      <DropdownMenu v-model="hyphenLanguage" :options="hyphenLanguages" width="auto" />
+      <DropdownMenu
+        v-model="hyphenLanguage"
+        :options="hyphenLanguages"
+        :disabled="richMode"
+        width="auto"
+      />
     </div>
   </div>
   <div class="container">

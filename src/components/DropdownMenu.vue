@@ -1,5 +1,5 @@
 <template>
-  <div class="custom-select" :style="width ? { width } : undefined">
+  <div class="custom-select" :class="{ disabled }" :style="width ? { width } : undefined">
     <div class="selected-option" @click="toggleDropdown">
       {{ selectedShort }} <IconArrowDown style="margin-left: auto" />
     </div>
@@ -35,6 +35,8 @@ const props = defineProps<{
   modelValue: string
   /** CSS width of the collapsed control (e.g. "auto" to only fit the short label). */
   width?: string
+  /** Whether the dropdown is disabled. */
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -50,10 +52,12 @@ const selectedShort = computed(() => {
 })
 
 function toggleDropdown() {
+  if (props.disabled) return
   dropdownOpen.value = !dropdownOpen.value
 }
 
 function select(value: string) {
+  if (props.disabled) return
   dropdownOpen.value = false
   emit("update:modelValue", value)
 }
@@ -65,6 +69,12 @@ function select(value: string) {
   cursor: pointer;
   width: 200px;
   user-select: none;
+}
+
+.custom-select.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .selected-option {
