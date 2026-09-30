@@ -449,6 +449,61 @@ describe("LyricsInputView", () => {
         expect(wrapper.find(".hex-value").text()).toBe("#8bd6d4")
     })
 
+    it("applies an 8-digit hex when alpha is lowered", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 3) // "one"
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+        await wrapper.find('input[aria-label="Alpha"]').setValue("128")
+
+        expect(wrapper.find(".hex-value").text()).toBe("#ff000080")
+
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#ff000080>one</color> two")
+    })
+
+    it("pre-fills the alpha slider from an 8-digit hex and reapplies it", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+        await wrapper.find("textarea.lyrics").setValue("<color=#8bd6d480>asd</color>")
+        await flushPromises()
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(17, 24) // the "asd" content (opening tag is 17 chars)
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        expect(wrapper.find(".hex-value").text()).toBe("#8bd6d480")
+        expect((wrapper.find('input[aria-label="Alpha"]').element as HTMLInputElement).value).toBe(
+            "128"
+        )
+
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#8bd6d480>asd</color>")
+    })
+
     it("replaces the color of a fully selected marker", async () => {
         const wrapper = mountView()
         await loadChart(

@@ -16,6 +16,20 @@
 
     <div v-if="panelOpen" class="color-panel">
       <ColorPicker v-model="color" format="hex" inline />
+      <div class="alpha-row">
+        <div class="alpha-track">
+          <div class="alpha-fill" :style="{ background: alphaGradient }"></div>
+          <input
+            type="range"
+            class="alpha-slider"
+            min="0"
+            max="255"
+            step="1"
+            v-model.number="alpha"
+            aria-label="Alpha"
+          />
+        </div>
+      </div>
       <div class="color-row">
         <code class="hex-value">{{ currentHex }}</code>
         <div class="color-actions">
@@ -42,10 +56,10 @@
           v-for="(hex, index) in history"
           :key="hex"
           class="history-swatch"
-          :style="{ backgroundColor: hex }"
           :title="hex"
           @click="apply(hex)"
         >
+          <div class="history-swatch-fill" :style="{ backgroundColor: hex }"></div>
           <button class="remove" aria-label="Remove color" @click.stop="removeColor(index)">
             ×
           </button>
@@ -71,9 +85,35 @@ const emit = defineEmits<{
 const root = ref<HTMLElement | null>(null)
 const panelOpen = ref(false)
 const color = ref("ff0000")
+const alpha = ref(255)
 const history = ref<string[]>(loadColorHistory())
 
-const currentHex = computed(() => "#" + color.value)
+const currentHex = computed(() => {
+  const base = "#" + color.value
+  return alpha.value === 255 ? base : base + alpha.value.toString(16).padStart(2, "0")
+})
+
+const colorRGB = computed(() => {
+  const hex = color.value.replace(/^#/, "")
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return "rgb(255, 0, 0)"
+  const r = parseInt(hex.slice(0, 2), 16)
+  const g = parseInt(hex.slice(2, 4), 16)
+  const b = parseInt(hex.slice(4, 6), 16)
+  return `rgb(${r}, ${g}, ${b})`
+})
+
+const alphaGradient = computed(() => `linear-gradient(to right, transparent, ${colorRGB.value})`)
+
+function setColorFromHex(hex: string) {
+  const value = hex.replace(/^#/, "")
+  if (/^[0-9a-fA-F]{8}$/.test(value)) {
+    color.value = value.slice(0, 6).toLowerCase()
+    alpha.value = parseInt(value.slice(6, 8), 16)
+  } else {
+    color.value = value.toLowerCase()
+    alpha.value = 255
+  }
+}
 
 // Runs on mousedown before the panel opens so the parent can snapshot the
 // rich-text selection while the editor still holds it.
@@ -90,7 +130,7 @@ function closePanel() {
 }
 
 function apply(hex: string) {
-  color.value = hex.replace(/^#/, "")
+  setColorFromHex(hex)
   emit("apply", hex)
   closePanel()
 }
@@ -110,7 +150,7 @@ function removeColor(index: number) {
 // Lets the parent pre-fill the picker with a color detected in the current
 // selection before the panel opens.
 function setColor(hex: string) {
-  color.value = hex.replace(/^#/, "")
+  setColorFromHex(hex)
 }
 
 defineExpose({ setColor })
@@ -165,6 +205,69 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick))
   padding: 0.75rem;
 }
 
+.alpha-row {
+  display: flex;
+  align-items: center;
+}
+
+.alpha-track {
+  position: relative;
+  border: 1px solid var(--background-400);
+  border-radius: var(--border-small);
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0;
+  background-size: 8px 8px;
+  width: 193px;
+  height: 14px;
+}
+
+.alpha-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.alpha-slider {
+  position: absolute;
+  appearance: none;
+  cursor: pointer;
+  margin: 0;
+  inset: 0;
+  background: transparent;
+}
+
+.alpha-slider::-webkit-slider-runnable-track,
+.alpha-slider::-moz-range-track {
+  background: transparent;
+}
+
+.alpha-slider::-webkit-slider-thumb {
+  appearance: none;
+  box-shadow: var(--shadow-drop-small);
+  border: 2px solid var(--text-100);
+  border-radius: 50%;
+  background: var(--text-900);
+  width: 10px;
+  height: 10px;
+}
+
+.alpha-slider::-moz-range-thumb {
+  box-shadow: var(--shadow-drop-small);
+  border: 2px solid var(--text-100);
+  border-radius: 50%;
+  background: var(--text-900);
+  width: 6px;
+  height: 6px;
+}
+
 .color-row {
   display: flex;
   align-items: center;
@@ -215,8 +318,25 @@ button.small svg {
   cursor: pointer;
   border: 1px solid var(--background-400);
   border-radius: var(--border-small);
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0;
+  background-size: 8px 8px;
   width: 1.4rem;
   height: 1.4rem;
+}
+
+.history-swatch-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
 }
 
 .history-swatch .remove {
