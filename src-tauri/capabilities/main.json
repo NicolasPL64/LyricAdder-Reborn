@@ -17,6 +17,22 @@
             "identifier": "fs:allow-write-text-file",
             "allow": ["**", "**/*", "/**/*"]
         },
+        {
+            "identifier": "fs:allow-mkdir",
+            "allow": ["**", "**/*", "/**/*"]
+        },
+        {
+            "identifier": "fs:allow-read-dir",
+            "allow": ["**", "**/*", "/**/*"]
+        },
+        {
+            "identifier": "fs:allow-remove",
+            "allow": ["**", "**/*", "/**/*"]
+        },
+        {
+            "identifier": "fs:allow-rename",
+            "allow": ["**", "**/*", "/**/*"]
+        },
         "fs:allow-exists",
         {
             "identifier": "fs:allow-watch",

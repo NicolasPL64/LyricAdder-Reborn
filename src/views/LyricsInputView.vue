@@ -152,6 +152,14 @@ import ColorPickerTool from "@/components/ColorPickerTool.vue"
 import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings } from "@/utils/settings"
+import {
+  backupBeforeSave,
+  backupLyrics,
+  clearLyricsBackups,
+  getLatestBackups,
+  pruneChartBackups,
+  readBackup,
+} from "@/utils/backup"
 import { hyphenateLyrics, hyphenLanguages } from "@/utils/hyphenateLyrics"
 import {
   renderEditableHtml,
@@ -178,7 +186,7 @@ import {
   detectColorInRange,
   recolorLine,
 } from "@/utils/recolorMarkup"
-import { open } from "@tauri-apps/plugin-dialog"
+import { open, ask } from "@tauri-apps/plugin-dialog"
 import {
   ref,
   computed,
@@ -533,6 +541,53 @@ function isHighlighted(index: number) {
 let chart: ParsedChartWithOriginal
 let path = ""
 
+// Automatic backups (crash / power-loss safety): the plain lyrics text is saved
+// on a fixed interval while editing, and the on-disk chart is snapshotted right
+// before each save. Backups live under the app-local data dir, keyed by a hash
+// of the chart path. Nothing is written when the text has not changed.
+const BACKUP_INTERVAL_MS = 15000
+let lastBackedUpText = "" // The text the newest lyrics backup already reflects
+let backupInterval: number | null = null
+let isFlushing = false
+
+// Forces a lyrics backup now. Does nothing if the text is already backed up
+// (the last created copy is enough; closing/leaving never forces a new one).
+async function flushLyricsBackup() {
+  if (isFlushing) return
+  if (!path || lyricsText.value === lastBackedUpText) return
+  isFlushing = true
+  try {
+    await backupLyrics(path, lyricsText.value)
+    lastBackedUpText = lyricsText.value
+  } catch (error) {
+    console.error("Failed to back up the lyrics text", error)
+  } finally {
+    isFlushing = false
+  }
+}
+
+async function promptForBackupRecovery() {
+  if (!path) return
+  const latest = await getLatestBackups(path)
+  if (!latest.lyrics) return
+
+  const restore = await ask(
+    "This song has unsaved lyrics from a previous session.\nRestore them?",
+    { title: "Unsaved lyrics found", kind: "warning", okLabel: "Restore", cancelLabel: "Discard" }
+  )
+  if (!restore) {
+    await clearLyricsBackups(path)
+    return
+  }
+  try {
+    lyricsText.value = await readBackup(latest.lyrics)
+    syncEditorFromLyrics()
+    lastBackedUpText = lyricsText.value
+  } catch (error) {
+    console.error("Failed to restore the lyrics backup", error)
+  }
+}
+
 async function loadFile() {
   const selectedPath = await open({
     multiple: false,
@@ -546,19 +601,30 @@ async function loadFile() {
   chartErrors.value = chart.parsed.errors
   lyricsText.value = chart.parsed.chartLyrics
   syncEditorFromLyrics()
+  lastBackedUpText = lyricsText.value // Nothing to back up right after loading
 
   await setupFileWatcher()
+  await promptForBackupRecovery()
 }
 
 async function saveFile() {
   if (!path) return
   if (chartErrors.value.length > 0) return
+
+  // Snapshot the on-disk chart before overwriting it, so a failed write never
+  // destroys the previous state.
+  await backupBeforeSave(path)
   await parseLyricsToChart(lyricsText.value.split("\n"), path)
 
   // Refresh the view so it reflects the saved file
   chart = await parseChart(path)
   chartErrors.value = chart.parsed.errors
   watchLyricsTextRef()
+
+  // The lyrics are now on disk, so their session backups are no longer needed.
+  lastBackedUpText = lyricsText.value
+  await clearLyricsBackups(path)
+  await pruneChartBackups(path)
 }
 
 async function setupFileWatcher() {
@@ -594,6 +660,7 @@ watch(lyricsText, watchLyricsTextRef)
 onMounted(() => {
   ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
   window.addEventListener("keydown", handleKeydown)
+  backupInterval = window.setInterval(() => void flushLyricsBackup(), BACKUP_INTERVAL_MS)
 })
 
 onActivated(async () => {
@@ -612,10 +679,16 @@ onActivated(async () => {
 onDeactivated(() => {
   window.removeEventListener("keydown", handleKeydown)
   removeFileWatcher()
+  void flushLyricsBackup()
 })
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown)
+  if (backupInterval !== null) {
+    clearInterval(backupInterval)
+    backupInterval = null
+  }
+  void flushLyricsBackup()
 })
 </script>
 

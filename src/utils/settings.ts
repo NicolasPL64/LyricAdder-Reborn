@@ -49,7 +49,7 @@ export function setStored(key: string, value: string | number | boolean) {
     localStorage.setItem(key, value.toString())
 }
 
-// Hex colors (#RRGGBB) the user has saved from the color picker toolbar tool.
+// Hex colors (#RRGGBB or #RRGGBBAA) the user has saved from the color picker toolbar tool.
 export function loadColorHistory(): string[] {
     const raw = localStorage.getItem(storageKeys.colorHistory)
     if (!raw) return []
