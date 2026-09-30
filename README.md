@@ -6,15 +6,35 @@ Personal project I started back in Oct 2024 to learn frontend. Based on the orig
 
 + Options to change the font size and line height
 + Built-in hyphenator supporting English, Spanish, French, German, Italian and Portuguese
-+ Toolbar and keyboard shortcuts for adding bold, italics, and other markers
++ Toolbar and keyboard shortcuts for bold, italics, underline, strikethrough and colored text
++ Rich text (WYSIWYG-like) editing mode
++ Color picker with alpha channel support and color bookmarks
++ Better chart errors messages
++ Automatic backups of your lyrics and chart, with a restore prompt
++ File watcher that re-reads the chart when it changes on disk
 + Quick auto-updater
 + Multiplatform support (Windows, Linux and Mac)
-+ Color picker
+
+## Backups
+
+Lyrics and chart backups are stored in the app's local data directory, under a
+folder named after a hash of the chart's absolute path:
+
+| OS | Backup directory |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\com.nicolaspl.lyricadder-reborn.app\backups\<chart-hash>\` |
+| macOS | `~/Library/Application Support/com.nicolaspl.lyricadder-reborn.app/backups/<chart-hash>/` |
+| Linux | `~/.local/share/com.nicolaspl.lyricadder-reborn.app/backups/<chart-hash>/` |
+
+Each folder contains `<timestamp>.lyrics.txt` files (unsaved lyrics text) and
+`<timestamp>.chart` snapshots (taken right before each save). Up to 5 backups
+per kind are kept, and chart snapshots older than 7 days are pruned.
 
 ## Future plans
 
 + Add user-option to auto-convert every type of apostrophe into the same custom character
 + Lyrics preview
++ More themes!
 
 ## Project Setup
 
