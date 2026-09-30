@@ -44,7 +44,7 @@
       @click="applyJoinSyllables"
       v-tooltip="{
         value:
-          'Joins two or more syllables together by replacing spaces with underscores.\n(Ctrl+Shift+A)',
+          'Joins two or more syllables together by replacing spaces with underscores, and equals with a special character.\n(Ctrl+Shift+A)',
         showDelay: 400,
       }"
     >
