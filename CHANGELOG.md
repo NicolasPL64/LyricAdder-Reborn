@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.6.0...v0.7.0) (2026-09-30)
+
+
+### Features
+
+* add alpha channel support to color picker and update hex handling ([f56bcb9](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/f56bcb9ce906dbf09bd54f3d1ddf84caefb756b6))
+* implement automatic backup system for lyrics and chart files ([a828908](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/a828908eb8f7a2e6013919ec91729f1001584650))
+
 ## [0.6.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.5.0...v0.6.0) (2026-09-29)
 
 
