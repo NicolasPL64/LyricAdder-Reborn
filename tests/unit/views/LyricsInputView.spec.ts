@@ -14,7 +14,24 @@ import { mockSelection, rangeOver } from "../helpers/dom"
 
 vi.mock("@tauri-apps/plugin-dialog", () => ({
     open: vi.fn(),
+    ask: vi.fn().mockResolvedValue(false),
 }))
+
+vi.mock("@tauri-apps/api/path", () => ({
+    appLocalDataDir: vi.fn().mockResolvedValue("/mock/appdata"),
+    join: vi.fn((...parts: string[]) => parts.join("/")),
+}))
+
+const fsMock = vi.hoisted(() => ({
+    mkdir: vi.fn(),
+    readDir: vi.fn(),
+    readTextFile: vi.fn(),
+    writeTextFile: vi.fn(),
+    rename: vi.fn(),
+    remove: vi.fn(),
+}))
+
+vi.mock("@tauri-apps/plugin-fs", () => fsMock)
 
 vi.mock("@/utils/patchChartEvents", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@/utils/patchChartEvents")>()
@@ -63,6 +80,12 @@ async function loadChart(wrapper: VueWrapper, chart: Chart) {
 describe("LyricsInputView", () => {
     beforeEach(() => {
         localStorage.clear()
+        fsMock.mkdir.mockResolvedValue(undefined)
+        fsMock.readDir.mockResolvedValue([])
+        fsMock.readTextFile.mockResolvedValue("chart")
+        fsMock.writeTextFile.mockResolvedValue(undefined)
+        fsMock.rename.mockResolvedValue(undefined)
+        fsMock.remove.mockResolvedValue(undefined)
     })
 
     it("loads a real fixture and shows the lyrics, syllable counts and invalid phrases", async () => {
