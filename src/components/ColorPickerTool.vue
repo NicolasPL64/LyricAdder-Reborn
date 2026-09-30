@@ -307,9 +307,11 @@ button.small svg {
 }
 
 .history {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 1.4rem);
+  column-gap: 0.6rem;
+  row-gap: 0.6rem;
+  justify-content: space-between;
   max-width: 13rem;
 }
 
