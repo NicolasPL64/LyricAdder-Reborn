@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.7.0...v0.8.0) (2026-10-01)
+
+
+### Features
+
+* add normalization settings and functionality for lyrics processing ([a6873e2](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/a6873e2eba7be5aa19e0b5ac3ad9d7654c6edcd5))
+* implement hex input for color selection with validation and dynamic width ([8753b9a](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/8753b9a785fa49f2f30e958d2eef660a8fbf0b50))
+* update default settings for reread on change and font size ([68690f1](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/68690f160223d3e87a56aa61f3dd74b0eda90ceb))
+
+
+### Bug Fixes
+
+* update tooltip description for syllable joining functionality ([72e7d79](https://github.com/NicolasPL64/LyricAdder-Reborn/commit/72e7d796424608b015075f0ecd173f07584af4fd))
+
 ## [0.7.0](https://github.com/NicolasPL64/LyricAdder-Reborn/compare/v0.6.0...v0.7.0) (2026-09-30)
 
 
