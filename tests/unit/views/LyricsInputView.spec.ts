@@ -1,37 +1,22 @@
-import { flushPromises, mount, type VueWrapper } from "@vue/test-utils"
+import { flushPromises } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import LyricsInputView from "@/views/LyricsInputView.vue"
 import ColorPickerTool from "@/components/ColorPickerTool.vue"
 import * as patchChartEvents from "@/utils/patchChartEvents"
 import { INTERNAL_EQUALS } from "@/utils/lyricsMarkup"
-import { ChartIO, type Chart } from "@/utils/herochartio"
-import { open } from "@tauri-apps/plugin-dialog"
+import { ChartIO } from "@/utils/herochartio"
 
 import test1ChartContent from "../../files/test1.chart?raw"
 import { buildChart, lyricNames } from "../helpers/chart"
 import { mockSelection, rangeOver } from "../helpers/dom"
-
-vi.mock("@tauri-apps/plugin-dialog", () => ({
-    open: vi.fn(),
-    ask: vi.fn().mockResolvedValue(false),
-}))
-
-vi.mock("@tauri-apps/api/path", () => ({
-    appLocalDataDir: vi.fn().mockResolvedValue("/mock/appdata"),
-    join: vi.fn((...parts: string[]) => parts.join("/")),
-}))
-
-const fsMock = vi.hoisted(() => ({
-    mkdir: vi.fn(),
-    readDir: vi.fn(),
-    readTextFile: vi.fn(),
-    writeTextFile: vi.fn(),
-    rename: vi.fn(),
-    remove: vi.fn(),
-}))
-
-vi.mock("@tauri-apps/plugin-fs", () => fsMock)
+import { fsMock } from "../helpers/tauriMocks"
+import {
+    findButton,
+    loadChart,
+    mountView,
+    textareaValue,
+    toggleRichMode,
+} from "../helpers/lyricsInputView"
 
 vi.mock("@/utils/patchChartEvents", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@/utils/patchChartEvents")>()
@@ -40,42 +25,6 @@ vi.mock("@/utils/patchChartEvents", async (importOriginal) => {
         saveChartEventsOnly: vi.fn(),
     }
 })
-
-function mountView() {
-    return mount(LyricsInputView, {
-        global: {
-            directives: { tooltip: {} },
-        },
-    })
-}
-
-function findButton(wrapper: VueWrapper, text: string) {
-    const button = wrapper.findAll("button").find((candidate) => candidate.text().includes(text))
-    if (!button) throw new Error(`Button "${text}" not found`)
-    return button
-}
-
-function findToggle(wrapper: VueWrapper) {
-    const toggle = wrapper.find(".p-toggleswitch-input")
-    if (!toggle.exists()) throw new Error("Rich text toggle not found")
-    return toggle
-}
-
-async function toggleRichMode(wrapper: VueWrapper) {
-    await findToggle(wrapper).trigger("change")
-    await flushPromises()
-}
-
-function textareaValue(wrapper: VueWrapper, selector: string) {
-    return (wrapper.find(selector).element as HTMLTextAreaElement).value
-}
-
-async function loadChart(wrapper: VueWrapper, chart: Chart) {
-    vi.mocked(open).mockResolvedValue("song.chart")
-    vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
-    await findButton(wrapper, "Load chart").trigger("click")
-    await flushPromises()
-}
 
 describe("LyricsInputView", () => {
     beforeEach(() => {
@@ -469,7 +418,7 @@ describe("LyricsInputView", () => {
         await colorButton.trigger("mousedown")
         await colorButton.trigger("click")
 
-        expect(wrapper.find(".hex-value").text()).toBe("#8bd6d4")
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#8bd6d4")
     })
 
     it("applies an 8-digit hex when alpha is lowered", async () => {
@@ -491,7 +440,7 @@ describe("LyricsInputView", () => {
         await colorButton.trigger("click")
         await wrapper.find('input[aria-label="Alpha"]').setValue("128")
 
-        expect(wrapper.find(".hex-value").text()).toBe("#ff000080")
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#ff000080")
 
         await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
 
@@ -517,7 +466,7 @@ describe("LyricsInputView", () => {
         await colorButton.trigger("mousedown")
         await colorButton.trigger("click")
 
-        expect(wrapper.find(".hex-value").text()).toBe("#8bd6d480")
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#8bd6d480")
         expect((wrapper.find('input[aria-label="Alpha"]').element as HTMLInputElement).value).toBe(
             "128"
         )
@@ -525,6 +474,110 @@ describe("LyricsInputView", () => {
         await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#8bd6d480>asd</color>")
+    })
+
+    it("prepends # and applies the typed color on blur", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 3) // "one"
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        await wrapper.find(".hex-value").setValue("135c5a")
+
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#135c5a")
+
+        await wrapper.find(".hex-value").trigger("blur")
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#135c5a>one</color> two")
+    })
+
+    it("applies the typed alpha on blur when typing an 8-digit hex value", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 3) // "one"
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        await wrapper.find(".hex-value").setValue("ff000080")
+
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#ff000080")
+
+        await wrapper.find(".hex-value").trigger("blur")
+
+        expect((wrapper.find('input[aria-label="Alpha"]').element as HTMLInputElement).value).toBe(
+            "128"
+        )
+
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#ff000080>one</color> two")
+    })
+
+    it("truncates input beyond 9 characters and strips invalid characters", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        await wrapper.find(".hex-value").setValue("ff000080ff0000extra!!")
+
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#ff000080")
+    })
+
+    it("selects all the text when the hex value input is focused", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        const input = wrapper.find(".hex-value")
+        await input.trigger("focus")
+
+        const el = input.element as HTMLInputElement
+        expect(el.selectionStart).toBe(0)
+        expect(el.selectionEnd).toBe(el.value.length)
     })
 
     it("replaces the color of a fully selected marker", async () => {
@@ -636,5 +689,67 @@ describe("LyricsInputView", () => {
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toContain("word0")
         expect((wrapper.find("textarea.lyrics").element as HTMLTextAreaElement).scrollTop).toBe(80)
+    })
+
+    it("normalizes the whole text when clicking Normalize", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+
+        await wrapper.find("textarea.lyrics").setValue("hello,\nworld...")
+        await flushPromises()
+        await findButton(wrapper, "Normalize").trigger("click")
+        await flushPromises()
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("Hello\nWorld...")
+    })
+
+    it("highlights the Normalize button while the text needs normalization", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+
+        const normalizeButton = findButton(wrapper, "Normalize")
+        await wrapper.find("textarea.lyrics").setValue("hello,\nworld...")
+        await flushPromises()
+
+        expect(normalizeButton.classes()).toContain("needs-fix")
+
+        await normalizeButton.trigger("click")
+        await flushPromises()
+
+        expect(normalizeButton.classes()).not.toContain("needs-fix")
+    })
+
+    it("disables the Normalize button when there is nothing to normalize", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric One"
+                2 = E "phrase_end"
+            `)
+        )
+
+        const normalizeButton = findButton(wrapper, "Normalize")
+        expect(normalizeButton.attributes("disabled")).toBeDefined()
+
+        await wrapper.find("textarea.lyrics").setValue("hello,\nworld...")
+        await flushPromises()
+
+        expect(normalizeButton.attributes("disabled")).toBeUndefined()
     })
 })

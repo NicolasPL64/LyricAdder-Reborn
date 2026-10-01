@@ -14,6 +14,8 @@
  * markers collapse into the single new color.
  */
 
+import { parseTag, TAG_REGEX } from "./lyricsMarkup"
+
 export interface MarkupToken {
     kind: "text" | "tag"
     /** The exact source slice this token represents. */
@@ -28,23 +30,6 @@ export interface MarkupToken {
     value?: string
     /** Whether the tag is a closing tag, only for tags. */
     isClose?: boolean
-}
-
-const TAG_REGEX = /(<[^>]*>)/g
-
-function parseTag(raw: string): { name: string; value?: string; isClose: boolean } {
-    const inner = raw.slice(1, -1)
-    const isClose = inner.startsWith("/")
-    const body = isClose ? inner.slice(1) : inner
-    const nameMatch = body.match(/^([a-z]+)/i)
-    const name = nameMatch ? nameMatch[1].toLowerCase() : ""
-    const value = nameMatch
-        ? body
-              .slice(nameMatch[1].length)
-              .replace(/^[=:\s]+/, "")
-              .replace(/^["']|["']$/g, "")
-        : ""
-    return { name, value, isClose }
 }
 
 export function tokenizeLine(line: string): MarkupToken[] {

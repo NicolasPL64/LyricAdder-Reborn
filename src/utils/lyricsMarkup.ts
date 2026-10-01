@@ -10,7 +10,36 @@
  *  //REF (whitelisted CH tags): https://strikeline.myjetbrains.com/youtrack/issue/CH-226
  */
 
-const TAG_REGEX = /(<[^>]*>)/g
+export const TAG_REGEX = /(<[^>]*>)/g
+
+// True when a token produced by splitting on TAG_REGEX is a markup tag.
+export function isTagToken(token: string): boolean {
+    return token.startsWith("<") && token.endsWith(">")
+}
+
+// Placeholder used to protect a markup tag (see TAG_PLACEHOLDER_REGEX).
+function tagKey(index: number): string {
+    return `\uE001${index}\uE002`
+}
+
+/**
+ * Parses a single markup tag (`<color=red>`, `</i>`, ...) into its name,
+ * optional value and whether it closes a tag.
+ */
+export function parseTag(raw: string): { name: string; value: string; isClose: boolean } {
+    const inner = raw.slice(1, -1)
+    const isClose = inner.startsWith("/")
+    const body = isClose ? inner.slice(1) : inner
+    const nameMatch = body.match(/^([a-z]+)/i)
+    const name = nameMatch ? nameMatch[1].toLowerCase() : ""
+    const value = nameMatch
+        ? body
+              .slice(nameMatch[1].length)
+              .replace(/^[=:\s]+/, "")
+              .replace(/^["']|["']$/g, "")
+        : ""
+    return { name, value, isClose }
+}
 
 // Internal marker used in the plain lyrics text to represent an "=" that belongs
 // to a single syllable (e.g. the single event `lyric A=B`). A trailing "=" that
@@ -123,20 +152,10 @@ function openFor(name: string, value: string): string | null {
 // Renders a single tag token into safe HTML, tracking open tags in `stack`.
 // Unmatched or non-renderable tags are kept as escaped literal text.
 function renderTagToken(token: string, stack: string[]): string {
-    const inner = token.slice(1, -1)
-    const isClosing = inner.startsWith("/")
-    const body = isClosing ? inner.slice(1) : inner
-    const nameMatch = body.match(/^([a-z]+)/i)
+    const { name, value, isClose } = parseTag(token)
+    if (!name) return escapeHtml(token)
 
-    if (!nameMatch) return escapeHtml(token)
-
-    const name = nameMatch[1].toLowerCase()
-    const value = body
-        .slice(nameMatch[1].length)
-        .replace(/^[=:\s]+/, "")
-        .replace(/^["']|["']$/g, "")
-
-    if (isClosing) {
+    if (isClose) {
         const index = stack.lastIndexOf(name)
         if (index === -1) {
             // Unmatched closing tag: keep it as literal text
@@ -169,8 +188,8 @@ function renderLine(line: string): string {
     for (const token of line.split(TAG_REGEX)) {
         if (!token) continue
 
-        if (token.startsWith("<") && token.endsWith(">")) {
-            const key = `\uE001${tagIndex++}\uE002`
+        if (isTagToken(token)) {
+            const key = tagKey(tagIndex++)
             tagHtml.set(key, renderTagToken(token, stack))
             flat += key
         } else {
@@ -243,7 +262,7 @@ function inline(el: HTMLElement): string {
             // A joined syllable: spaces are literal space markers. Tags are
             // protected so their own attributes (e.g. <color=red>) stay intact.
             return inlineChildren(el)
-                .replace(/(<[^>]*>)/g, (match) => `\uE001${match}\uE002`)
+                .replace(TAG_REGEX, (match) => `\uE001${match}\uE002`)
                 .replace(/[\u0020\u00A0]/g, "_")
                 .replace(/\uE002/g, "")
                 .replace(/\uE001/g, "")
@@ -346,7 +365,7 @@ export function protectMarkupTags<T extends string | string[]>(
     const tags = new Map<string, string>()
     let tagIndex = 0
     const protectedText = text.replace(TAG_REGEX, (tag) => {
-        const key = `\uE001${tagIndex++}\uE002`
+        const key = tagKey(tagIndex++)
         tags.set(key, tag)
         return key
     })

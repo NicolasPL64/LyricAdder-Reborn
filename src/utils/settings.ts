@@ -1,11 +1,22 @@
 import { getCurrentWindow } from "@tauri-apps/api/window"
+import { normalizeEllipsisDirection, type NormalizeOptions } from "./normalizeLyrics"
 
 export const defaultSettings = {
-    isRereadOnChange: false,
+    isRereadOnChange: true,
     isGayMode: false,
-    lyricsFontSize: 0.9,
+    lyricsFontSize: 1.0,
     lyricsLineHeight: 1.5,
     maxSectionSeparators: 3,
+    normalizeCapitalize: true,
+    normalizeTrailingPunctuation: true,
+    normalizeTrailingPunctuationChars: ",.;",
+    normalizeApostrophes: true,
+    normalizeApostropheChar: "'",
+    normalizeUnicodeSpaces: true,
+    normalizeEllipsis: true,
+    normalizeEllipsisDirection: "unicodeToAscii",
+    normalizeInvisible: true,
+    normalizeNfc: true,
 } as const
 
 export const themesArray = [
@@ -24,10 +35,21 @@ export const storageKeys = {
     maxSectionSeparators: "maxSectionSeparators",
     lastSeenChangelogVersion: "lastSeenChangelogVersion",
     colorHistory: "colorHistory",
+    normalizeCapitalize: "normalizeCapitalize",
+    normalizeTrailingPunctuation: "normalizeTrailingPunctuation",
+    normalizeTrailingPunctuationChars: "normalizeTrailingPunctuationChars",
+    normalizeApostrophes: "normalizeApostrophes",
+    normalizeApostropheChar: "normalizeApostropheChar",
+    normalizeUnicodeSpaces: "normalizeUnicodeSpaces",
+    normalizeEllipsis: "normalizeEllipsis",
+    normalizeEllipsisDirection: "normalizeEllipsisDirection",
+    normalizeInvisible: "normalizeInvisible",
+    normalizeNfc: "normalizeNfc",
 } as const
 
 export const maxColorHistory = 12
 
+export function getStored<T extends string | number | boolean>(key: string, fallback: T): T
 export function getStored(key: string, fallback: string): string
 export function getStored(key: string, fallback: number): number
 export function getStored(key: string, fallback: boolean): boolean
@@ -65,13 +87,21 @@ export function saveColorHistory(colors: string[]) {
     localStorage.setItem(storageKeys.colorHistory, JSON.stringify(colors))
 }
 
-export function setTheme(theme: ThemeId) {
+export function applyThemeAttribute(theme: ThemeId) {
     document.documentElement.setAttribute("data-theme", theme) // For choosing the right CSS variables
+}
+
+export function setTheme(theme: ThemeId) {
+    applyThemeAttribute(theme)
     localStorage.setItem(storageKeys.theme, theme)
 }
 
 export async function getSystemTheme(): Promise<ThemeId> {
     return (await getCurrentWindow().theme()) ?? "dark"
+}
+
+export async function resolveTheme(): Promise<ThemeId> {
+    return (localStorage.getItem(storageKeys.theme) as ThemeId | null) ?? (await getSystemTheme())
 }
 
 export function loadLyricsSettings() {
@@ -88,4 +118,39 @@ export function loadLyricsSettings() {
     root.style.setProperty("--lyrics-container-font-size", fontSize)
     root.style.setProperty("--lyrics-container-line-height", lineHeight.toString())
     return { isRereadOnChange, isGayMode }
+}
+
+export function loadNormalizeSettings(): NormalizeOptions {
+    return {
+        capitalize: getStored(storageKeys.normalizeCapitalize, defaultSettings.normalizeCapitalize),
+        trailingPunctuation: getStored(
+            storageKeys.normalizeTrailingPunctuation,
+            defaultSettings.normalizeTrailingPunctuation
+        ),
+        trailingPunctuationChars: getStored(
+            storageKeys.normalizeTrailingPunctuationChars,
+            defaultSettings.normalizeTrailingPunctuationChars
+        ),
+        apostrophes: getStored(
+            storageKeys.normalizeApostrophes,
+            defaultSettings.normalizeApostrophes
+        ),
+        apostropheTarget: getStored(
+            storageKeys.normalizeApostropheChar,
+            defaultSettings.normalizeApostropheChar
+        ),
+        unicodeSpaces: getStored(
+            storageKeys.normalizeUnicodeSpaces,
+            defaultSettings.normalizeUnicodeSpaces
+        ),
+        ellipsis: getStored(storageKeys.normalizeEllipsis, defaultSettings.normalizeEllipsis),
+        ellipsisDirection: normalizeEllipsisDirection(
+            getStored(
+                storageKeys.normalizeEllipsisDirection,
+                defaultSettings.normalizeEllipsisDirection
+            )
+        ),
+        invisible: getStored(storageKeys.normalizeInvisible, defaultSettings.normalizeInvisible),
+        nfc: getStored(storageKeys.normalizeNfc, defaultSettings.normalizeNfc),
+    }
 }

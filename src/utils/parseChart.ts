@@ -2,7 +2,7 @@ import { isLyricEvent, removeTrailingEmptyElements, sortEventsByPriority } from 
 import { chartErrorMessages } from "./chartErrorMessages"
 import { Chart, ChartIO, type ChartEvent, type ChartTrack } from "./herochartio"
 import { defaultSettings, getStored, storageKeys } from "./settings"
-import { INTERNAL_EQUALS } from "./lyricsMarkup"
+import { INTERNAL_EQUALS, isTagToken, TAG_REGEX } from "./lyricsMarkup"
 
 export type ChartError = {
     message: string
@@ -68,12 +68,8 @@ export function extractLyrics(
     // left untouched.
     const markInternalEquals = (text: string): string =>
         text
-            .split(/(<[^>]*>)/g)
-            .map((part) =>
-                part.startsWith("<") && part.endsWith(">")
-                    ? part
-                    : part.replace(/=(?!$)/g, INTERNAL_EQUALS)
-            )
+            .split(TAG_REGEX)
+            .map((part) => (isTagToken(part) ? part : part.replace(/=(?!$)/g, INTERNAL_EQUALS)))
             .join("")
 
     for (const [time, eventList] of Object.entries(events)) {

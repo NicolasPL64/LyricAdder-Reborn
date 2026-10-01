@@ -11,6 +11,8 @@
  * partial syllable.
  */
 
+import { isTagToken, TAG_REGEX } from "./lyricsMarkup"
+
 const SPACE_REGEX = /[ \u00A0]/
 
 interface Point {
@@ -19,7 +21,7 @@ interface Point {
 }
 
 // Returns the DOM point at the given character offset of an element's text.
-export function getTextPoint(element: HTMLElement, offset: number): Point {
+function getTextPoint(element: HTMLElement, offset: number): Point {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
     let remaining = offset
     let node = walker.nextNode()
@@ -229,7 +231,7 @@ function inRangeSplitOffsets(span: HTMLElement, range: Range): number[] {
 }
 
 // The joined spans whose content intersects the selection range.
-export function collectTouchedJoinedSpans(range: Range, editor: HTMLElement): HTMLElement[] {
+function collectTouchedJoinedSpans(range: Range, editor: HTMLElement): HTMLElement[] {
     const spans = new Set<HTMLElement>()
     const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
     let node = walker.nextNode()
@@ -343,11 +345,11 @@ function convertEqualsToInternal(fragment: DocumentFragment) {
     for (const textNode of targets) {
         const parent = textNode.parentNode
         if (!parent) continue
-        const parts = (textNode.textContent ?? "").split(/(<[^>]*>)/g)
+        const parts = (textNode.textContent ?? "").split(TAG_REGEX)
         const nodes: Node[] = []
         for (const part of parts) {
             if (part === "") continue
-            if (part.startsWith("<") && part.endsWith(">")) {
+            if (isTagToken(part)) {
                 nodes.push(document.createTextNode(part))
                 continue
             }
