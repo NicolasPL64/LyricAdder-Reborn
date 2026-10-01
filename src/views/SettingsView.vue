@@ -1,164 +1,212 @@
 <template>
-  <h1 style="margin-top: 0">Settings</h1>
-  <h2>Theme</h2>
-  <p style="display: flex; align-items: center">
-    Select your theme: <ThemeDropdownMenu style="margin-left: 0.25em" width="auto" />
-  </p>
+  <div class="settings">
+    <h1 style="margin-top: 0">Settings</h1>
+    <h2>Theme</h2>
+    <div class="setting-row">
+      <span class="setting-label">Select your theme:</span>
+      <div class="setting-controls">
+        <ThemeDropdownMenu width="auto" />
+      </div>
+    </div>
 
-  <hr />
-  <h2>Lyrics View</h2>
-  <p>
-    Font size:
-    <input type="number" v-model="lyricsFontSize" min="0.5" max="5" step="0.1" />
-  </p>
-  <p>
-    Line height:
-    <input type="number" v-model="lyricsLineHeight" min="0.8" max="5" step="0.1" />
-  </p>
+    <hr />
+    <h2>Lyrics View</h2>
+    <div class="setting-row">
+      <span class="setting-label">Font size:</span>
+      <div class="setting-controls">
+        <input type="number" v-model="lyricsFontSize" min="0.5" max="5" step="0.1" />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Line height:</span>
+      <div class="setting-controls">
+        <input type="number" v-model="lyricsLineHeight" min="0.8" max="5" step="0.1" />
+      </div>
+    </div>
 
-  <hr />
-  <h2>Behavior</h2>
-  <p>
-    Re-read chart on change
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value:
-          'If enabled, each time the loaded chart is updated, the file will be automatically re-read.\n\nIf disabled, the file will be only re-read when there is a change to the lyrics box. (This is the original LyricAdder behavior)',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="isRereadOnChange" />
-  </p>
-  <p>
-    Max amount of section separators:
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value:
-          'Indicates the maximum amount of concurrent line breaks that will be added to indicate a new section when loading a chart.\n\nSet this to 0 to disable it.',
-        showDelay: 0,
-      }"
-    />
-    <input type="number" v-model="maxSectionSeparators" min="0" />
-  </p>
-  <p>
-    Gay mode
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value: 'g\n\n\n\n\na\n\n\n\n\ny',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="isGayMode" />
-  </p>
+    <hr />
+    <h2>Behavior</h2>
+    <div class="setting-row">
+      <span class="setting-label">
+        Re-read chart on change
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value:
+              'If enabled, each time the loaded chart is updated, the file will be automatically re-read.\n\nIf disabled, the file will be only re-read when there is a change to the lyrics box. (This is the original LyricAdder behavior)',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="isRereadOnChange" />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">
+        Max amount of section separators:
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value:
+              'Indicates the maximum amount of concurrent line breaks that will be added to indicate a new section when loading a chart.\n\nSet this to 0 to disable it.',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <input type="number" v-model="maxSectionSeparators" min="0" />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">
+        Gay mode
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value: 'g\n\n\n\n\na\n\n\n\n\ny',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="isGayMode" />
+      </div>
+    </div>
 
-  <hr />
-  <h2>Normalize</h2>
-  <p>
-    Capitalize the first letter of each line
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value: 'Capitalizes the first alphanumeric character of each line, skipping symbols.',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="normalizeCapitalize" />
-  </p>
-  <p>
-    Remove trailing punctuation
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value:
-          'Removes the configured characters from the end of each line.\n\nWrite the characters to remove (use no separators).\n\nIf there are exactly three trailing dots (e.g. ...), they are left intact.',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="normalizeTrailingPunctuation" />
-    <input
-      class="text-input"
-      type="text"
-      v-model="normalizeTrailingPunctuationChars"
-      :disabled="!normalizeTrailingPunctuation"
-    />
-  </p>
-  <p>
-    Normalize apostrophes
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value: 'Unifies every apostrophe variant (e.g. ’, ʼ, ´) into the selected character.',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="normalizeApostrophes" />
-    <DropdownMenu
-      v-model="normalizeApostropheChar"
-      :options="APOSTROPHE_OPTIONS"
-      :disabled="!normalizeApostrophes"
-      style="margin-left: 0.25em"
-      width="auto"
-    />
-  </p>
-  <p>
-    Normalize unicode spaces
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value: 'Replaces exotic space characters (e.g. no-break space) with a regular space.',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="normalizeUnicodeSpaces" />
-  </p>
-  <p>
-    Normalize ellipsis
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value:
-          'Normalizes ellipses between the ellipsis character (…) and three dots (...), according to the selected direction.',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="normalizeEllipsis" />
-    <DropdownMenu
-      v-model="normalizeEllipsisDirection"
-      :options="ELLIPSIS_DIRECTIONS"
-      :disabled="!normalizeEllipsis"
-      style="margin-left: 0.25em"
-      width="auto"
-    />
-  </p>
-  <p>
-    Remove invisible characters
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value: 'Removes zero-width and BOM characters that break rendering.',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="normalizeInvisible" />
-  </p>
-  <p>
-    Unicode NFC normalization
-    <IconInfo
-      class="info-icon"
-      v-tooltip="{
-        value:
-          'Unifies decomposed accented characters (e.g. e + combining accent) into their precomposed form (é).',
-        showDelay: 0,
-      }"
-    />
-    <ToggleSwitch v-model="normalizeNfc" />
-  </p>
+    <hr />
+    <h2>Normalize</h2>
+    <div class="setting-row">
+      <span class="setting-label">
+        Capitalize the first letter of each line
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value: 'Capitalizes the first alphanumeric character of each line, skipping symbols.',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="normalizeCapitalize" />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">
+        Remove trailing punctuation
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value:
+              'Removes the configured characters from the end of each line.\n\nWrite the characters to remove (use no separators).\n\nIf there are exactly three trailing dots (e.g. ...), they are left intact.',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="normalizeTrailingPunctuation" />
+        <input
+          class="text-input"
+          type="text"
+          v-model="normalizeTrailingPunctuationChars"
+          :disabled="!normalizeTrailingPunctuation"
+        />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">
+        Normalize apostrophes
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value: 'Unifies every apostrophe variant (e.g. ’, ʼ, ´) into the selected character.',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="normalizeApostrophes" />
+        <DropdownMenu
+          v-model="normalizeApostropheChar"
+          :options="APOSTROPHE_OPTIONS"
+          :disabled="!normalizeApostrophes"
+          width="auto"
+        />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">
+        Normalize unicode spaces
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value: 'Replaces exotic space characters (e.g. no-break space) with a regular space.',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="normalizeUnicodeSpaces" />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">
+        Normalize ellipsis
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value:
+              'Normalizes ellipses between the ellipsis character (…) and three dots (...), according to the selected direction.',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="normalizeEllipsis" />
+        <DropdownMenu
+          v-model="normalizeEllipsisDirection"
+          :options="ELLIPSIS_DIRECTIONS"
+          :disabled="!normalizeEllipsis"
+          width="auto"
+        />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">
+        Remove invisible characters
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value: 'Removes zero-width and BOM characters that break rendering.',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="normalizeInvisible" />
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">
+        Unicode NFC normalization
+        <IconInfo
+          class="info-icon"
+          v-tooltip="{
+            value:
+              'Unifies decomposed accented characters (e.g. e + combining accent) into their precomposed form (é).',
+            showDelay: 0,
+          }"
+        />
+      </span>
+      <div class="setting-controls">
+        <ToggleSwitch v-model="normalizeNfc" />
+      </div>
+    </div>
 
-  <hr />
-  <button @click="resetDefaultSettings">Reset to default</button>
+    <div class="settings-actions">
+      <button @click="resetDefaultSettings">Reset to default</button>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -301,9 +349,43 @@ watchSetting(normalizeNfc, storageKeys.normalizeNfc)
 </script>
 
 <style scoped>
+.settings {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 1.5em;
+  row-gap: 0.75em;
+  align-items: center;
+}
+
+.settings > h1,
+.settings > h2,
+.settings > hr,
+.settings-actions {
+  grid-column: 1 / -1;
+}
+
+.setting-row {
+  display: contents;
+}
+
+.setting-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.setting-label,
+.setting-controls {
+  min-height: 2em;
+}
+
+.setting-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
 .info-icon {
-  vertical-align: middle;
-  margin-right: 0.25em;
   width: 1rem;
   height: 1rem;
 }
@@ -333,12 +415,12 @@ input:disabled {
   cursor: not-allowed;
 }
 
-p :deep(.custom-select) {
+.setting-controls :deep(.custom-select) {
   display: inline-flex;
   vertical-align: middle;
 }
 
-p :deep(.custom-select .selected-option) {
+.setting-controls :deep(.custom-select .selected-option) {
   column-gap: 0.5em;
 }
 </style>
