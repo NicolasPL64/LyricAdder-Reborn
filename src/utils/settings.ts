@@ -1,4 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window"
+import type { NormalizeOptions } from "./normalizeLyrics"
 
 export const defaultSettings = {
     isRereadOnChange: false,
@@ -6,6 +7,16 @@ export const defaultSettings = {
     lyricsFontSize: 0.9,
     lyricsLineHeight: 1.5,
     maxSectionSeparators: 3,
+    normalizeCapitalize: true,
+    normalizeTrailingPunctuation: true,
+    normalizeTrailingPunctuationChars: ",.;",
+    normalizeApostrophes: true,
+    normalizeApostropheChar: "'",
+    normalizeUnicodeSpaces: true,
+    normalizeEllipsis: true,
+    normalizeEllipsisDirection: "unicodeToAscii",
+    normalizeInvisible: true,
+    normalizeNfc: true,
 } as const
 
 export const themesArray = [
@@ -24,6 +35,16 @@ export const storageKeys = {
     maxSectionSeparators: "maxSectionSeparators",
     lastSeenChangelogVersion: "lastSeenChangelogVersion",
     colorHistory: "colorHistory",
+    normalizeCapitalize: "normalizeCapitalize",
+    normalizeTrailingPunctuation: "normalizeTrailingPunctuation",
+    normalizeTrailingPunctuationChars: "normalizeTrailingPunctuationChars",
+    normalizeApostrophes: "normalizeApostrophes",
+    normalizeApostropheChar: "normalizeApostropheChar",
+    normalizeUnicodeSpaces: "normalizeUnicodeSpaces",
+    normalizeEllipsis: "normalizeEllipsis",
+    normalizeEllipsisDirection: "normalizeEllipsisDirection",
+    normalizeInvisible: "normalizeInvisible",
+    normalizeNfc: "normalizeNfc",
 } as const
 
 export const maxColorHistory = 12
@@ -88,4 +109,39 @@ export function loadLyricsSettings() {
     root.style.setProperty("--lyrics-container-font-size", fontSize)
     root.style.setProperty("--lyrics-container-line-height", lineHeight.toString())
     return { isRereadOnChange, isGayMode }
+}
+
+export function loadNormalizeSettings(): NormalizeOptions {
+    const storedDirection = getStored(
+        storageKeys.normalizeEllipsisDirection,
+        defaultSettings.normalizeEllipsisDirection
+    )
+    return {
+        capitalize: getStored(storageKeys.normalizeCapitalize, defaultSettings.normalizeCapitalize),
+        trailingPunctuation: getStored(
+            storageKeys.normalizeTrailingPunctuation,
+            defaultSettings.normalizeTrailingPunctuation
+        ),
+        trailingPunctuationChars: getStored(
+            storageKeys.normalizeTrailingPunctuationChars,
+            defaultSettings.normalizeTrailingPunctuationChars
+        ),
+        apostrophes: getStored(
+            storageKeys.normalizeApostrophes,
+            defaultSettings.normalizeApostrophes
+        ),
+        apostropheTarget: getStored(
+            storageKeys.normalizeApostropheChar,
+            defaultSettings.normalizeApostropheChar
+        ),
+        unicodeSpaces: getStored(
+            storageKeys.normalizeUnicodeSpaces,
+            defaultSettings.normalizeUnicodeSpaces
+        ),
+        ellipsis: getStored(storageKeys.normalizeEllipsis, defaultSettings.normalizeEllipsis),
+        ellipsisDirection:
+            storedDirection === "asciiToUnicode" ? "asciiToUnicode" : "unicodeToAscii",
+        invisible: getStored(storageKeys.normalizeInvisible, defaultSettings.normalizeInvisible),
+        nfc: getStored(storageKeys.normalizeNfc, defaultSettings.normalizeNfc),
+    }
 }

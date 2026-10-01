@@ -50,6 +50,22 @@
     >
       Join syllables
     </button>
+    <span
+      class="tooltip-wrapper"
+      v-tooltip="{
+        value: 'Normalizes all the text using the rules configured in Settings.',
+        showDelay: 400,
+      }"
+    >
+      <button
+        @click="normalizeLyricsText"
+        class="normalize-button"
+        :class="{ 'needs-fix': needsNormalization }"
+        :disabled="!needsNormalization"
+      >
+        Normalize
+      </button>
+    </span>
     <ColorPickerTool ref="colorPicker" @opening="captureColorSelection" @apply="applyColor" />
     <div class="hyphen-group" v-tooltip.left="{ value: hyphenateTooltip, showDelay: 400 }">
       <span class="tooltip-wrapper">
@@ -151,7 +167,8 @@ import ColorPickerTool from "@/components/ColorPickerTool.vue"
 
 import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
-import { loadLyricsSettings } from "@/utils/settings"
+import { loadLyricsSettings, loadNormalizeSettings } from "@/utils/settings"
+import { normalizeLyrics, type NormalizeOptions } from "@/utils/normalizeLyrics"
 import {
   backupBeforeSave,
   backupLyrics,
@@ -224,6 +241,12 @@ const saveTooltipMessage = computed(() => {
 
 const hyphenateTooltip = computed(() =>
   richMode.value ? "Only available in plain text mode" : "Splits the selected words into syllables"
+)
+
+const normalizeOptions = ref<NormalizeOptions>(loadNormalizeSettings())
+
+const needsNormalization = computed(
+  () => normalizeLyrics(lyricsText.value, normalizeOptions.value) !== lyricsText.value
 )
 
 const syllablesTextarea = ref<HTMLTextAreaElement | null>(null)
@@ -507,6 +530,13 @@ async function hyphenateSelection() {
   nextTick(() => textarea.setSelectionRange(start, start + hyphenated.length))
 }
 
+function normalizeLyricsText() {
+  const normalized = normalizeLyrics(lyricsText.value, normalizeOptions.value)
+  if (normalized === lyricsText.value) return
+  lyricsText.value = normalized
+  syncEditorFromLyrics()
+}
+
 function handleKeydown(event: KeyboardEvent) {
   if (!event.ctrlKey || event.altKey || event.metaKey) return
   const key = event.key.toLowerCase()
@@ -659,12 +689,14 @@ watch(lyricsText, watchLyricsTextRef)
 
 onMounted(() => {
   ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
+  normalizeOptions.value = loadNormalizeSettings()
   window.addEventListener("keydown", handleKeydown)
   backupInterval = window.setInterval(() => void flushLyricsBackup(), BACKUP_INTERVAL_MS)
 })
 
 onActivated(async () => {
   ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
+  normalizeOptions.value = loadNormalizeSettings()
   window.addEventListener("keydown", handleKeydown)
   if (path) {
     if (isRereadOnChange) {
@@ -718,6 +750,31 @@ onUnmounted(() => {
   gap: 0.25em;
   margin: 0;
   padding: 0.5em;
+}
+
+.normalize-button {
+  position: relative;
+}
+
+.normalize-button.needs-fix::after {
+  position: absolute;
+  opacity: 0;
+  animation: normalize-tint 2s ease-in-out infinite;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--error-500);
+  pointer-events: none;
+  content: "";
+}
+
+@keyframes normalize-tint {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.15;
+  }
 }
 
 .hyphen-group {
