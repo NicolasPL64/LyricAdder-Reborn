@@ -165,7 +165,11 @@
 import IconInfo from "@/components/icons/IconAbout.vue"
 import ThemeDropdownMenu from "@/components/ThemeDropdownMenu.vue"
 import DropdownMenu from "@/components/DropdownMenu.vue"
-import { APOSTROPHE_OPTIONS, ELLIPSIS_DIRECTIONS } from "@/utils/normalizeLyrics"
+import {
+  APOSTROPHE_OPTIONS,
+  ELLIPSIS_DIRECTIONS,
+  normalizeEllipsisDirection as normalizeDirection,
+} from "@/utils/normalizeLyrics"
 import { defaultSettings, getStored, setStored, storageKeys } from "@/utils/settings"
 import { onMounted, ref, watch, type Ref } from "vue"
 
@@ -207,10 +211,6 @@ function watchSetting<T extends string | number | boolean>(
     if (skipFalsy ? !newVal : newVal === undefined || newVal === null) return
     setStored(key, newVal)
   })
-}
-
-function normalizeDirection(value: string): string {
-  return value === "asciiToUnicode" ? "asciiToUnicode" : "unicodeToAscii"
 }
 
 function resetDefaultSettings() {

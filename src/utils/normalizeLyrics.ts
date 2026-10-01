@@ -27,6 +27,11 @@ export const ELLIPSIS_DIRECTIONS: { value: EllipsisDirection; label: string }[] 
     { value: "asciiToUnicode", label: "... → …" },
 ]
 
+// Coerces an arbitrary stored value into a valid ellipsis direction.
+export function normalizeEllipsisDirection(value: string): EllipsisDirection {
+    return value === "asciiToUnicode" ? "asciiToUnicode" : "unicodeToAscii"
+}
+
 export const APOSTROPHE_OPTIONS: { value: string; label: string }[] = [
     { value: "'", label: "' (apostrophe)" },
     { value: "’", label: "’ (right single quotation mark)" },

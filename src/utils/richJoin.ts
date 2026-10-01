@@ -21,7 +21,7 @@ interface Point {
 }
 
 // Returns the DOM point at the given character offset of an element's text.
-export function getTextPoint(element: HTMLElement, offset: number): Point {
+function getTextPoint(element: HTMLElement, offset: number): Point {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
     let remaining = offset
     let node = walker.nextNode()
@@ -231,7 +231,7 @@ function inRangeSplitOffsets(span: HTMLElement, range: Range): number[] {
 }
 
 // The joined spans whose content intersects the selection range.
-export function collectTouchedJoinedSpans(range: Range, editor: HTMLElement): HTMLElement[] {
+function collectTouchedJoinedSpans(range: Range, editor: HTMLElement): HTMLElement[] {
     const spans = new Set<HTMLElement>()
     const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
     let node = walker.nextNode()

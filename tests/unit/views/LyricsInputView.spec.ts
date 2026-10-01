@@ -1,37 +1,22 @@
-import { flushPromises, mount, type VueWrapper } from "@vue/test-utils"
+import { flushPromises } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import LyricsInputView from "@/views/LyricsInputView.vue"
 import ColorPickerTool from "@/components/ColorPickerTool.vue"
 import * as patchChartEvents from "@/utils/patchChartEvents"
 import { INTERNAL_EQUALS } from "@/utils/lyricsMarkup"
-import { ChartIO, type Chart } from "@/utils/herochartio"
-import { open } from "@tauri-apps/plugin-dialog"
+import { ChartIO } from "@/utils/herochartio"
 
 import test1ChartContent from "../../files/test1.chart?raw"
 import { buildChart, lyricNames } from "../helpers/chart"
 import { mockSelection, rangeOver } from "../helpers/dom"
-
-vi.mock("@tauri-apps/plugin-dialog", () => ({
-    open: vi.fn(),
-    ask: vi.fn().mockResolvedValue(false),
-}))
-
-vi.mock("@tauri-apps/api/path", () => ({
-    appLocalDataDir: vi.fn().mockResolvedValue("/mock/appdata"),
-    join: vi.fn((...parts: string[]) => parts.join("/")),
-}))
-
-const fsMock = vi.hoisted(() => ({
-    mkdir: vi.fn(),
-    readDir: vi.fn(),
-    readTextFile: vi.fn(),
-    writeTextFile: vi.fn(),
-    rename: vi.fn(),
-    remove: vi.fn(),
-}))
-
-vi.mock("@tauri-apps/plugin-fs", () => fsMock)
+import { fsMock } from "../helpers/tauriMocks"
+import {
+    findButton,
+    loadChart,
+    mountView,
+    textareaValue,
+    toggleRichMode,
+} from "../helpers/lyricsInputView"
 
 vi.mock("@/utils/patchChartEvents", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@/utils/patchChartEvents")>()
@@ -40,42 +25,6 @@ vi.mock("@/utils/patchChartEvents", async (importOriginal) => {
         saveChartEventsOnly: vi.fn(),
     }
 })
-
-function mountView() {
-    return mount(LyricsInputView, {
-        global: {
-            directives: { tooltip: {} },
-        },
-    })
-}
-
-function findButton(wrapper: VueWrapper, text: string) {
-    const button = wrapper.findAll("button").find((candidate) => candidate.text().includes(text))
-    if (!button) throw new Error(`Button "${text}" not found`)
-    return button
-}
-
-function findToggle(wrapper: VueWrapper) {
-    const toggle = wrapper.find(".p-toggleswitch-input")
-    if (!toggle.exists()) throw new Error("Rich text toggle not found")
-    return toggle
-}
-
-async function toggleRichMode(wrapper: VueWrapper) {
-    await findToggle(wrapper).trigger("change")
-    await flushPromises()
-}
-
-function textareaValue(wrapper: VueWrapper, selector: string) {
-    return (wrapper.find(selector).element as HTMLTextAreaElement).value
-}
-
-async function loadChart(wrapper: VueWrapper, chart: Chart) {
-    vi.mocked(open).mockResolvedValue("song.chart")
-    vi.spyOn(ChartIO, "load").mockResolvedValue(chart)
-    await findButton(wrapper, "Load chart").trigger("click")
-    await flushPromises()
-}
 
 describe("LyricsInputView", () => {
     beforeEach(() => {

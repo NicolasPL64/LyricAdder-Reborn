@@ -10,7 +10,14 @@
 <script setup lang="ts">
 import DropdownMenu, { type DropdownOption } from "./DropdownMenu.vue"
 import { onMounted, ref } from "vue"
-import { themesArray, setTheme, getSystemTheme, storageKeys, type ThemeId } from "@/utils/settings"
+import {
+  themesArray,
+  setTheme,
+  applyThemeAttribute,
+  resolveTheme,
+  storageKeys,
+  type ThemeId,
+} from "@/utils/settings"
 
 const themeOptions: DropdownOption[] = themesArray.map((theme) => ({
   value: theme.id,
@@ -23,7 +30,7 @@ const originalTheme = ref<ThemeId>(currentTheme.value)
 onMounted(async () => {
   // If no theme was saved, use the system theme
   if (!localStorage.getItem(storageKeys.theme)) {
-    const systemTheme = await getSystemTheme()
+    const systemTheme = await resolveTheme()
     if (!localStorage.getItem(storageKeys.theme)) {
       currentTheme.value = systemTheme
       originalTheme.value = systemTheme
@@ -32,7 +39,7 @@ onMounted(async () => {
 })
 
 const previewTheme = (themeId: string | null) => {
-  document.documentElement.setAttribute("data-theme", themeId ?? originalTheme.value)
+  applyThemeAttribute((themeId as ThemeId) ?? originalTheme.value)
 }
 
 const applyTheme = (themeId: string) => {

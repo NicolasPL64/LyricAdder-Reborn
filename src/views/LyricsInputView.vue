@@ -60,8 +60,8 @@
       <button
         @click="normalizeLyricsText"
         class="normalize-button"
-        :class="{ 'needs-fix': needsNormalization }"
-        :disabled="!needsNormalization"
+        :class="{ 'needs-fix': lyricsNeedNormalization }"
+        :disabled="!lyricsNeedNormalization"
       >
         Normalize
       </button>
@@ -96,7 +96,7 @@
       readonly
     ></textarea>
 
-    <div class="highlighted-lines" ref="highlightedLinesContainer" readonly>
+    <div class="highlighted-lines" ref="highlightedLinesContainer">
       <div
         v-for="(line, index) in highlightedLines"
         :key="index"
@@ -168,7 +168,7 @@ import ColorPickerTool from "@/components/ColorPickerTool.vue"
 import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/utils/parseChart"
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings, loadNormalizeSettings } from "@/utils/settings"
-import { normalizeLyrics, type NormalizeOptions } from "@/utils/normalizeLyrics"
+import { normalizeLyrics, needsNormalization, type NormalizeOptions } from "@/utils/normalizeLyrics"
 import {
   backupBeforeSave,
   backupLyrics,
@@ -245,14 +245,14 @@ const hyphenateTooltip = computed(() =>
 
 const normalizeOptions = ref<NormalizeOptions>(loadNormalizeSettings())
 
-const needsNormalization = computed(
-  () => normalizeLyrics(lyricsText.value, normalizeOptions.value) !== lyricsText.value
+const lyricsNeedNormalization = computed(() =>
+  needsNormalization(lyricsText.value, normalizeOptions.value)
 )
 
 const syllablesTextarea = ref<HTMLTextAreaElement | null>(null)
 const lineNumbersTextarea = ref<HTMLTextAreaElement | null>(null)
 const lyricsTextarea = ref<HTMLTextAreaElement | null>(null)
-const highlightedLinesContainer = ref<HTMLTextAreaElement | null>(null)
+const highlightedLinesContainer = ref<HTMLElement | null>(null)
 const lyricsEditor = ref<HTMLElement | null>(null)
 
 // Settings

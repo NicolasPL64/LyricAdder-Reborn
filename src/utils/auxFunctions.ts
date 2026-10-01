@@ -32,8 +32,9 @@ export function sortEventsByPriority(events: ChartEvent[]): ChartEvent[] {
 }
 
 export function removeTrailingEmptyElements(arr: string[]): string[] {
-    while (arr.length > 0 && arr[arr.length - 1].trim() === "") {
-        arr.pop()
+    const result = [...arr]
+    while (result.length > 0 && result[result.length - 1].trim() === "") {
+        result.pop()
     }
-    return arr
+    return result
 }

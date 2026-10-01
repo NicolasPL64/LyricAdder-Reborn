@@ -14,22 +14,7 @@ import {
     readBackup,
     timestamp,
 } from "@/utils/backup"
-
-vi.mock("@tauri-apps/api/path", () => ({
-    appLocalDataDir: vi.fn().mockResolvedValue("/mock/appdata"),
-    join: vi.fn((...parts: string[]) => parts.join("/")),
-}))
-
-const fsMock = vi.hoisted(() => ({
-    mkdir: vi.fn(),
-    readDir: vi.fn(),
-    readTextFile: vi.fn(),
-    writeTextFile: vi.fn(),
-    rename: vi.fn(),
-    remove: vi.fn(),
-}))
-
-vi.mock("@tauri-apps/plugin-fs", () => fsMock)
+import { fsMock } from "../helpers/tauriMocks"
 
 const entry = (name: string) => ({
     name,
