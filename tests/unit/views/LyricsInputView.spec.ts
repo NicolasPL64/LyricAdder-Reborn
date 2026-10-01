@@ -418,7 +418,7 @@ describe("LyricsInputView", () => {
         await colorButton.trigger("mousedown")
         await colorButton.trigger("click")
 
-        expect(wrapper.find(".hex-value").text()).toBe("#8bd6d4")
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#8bd6d4")
     })
 
     it("applies an 8-digit hex when alpha is lowered", async () => {
@@ -440,7 +440,7 @@ describe("LyricsInputView", () => {
         await colorButton.trigger("click")
         await wrapper.find('input[aria-label="Alpha"]').setValue("128")
 
-        expect(wrapper.find(".hex-value").text()).toBe("#ff000080")
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#ff000080")
 
         await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
 
@@ -466,7 +466,7 @@ describe("LyricsInputView", () => {
         await colorButton.trigger("mousedown")
         await colorButton.trigger("click")
 
-        expect(wrapper.find(".hex-value").text()).toBe("#8bd6d480")
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#8bd6d480")
         expect((wrapper.find('input[aria-label="Alpha"]').element as HTMLInputElement).value).toBe(
             "128"
         )
@@ -474,6 +474,110 @@ describe("LyricsInputView", () => {
         await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
 
         expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#8bd6d480>asd</color>")
+    })
+
+    it("prepends # and applies the typed color on blur", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 3) // "one"
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        await wrapper.find(".hex-value").setValue("135c5a")
+
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#135c5a")
+
+        await wrapper.find(".hex-value").trigger("blur")
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#135c5a>one</color> two")
+    })
+
+    it("applies the typed alpha on blur when typing an 8-digit hex value", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "lyric two"
+                3 = E "phrase_end"
+            `)
+        )
+
+        const textarea = wrapper.find("textarea.lyrics").element as HTMLTextAreaElement
+        textarea.setSelectionRange(0, 3) // "one"
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        await wrapper.find(".hex-value").setValue("ff000080")
+
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#ff000080")
+
+        await wrapper.find(".hex-value").trigger("blur")
+
+        expect((wrapper.find('input[aria-label="Alpha"]').element as HTMLInputElement).value).toBe(
+            "128"
+        )
+
+        await wrapper.find('button[aria-label="Aplicar"]').trigger("click")
+
+        expect(textareaValue(wrapper, "textarea.lyrics")).toBe("<color=#ff000080>one</color> two")
+    })
+
+    it("truncates input beyond 9 characters and strips invalid characters", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        await wrapper.find(".hex-value").setValue("ff000080ff0000extra!!")
+
+        expect((wrapper.find(".hex-value").element as HTMLInputElement).value).toBe("#ff000080")
+    })
+
+    it("selects all the text when the hex value input is focused", async () => {
+        const wrapper = mountView()
+        await loadChart(
+            wrapper,
+            buildChart(`
+                0 = E "phrase_start"
+                1 = E "lyric one"
+                2 = E "phrase_end"
+            `)
+        )
+
+        const colorButton = wrapper.find('button[aria-label="Apply a color"]')
+        await colorButton.trigger("mousedown")
+        await colorButton.trigger("click")
+
+        const input = wrapper.find(".hex-value")
+        await input.trigger("focus")
+
+        const el = input.element as HTMLInputElement
+        expect(el.selectionStart).toBe(0)
+        expect(el.selectionEnd).toBe(el.value.length)
     })
 
     it("replaces the color of a fully selected marker", async () => {

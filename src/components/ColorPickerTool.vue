@@ -31,7 +31,19 @@
         </div>
       </div>
       <div class="color-row">
-        <code class="hex-value">{{ currentHex }}</code>
+        <input
+          class="hex-value"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          maxlength="9"
+          :value="hexInput"
+          :style="{ width: hexInputWidth }"
+          aria-label="Hex color"
+          @focus="onHexFocus"
+          @input="onHexInput"
+          @blur="onHexBlur"
+        />
         <div class="color-actions">
           <button
             class="small"
@@ -103,6 +115,32 @@ const colorRGB = computed(() => {
 })
 
 const alphaGradient = computed(() => `linear-gradient(to right, transparent, ${colorRGB.value})`)
+
+const hexInput = ref(currentHex.value)
+
+const hexInputWidth = computed(() => (hexInput.value.length > 7 ? "9ch" : "7ch"))
+
+watch(currentHex, (value) => {
+  hexInput.value = value
+})
+
+function onHexFocus(event: FocusEvent) {
+  ;(event.target as HTMLInputElement).select()
+}
+
+function onHexInput(event: Event) {
+  const digits = (event.target as HTMLInputElement).value.replace(/[^0-9a-fA-F]/g, "").slice(0, 8)
+  hexInput.value = "#" + digits
+}
+
+function onHexBlur() {
+  const digits = hexInput.value.replace(/^#/, "")
+  if (/^[0-9a-fA-F]{6}$/.test(digits) || /^[0-9a-fA-F]{8}$/.test(digits)) {
+    setColorFromHex(hexInput.value)
+  } else {
+    hexInput.value = currentHex.value
+  }
+}
 
 function setColorFromHex(hex: string) {
   const value = hex.replace(/^#/, "")
@@ -281,13 +319,15 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick))
 }
 
 .hex-value {
-  display: flex;
-  align-items: center;
+  border: 1px solid var(--background-400);
   border-radius: var(--border-small);
   background: var(--background-100);
   padding: 0 0.5em;
   height: var(--color-control-height);
   color: var(--text-900);
+  font-size: inherit;
+  font-family: monospace;
+  text-align: center;
 }
 
 button.small {
