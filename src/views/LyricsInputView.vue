@@ -169,14 +169,7 @@ import { parseChart, type ChartError, type ParsedChartWithOriginal } from "@/uti
 import { parseLyricsToChart } from "@/utils/saveChart"
 import { loadLyricsSettings, loadNormalizeSettings } from "@/utils/settings"
 import { normalizeLyrics, needsNormalization, type NormalizeOptions } from "@/utils/normalizeLyrics"
-import {
-  backupBeforeSave,
-  backupLyrics,
-  clearLyricsBackups,
-  getLatestBackups,
-  pruneChartBackups,
-  readBackup,
-} from "@/utils/backup"
+import { backupBeforeSave, clearLyricsBackups, pruneChartBackups } from "@/utils/backup"
 import { hyphenateLyrics, hyphenLanguages } from "@/utils/hyphenateLyrics"
 import {
   renderEditableHtml,
@@ -193,17 +186,11 @@ import {
   restoreSelectionAt,
 } from "@/utils/richJoin"
 import { updateSyllableCount, updateLineNumbers } from "@/utils/updateLyricsInfoRefs"
-import { createFileWatcher, removeFileWatcher } from "@/utils/watchFile"
 import { wrongPhrases } from "@/utils/wrongPhrases"
-import {
-  tokenizeLine,
-  markupOffsetToText,
-  textToMarkupOffset,
-  lineTextLength,
-  detectColorInRange,
-  recolorLine,
-} from "@/utils/recolorMarkup"
-import { open, ask } from "@tauri-apps/plugin-dialog"
+import { useAutoBackup } from "@/composables/useAutoBackup"
+import { useChartWatcher } from "@/composables/useChartWatcher"
+import { useColorSelection } from "@/composables/useColorSelection"
+import { open } from "@tauri-apps/plugin-dialog"
 import {
   ref,
   computed,
@@ -385,136 +372,15 @@ function applyJoinSyllables() {
   nextTick(() => textarea.setSelectionRange(start, start + replacement.length))
 }
 
-// Color picker integration. The selection is snapshotted when the picker opens
-// (on mousedown, before the panel steals focus) as per-line visible-text ranges,
-// so recoloring works in both plain and rich mode. The detected color (a single
-// marker covering the whole selection) pre-fills the picker.
-interface ColorLineRange {
-  lineIndex: number
-  s: number
-  e: number
-}
-
-const colorPicker = ref<InstanceType<typeof ColorPickerTool> | null>(null)
-const capturedColorRanges = ref<ColorLineRange[] | null>(null)
-const capturedTextOffsets = ref<{ start: number; end: number } | null>(null)
-
-function markupSelectionToLineRanges(lyrics: string, ms: number, me: number): ColorLineRange[] {
-  const lines = lyrics.split("\n")
-  const ranges: ColorLineRange[] = []
-  let offset = 0
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const lineStart = offset
-    const lineEnd = offset + line.length
-    const sMarkup = Math.max(ms, lineStart)
-    const eMarkup = Math.min(me, lineEnd)
-    if (sMarkup < eMarkup) {
-      const s = markupOffsetToText(line, sMarkup - lineStart)
-      const e = markupOffsetToText(line, eMarkup - lineStart)
-      if (s < e) ranges.push({ lineIndex: i, s, e })
-    }
-    offset = lineEnd + 1 // skip the "\n" separator
-  }
-  return ranges
-}
-
-function textSelectionToLineRanges(lyrics: string, ts: number, te: number): ColorLineRange[] {
-  const lines = lyrics.split("\n")
-  const ranges: ColorLineRange[] = []
-  let offset = 0
-  for (let i = 0; i < lines.length; i++) {
-    const len = lineTextLength(lines[i])
-    const s = Math.max(ts, offset)
-    const e = Math.min(te, offset + len)
-    if (s < e) ranges.push({ lineIndex: i, s: s - offset, e: e - offset })
-    offset += len
-  }
-  return ranges
-}
-
-function detectSelectionColor(lyrics: string, ranges: ColorLineRange[]): string | null {
-  const lines = lyrics.split("\n")
-  let detected: string | null = null
-  for (const range of ranges) {
-    const color = detectColorInRange(tokenizeLine(lines[range.lineIndex]), range.s, range.e)
-    if (color === null) return null
-    if (detected === null) detected = color
-    else if (detected !== color) return null
-  }
-  return detected
-}
-
-function captureColorSelection() {
-  let ranges: ColorLineRange[]
-  if (richMode.value) {
-    const editor = lyricsEditor.value
-    if (!editor) return
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return
-    const range = selection.getRangeAt(0)
-    if (!editor.contains(range.commonAncestorContainer)) return
-    const start = textOffsetAt(editor, range.startContainer, range.startOffset)
-    const end = textOffsetAt(editor, range.endContainer, range.endOffset)
-    capturedTextOffsets.value = { start, end }
-    ranges = textSelectionToLineRanges(lyricsText.value, start, end)
-  } else {
-    const textarea = lyricsTextarea.value
-    if (!textarea) return
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    if (start === end) return
-    capturedTextOffsets.value = null
-    ranges = markupSelectionToLineRanges(lyricsText.value, start, end)
-  }
-  capturedColorRanges.value = ranges
-  const detected = detectSelectionColor(lyricsText.value, ranges)
-  if (detected) colorPicker.value?.setColor(detected)
-}
-
-// Recolors the captured selection: each affected line wraps its selected text
-// in `<color=hex>`, preserving non-color markup and the colors outside the
-// selection. In rich mode the editor is re-rendered and the selection restored
-// by its (unchanged) visible-text offsets.
-function applyColor(hex: string) {
-  const ranges = capturedColorRanges.value
-  if (!ranges || ranges.length === 0) return
-
-  const lines = lyricsText.value.split("\n")
-  for (const range of ranges) {
-    const tokens = tokenizeLine(lines[range.lineIndex])
-    lines[range.lineIndex] = recolorLine(tokens, range.s, range.e, hex)
-  }
-  lyricsText.value = lines.join("\n")
-  capturedColorRanges.value = null
-
-  if (richMode.value) {
-    const editor = lyricsEditor.value
-    const offsets = capturedTextOffsets.value
-    capturedTextOffsets.value = null
-    if (!editor || !offsets) return
-    syncEditorFromLyrics()
-    restoreSelectionAt(editor, offsets.start, offsets.end)
-    return
-  }
-
-  const textarea = lyricsTextarea.value
-  if (!textarea) return
-  const newLines = lyricsText.value.split("\n")
-  const first = ranges[0]
-  const last = ranges[ranges.length - 1]
-  let lineStart = 0
-  let selStart = 0
-  let selEnd = 0
-  for (let i = 0; i <= last.lineIndex; i++) {
-    if (i === first.lineIndex)
-      selStart = lineStart + textToMarkupOffset(newLines[i], first.s, "start")
-    if (i === last.lineIndex) selEnd = lineStart + textToMarkupOffset(newLines[i], last.e, "end")
-    lineStart += newLines[i].length + 1
-  }
-  textarea.focus()
-  nextTick(() => textarea.setSelectionRange(selStart, selEnd))
-}
+// Color picker integration: snapshots the selection when the picker opens and
+// recolors it on apply, in both plain and rich mode.
+const { colorPicker, captureColorSelection, applyColor } = useColorSelection(
+  lyricsText,
+  richMode,
+  lyricsEditor,
+  lyricsTextarea,
+  syncEditorFromLyrics
+)
 
 async function hyphenateSelection() {
   if (richMode.value) return
@@ -571,52 +437,21 @@ function isHighlighted(index: number) {
 let chart: ParsedChartWithOriginal
 let path = ""
 
-// Automatic backups (crash / power-loss safety): the plain lyrics text is saved
-// on a fixed interval while editing, and the on-disk chart is snapshotted right
-// before each save. Backups live under the app-local data dir, keyed by a hash
-// of the chart path. Nothing is written when the text has not changed.
-const BACKUP_INTERVAL_MS = 15000
-let lastBackedUpText = "" // The text the newest lyrics backup already reflects
-let backupInterval: number | null = null
-let isFlushing = false
+const { flushLyricsBackup, promptForBackupRecovery, markBackedUp } = useAutoBackup(
+  () => path,
+  lyricsText,
+  syncEditorFromLyrics
+)
 
-// Forces a lyrics backup now. Does nothing if the text is already backed up
-// (the last created copy is enough; closing/leaving never forces a new one).
-async function flushLyricsBackup() {
-  if (isFlushing) return
-  if (!path || lyricsText.value === lastBackedUpText) return
-  isFlushing = true
-  try {
-    await backupLyrics(path, lyricsText.value)
-    lastBackedUpText = lyricsText.value
-  } catch (error) {
-    console.error("Failed to back up the lyrics text", error)
-  } finally {
-    isFlushing = false
+const { setupFileWatcher, teardownFileWatcher } = useChartWatcher(
+  () => path,
+  () => isRereadOnChange,
+  (updatedChart) => {
+    chart = updatedChart
+    chartErrors.value = updatedChart.parsed.errors
+    watchLyricsTextRef()
   }
-}
-
-async function promptForBackupRecovery() {
-  if (!path) return
-  const latest = await getLatestBackups(path)
-  if (!latest.lyrics) return
-
-  const restore = await ask(
-    "This song has unsaved lyrics from a previous session.\nRestore them?",
-    { title: "Unsaved lyrics found", kind: "warning", okLabel: "Restore", cancelLabel: "Discard" }
-  )
-  if (!restore) {
-    await clearLyricsBackups(path)
-    return
-  }
-  try {
-    lyricsText.value = await readBackup(latest.lyrics)
-    syncEditorFromLyrics()
-    lastBackedUpText = lyricsText.value
-  } catch (error) {
-    console.error("Failed to restore the lyrics backup", error)
-  }
-}
+)
 
 async function loadFile() {
   const selectedPath = await open({
@@ -631,7 +466,7 @@ async function loadFile() {
   chartErrors.value = chart.parsed.errors
   lyricsText.value = chart.parsed.chartLyrics
   syncEditorFromLyrics()
-  lastBackedUpText = lyricsText.value // Nothing to back up right after loading
+  markBackedUp() // Nothing to back up right after loading
 
   await setupFileWatcher()
   await promptForBackupRecovery()
@@ -652,21 +487,9 @@ async function saveFile() {
   watchLyricsTextRef()
 
   // The lyrics are now on disk, so their session backups are no longer needed.
-  lastBackedUpText = lyricsText.value
+  markBackedUp()
   await clearLyricsBackups(path)
   await pruneChartBackups(path)
-}
-
-async function setupFileWatcher() {
-  try {
-    await createFileWatcher(path, isRereadOnChange, (updatedChart) => {
-      chart = updatedChart
-      chartErrors.value = updatedChart.parsed.errors
-      watchLyricsTextRef()
-    })
-  } catch (error) {
-    console.error("Failed to set up the chart file watcher", error)
-  }
 }
 
 async function watchLyricsTextRef() {
@@ -691,7 +514,6 @@ onMounted(() => {
   ;({ isRereadOnChange: isRereadOnChange, isGayMode: isGayMode.value } = loadLyricsSettings())
   normalizeOptions.value = loadNormalizeSettings()
   window.addEventListener("keydown", handleKeydown)
-  backupInterval = window.setInterval(() => void flushLyricsBackup(), BACKUP_INTERVAL_MS)
 })
 
 onActivated(async () => {
@@ -710,17 +532,12 @@ onActivated(async () => {
 
 onDeactivated(() => {
   window.removeEventListener("keydown", handleKeydown)
-  removeFileWatcher()
+  teardownFileWatcher()
   void flushLyricsBackup()
 })
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown)
-  if (backupInterval !== null) {
-    clearInterval(backupInterval)
-    backupInterval = null
-  }
-  void flushLyricsBackup()
 })
 </script>
 
