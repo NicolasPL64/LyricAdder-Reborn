@@ -1,4 +1,5 @@
 import { removeTrailingEmptyElements } from "./auxFunctions"
+import { TAG_REGEX } from "./lyricsMarkup"
 import type { ParsedChart } from "./parseChart"
 
 /**
@@ -56,7 +57,7 @@ function mapChartSyllables(chart: ParsedChart, lines: string[]) {
 function countSyllables(lines: string[]) {
     return lines.map((line) => {
         // Eliminate content inside HTML tags
-        const cleanedLine = line.replace(/<[^>]*>/g, "")
+        const cleanedLine = line.replace(TAG_REGEX, "")
         return cleanedLine.trim().length === 0
             ? "0"
             : cleanedLine

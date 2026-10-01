@@ -97,7 +97,7 @@
     <ToggleSwitch v-model="normalizeApostrophes" />
     <DropdownMenu
       v-model="normalizeApostropheChar"
-      :options="apostropheOptions"
+      :options="APOSTROPHE_OPTIONS"
       :disabled="!normalizeApostrophes"
       style="margin-left: 0.25em"
       width="auto"
@@ -127,7 +127,7 @@
     <ToggleSwitch v-model="normalizeEllipsis" />
     <DropdownMenu
       v-model="normalizeEllipsisDirection"
-      :options="ellipsisDirections"
+      :options="ELLIPSIS_DIRECTIONS"
       :disabled="!normalizeEllipsis"
       style="margin-left: 0.25em"
       width="auto"
@@ -167,7 +167,7 @@ import ThemeDropdownMenu from "@/components/ThemeDropdownMenu.vue"
 import DropdownMenu from "@/components/DropdownMenu.vue"
 import { APOSTROPHE_OPTIONS, ELLIPSIS_DIRECTIONS } from "@/utils/normalizeLyrics"
 import { defaultSettings, getStored, setStored, storageKeys } from "@/utils/settings"
-import { onMounted, ref, watch } from "vue"
+import { onMounted, ref, watch, type Ref } from "vue"
 
 const lyricsFontSize = ref<number>(defaultSettings.lyricsFontSize)
 const lyricsLineHeight = ref<number>(defaultSettings.lyricsLineHeight)
@@ -187,8 +187,31 @@ const normalizeEllipsisDirection = ref<string>(defaultSettings.normalizeEllipsis
 const normalizeInvisible = ref<boolean>(defaultSettings.normalizeInvisible)
 const normalizeNfc = ref<boolean>(defaultSettings.normalizeNfc)
 
-const apostropheOptions = APOSTROPHE_OPTIONS
-const ellipsisDirections = ELLIPSIS_DIRECTIONS
+// Reads a stored setting into a ref, falling back to the default when unset.
+function loadSetting<T extends string | number | boolean>(
+  target: Ref<T>,
+  key: string,
+  fallback: T
+) {
+  target.value = getStored(key, fallback)
+}
+
+// Persists a setting whenever its ref changes. The numeric inputs emit "" when
+// cleared, which must never reach localStorage (skipFalsy matches that guard).
+function watchSetting<T extends string | number | boolean>(
+  target: Ref<T>,
+  key: string,
+  skipFalsy = false
+) {
+  watch(target, (newVal) => {
+    if (skipFalsy ? !newVal : newVal === undefined || newVal === null) return
+    setStored(key, newVal)
+  })
+}
+
+function normalizeDirection(value: string): string {
+  return value === "asciiToUnicode" ? "asciiToUnicode" : "unicodeToAscii"
+}
 
 function resetDefaultSettings() {
   lyricsFontSize.value = defaultSettings.lyricsFontSize
@@ -209,114 +232,72 @@ function resetDefaultSettings() {
 }
 
 onMounted(() => {
-  lyricsFontSize.value = getStored(storageKeys.lyricsFontSize, defaultSettings.lyricsFontSize)
-  lyricsLineHeight.value = getStored(storageKeys.lyricsLineHeight, defaultSettings.lyricsLineHeight)
-  isRereadOnChange.value = getStored(storageKeys.isRereadOnChange, defaultSettings.isRereadOnChange)
-  maxSectionSeparators.value = getStored(
+  loadSetting(lyricsFontSize, storageKeys.lyricsFontSize, defaultSettings.lyricsFontSize)
+  loadSetting(lyricsLineHeight, storageKeys.lyricsLineHeight, defaultSettings.lyricsLineHeight)
+  loadSetting(isRereadOnChange, storageKeys.isRereadOnChange, defaultSettings.isRereadOnChange)
+  loadSetting(
+    maxSectionSeparators,
     storageKeys.maxSectionSeparators,
     defaultSettings.maxSectionSeparators
   )
-  isGayMode.value = getStored(storageKeys.isGayMode, defaultSettings.isGayMode)
-  normalizeCapitalize.value = getStored(
+  loadSetting(isGayMode, storageKeys.isGayMode, defaultSettings.isGayMode)
+  loadSetting(
+    normalizeCapitalize,
     storageKeys.normalizeCapitalize,
     defaultSettings.normalizeCapitalize
   )
-  normalizeTrailingPunctuation.value = getStored(
+  loadSetting(
+    normalizeTrailingPunctuation,
     storageKeys.normalizeTrailingPunctuation,
     defaultSettings.normalizeTrailingPunctuation
   )
-  normalizeTrailingPunctuationChars.value = getStored(
+  loadSetting(
+    normalizeTrailingPunctuationChars,
     storageKeys.normalizeTrailingPunctuationChars,
     defaultSettings.normalizeTrailingPunctuationChars
   )
-  normalizeApostrophes.value = getStored(
+  loadSetting(
+    normalizeApostrophes,
     storageKeys.normalizeApostrophes,
     defaultSettings.normalizeApostrophes
   )
-  normalizeApostropheChar.value = getStored(
+  loadSetting(
+    normalizeApostropheChar,
     storageKeys.normalizeApostropheChar,
     defaultSettings.normalizeApostropheChar
   )
-  normalizeUnicodeSpaces.value = getStored(
+  loadSetting(
+    normalizeUnicodeSpaces,
     storageKeys.normalizeUnicodeSpaces,
     defaultSettings.normalizeUnicodeSpaces
   )
-  normalizeEllipsis.value = getStored(
-    storageKeys.normalizeEllipsis,
-    defaultSettings.normalizeEllipsis
+  loadSetting(normalizeEllipsis, storageKeys.normalizeEllipsis, defaultSettings.normalizeEllipsis)
+  normalizeEllipsisDirection.value = normalizeDirection(
+    getStored(storageKeys.normalizeEllipsisDirection, defaultSettings.normalizeEllipsisDirection)
   )
-  const storedDirection = getStored(
-    storageKeys.normalizeEllipsisDirection,
-    defaultSettings.normalizeEllipsisDirection
-  )
-  normalizeEllipsisDirection.value =
-    storedDirection === "asciiToUnicode" ? "asciiToUnicode" : "unicodeToAscii"
-  normalizeInvisible.value = getStored(
+  loadSetting(
+    normalizeInvisible,
     storageKeys.normalizeInvisible,
     defaultSettings.normalizeInvisible
   )
-  normalizeNfc.value = getStored(storageKeys.normalizeNfc, defaultSettings.normalizeNfc)
+  loadSetting(normalizeNfc, storageKeys.normalizeNfc, defaultSettings.normalizeNfc)
 })
 
-watch(lyricsFontSize, (newVal) => {
-  if (newVal) setStored(storageKeys.lyricsFontSize, newVal)
-})
-
-watch(lyricsLineHeight, (newVal) => {
-  if (newVal) setStored(storageKeys.lyricsLineHeight, newVal)
-})
-
-watch(isRereadOnChange, (newVal) => {
-  setStored(storageKeys.isRereadOnChange, newVal)
-})
-
-watch(maxSectionSeparators, (newVal) => {
-  if (newVal) setStored(storageKeys.maxSectionSeparators, newVal)
-})
-
-watch(isGayMode, (newVal) => {
-  setStored(storageKeys.isGayMode, newVal)
-})
-
-watch(normalizeCapitalize, (newVal) => {
-  setStored(storageKeys.normalizeCapitalize, newVal)
-})
-
-watch(normalizeTrailingPunctuation, (newVal) => {
-  setStored(storageKeys.normalizeTrailingPunctuation, newVal)
-})
-
-watch(normalizeTrailingPunctuationChars, (newVal) => {
-  setStored(storageKeys.normalizeTrailingPunctuationChars, newVal)
-})
-
-watch(normalizeApostrophes, (newVal) => {
-  setStored(storageKeys.normalizeApostrophes, newVal)
-})
-
-watch(normalizeApostropheChar, (newVal) => {
-  setStored(storageKeys.normalizeApostropheChar, newVal)
-})
-
-watch(normalizeUnicodeSpaces, (newVal) => {
-  setStored(storageKeys.normalizeUnicodeSpaces, newVal)
-})
-
-watch(normalizeEllipsis, (newVal) => {
-  setStored(storageKeys.normalizeEllipsis, newVal)
-})
-
-watch(normalizeEllipsisDirection, (newVal) => {
-  setStored(storageKeys.normalizeEllipsisDirection, newVal)
-})
-
-watch(normalizeInvisible, (newVal) => {
-  setStored(storageKeys.normalizeInvisible, newVal)
-})
-
-watch(normalizeNfc, (newVal) => {
-  setStored(storageKeys.normalizeNfc, newVal)
-})
+watchSetting(lyricsFontSize, storageKeys.lyricsFontSize, true)
+watchSetting(lyricsLineHeight, storageKeys.lyricsLineHeight, true)
+watchSetting(isRereadOnChange, storageKeys.isRereadOnChange)
+watchSetting(maxSectionSeparators, storageKeys.maxSectionSeparators, true)
+watchSetting(isGayMode, storageKeys.isGayMode)
+watchSetting(normalizeCapitalize, storageKeys.normalizeCapitalize)
+watchSetting(normalizeTrailingPunctuation, storageKeys.normalizeTrailingPunctuation)
+watchSetting(normalizeTrailingPunctuationChars, storageKeys.normalizeTrailingPunctuationChars)
+watchSetting(normalizeApostrophes, storageKeys.normalizeApostrophes)
+watchSetting(normalizeApostropheChar, storageKeys.normalizeApostropheChar)
+watchSetting(normalizeUnicodeSpaces, storageKeys.normalizeUnicodeSpaces)
+watchSetting(normalizeEllipsis, storageKeys.normalizeEllipsis)
+watchSetting(normalizeEllipsisDirection, storageKeys.normalizeEllipsisDirection)
+watchSetting(normalizeInvisible, storageKeys.normalizeInvisible)
+watchSetting(normalizeNfc, storageKeys.normalizeNfc)
 </script>
 
 <style scoped>

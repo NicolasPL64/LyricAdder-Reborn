@@ -11,6 +11,8 @@
  * partial syllable.
  */
 
+import { isTagToken, TAG_REGEX } from "./lyricsMarkup"
+
 const SPACE_REGEX = /[ \u00A0]/
 
 interface Point {
@@ -343,11 +345,11 @@ function convertEqualsToInternal(fragment: DocumentFragment) {
     for (const textNode of targets) {
         const parent = textNode.parentNode
         if (!parent) continue
-        const parts = (textNode.textContent ?? "").split(/(<[^>]*>)/g)
+        const parts = (textNode.textContent ?? "").split(TAG_REGEX)
         const nodes: Node[] = []
         for (const part of parts) {
             if (part === "") continue
-            if (part.startsWith("<") && part.endsWith(">")) {
+            if (isTagToken(part)) {
                 nodes.push(document.createTextNode(part))
                 continue
             }

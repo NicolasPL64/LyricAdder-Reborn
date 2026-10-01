@@ -1,7 +1,4 @@
-import { INTERNAL_EQUALS, protectMarkupTags } from "./lyricsMarkup"
-
-// Same tag detection used across the codebase: any "<...>" is markup.
-const TAG_REGEX = /(<[^>]*>)/g
+import { INTERNAL_EQUALS, isTagToken, protectMarkupTags, TAG_REGEX } from "./lyricsMarkup"
 
 // Characters that are structurally meaningful in the chart syntax and must
 // never be removed as "trailing punctuation": "_" marks a literal space inside
@@ -62,7 +59,7 @@ function capitalizeFirstAlphanumeric(line: string): string {
     let index = 0
     for (const token of line.split(TAG_REGEX)) {
         if (!token) continue
-        if (token.startsWith("<") && token.endsWith(">")) {
+        if (isTagToken(token)) {
             index += token.length
             continue
         }
@@ -99,7 +96,7 @@ function stripLineTrailingPunctuation(line: string, set: Set<string>): string {
     let index = tokens.length - 1
     while (index >= 0) {
         const token = tokens[index]
-        if (token.startsWith("<") && token.endsWith(">")) {
+        if (isTagToken(token)) {
             index--
             continue
         }

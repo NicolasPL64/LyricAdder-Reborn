@@ -49,6 +49,7 @@ export const storageKeys = {
 
 export const maxColorHistory = 12
 
+export function getStored<T extends string | number | boolean>(key: string, fallback: T): T
 export function getStored(key: string, fallback: string): string
 export function getStored(key: string, fallback: number): number
 export function getStored(key: string, fallback: boolean): boolean
@@ -112,7 +113,7 @@ export function loadLyricsSettings() {
 }
 
 export function loadNormalizeSettings(): NormalizeOptions {
-    const storedDirection = getStored(
+    const storedDirection: string = getStored(
         storageKeys.normalizeEllipsisDirection,
         defaultSettings.normalizeEllipsisDirection
     )
