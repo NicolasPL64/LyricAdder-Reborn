@@ -2,9 +2,9 @@ import { getCurrentWindow } from "@tauri-apps/api/window"
 import type { NormalizeOptions } from "./normalizeLyrics"
 
 export const defaultSettings = {
-    isRereadOnChange: false,
+    isRereadOnChange: true,
     isGayMode: false,
-    lyricsFontSize: 0.9,
+    lyricsFontSize: 1.0,
     lyricsLineHeight: 1.5,
     maxSectionSeparators: 3,
     normalizeCapitalize: true,
