@@ -7,11 +7,12 @@ Personal project I started back in Oct 2024 to learn frontend. Based on the orig
 + Options to change the font size and line height
 + Built-in hyphenator supporting English, Spanish, French, German, Italian and Portuguese
 + Toolbar and keyboard shortcuts for bold, italics, underline, strikethrough and colored text
-+ Rich text (WYSIWYG-like) editing mode
 + Color picker with alpha channel support and color bookmarks
++ Rich text editing mode
 + Better chart errors messages
 + Automatic backups of your lyrics and chart, with a restore prompt
 + File watcher that re-reads the chart when it changes on disk
++ Text normalizer (capitalize lines, strip trailing punctuation, unify apostrophes, spaces, ellipses and more!)
 + Quick auto-updater
 + Multiplatform support (Windows, Linux and Mac)
 
@@ -32,7 +33,6 @@ per kind are kept, and chart snapshots older than 7 days are pruned.
 
 ## Future plans
 
-+ Add user-option to auto-convert every type of apostrophe into the same custom character
 + Lyrics preview
 + More themes!
 
